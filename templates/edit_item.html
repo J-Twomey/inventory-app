@@ -1,16 +1,139 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Edit Items</title>
+  <title>Edit Items</title>
+  <link href="/static/css/styles.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
 </head>
 <body>
-    <h1>Item Edit</h1>
+
+<h1>Item Edit</h1>
 
 <form method="post" action="/edit/{{ item.id }}">
-  <label>Name: <input type="text" name="name" value="{{ item.name }}"></label><br>
-  <label>Category: <input type="text" name="category" value="{{ item.category }}"></label><br>
-  <label>Price: <input type="number" name="price" value="{{ item.price }}"></label><br>
-  <label>Purchase Date: <input type="text" name="purchase_date" value="{{ item.purchase_date }}"></label><br>
+
+  <label>Name:</label>
+  <input type="text" name="name" value="{{ item.name }}"><br><br>
+
+  <label>Set Name:</label>
+  <input type="text" name="set_name" value="{{ item.set_name }}"><br><br>
+
+  <label>Category:</label>
+  <select name="category" value="{{ item.category }}">
+    <option value="CARD">Card</option>
+    <option value="PACK">Pack</option>
+    <option value="BOX">Box</option>
+  </select><br><br>
+
+  <label>Language:</label>
+  <select name="language" value="{{ item.language }}">
+    <option value="JAPANESE">Japanese</option>
+    <option value="ENGLISH">English</option>
+    <option value="FRENCH">French</option>
+    <option value="GERMAN">German</option>
+    <option value="SPANISH">Spanish</option>
+    <option value="ITALIAN">Italian</option>
+    <option value="DUTCH">Dutch</option>
+    <option value="PORTUGUESE">Porguguese</option>
+    <option value="POLISH">Polish</option>
+    <option value="RUSSIAN">Russian</option>
+    <option value="LATIN_AMERICAN">Latin American</option>
+    <option value="CHINESE_SIMPLIFIED">Chinese Simplified</option>
+    <option value="CHINESE_TRADITIONAL">Chinese Traditional</option>
+    <option value="KOREAN">Korean</option>
+    <option value="THAI">Thai</option>
+    <option value="INDONESIAN">Indonesian</option>
+  </select><br><br>
+
+  <label>Qualifiers (comma-separated):</label>
+  <input type="text" name="qualifiers" value="{{ item.qualifiers }}"><br><br>
+
+  <label>Details:</label>
+  <input type="text" name="details" value="{{ item.details }}"><br><br>
+
+  <label>Purchase Date:</label>
+  <input type="date" name="purchase_date" value="{{ item.purchase_date }}"><br><br>
+
+  <label>Purchase Price:</label>
+  <input type="number" name="purchase_price" value="{{ item.purchase_price }}"><br><br>
+
+  <label>Status:</label>
+  <select name="status" value="{{ item.status }}">
+    <option value="ORDER">Order</option>
+    <option value="CLOSED">Closed</option>
+    <option value="STORAGE">Storage</option>
+    <option value="LISTED">Listed</option>
+    <option value="VAULT">Vault</option>
+    <option value="SUBMITTED">Submitted</option>
+  </select><br><br>
+
+  <label>Intent:</label>
+  <select name="intent" value="{{ item.intent }}">
+    <option value="TBD">TBD</option>
+    <option value="KEEP">Keep</option>
+    <option value="GRADE">Grade</option>
+    <option value="SELL">Sell</option>
+  </select><br><br>
+
+  <label>Grading Fee (JSON format):</label>
+  <input type="text" name="grading_fee" value="{{ item.grading_fee }}"><br><br>
+
+  <label>Grade:</label>
+  <input type="number" name="grade" step="any" value="{{ item.grade }}"><br><br>
+
+  <label>Grading Company:</label>
+  <select name="grading_company" value="{{ item.grading_company }}">
+    <option value="RAW">Raw</option>
+    <option value="PSA">PSA</option>
+    <option value="CGC">CGC</option>
+    <option value="BGS">BGS</option>
+  </select><br><br>
+
+  <label>Cert #:</label>
+  <input type="number" name="cert" value="{{ item.cert }}"><br><br>
+
+  <label>Submission Numbers (comma-separated):</label>
+  <input type="text" name="submission_number" value="{{ item.submission_number }}"><br><br>
+
+  <label>List Price:</label>
+  <input type="number" name="list_price" step="any" value="{{ item.list_price }}"><br><br>
+
+  <label>List Type:</label>
+  <select name="list_type"  value="{{ item.list_type }}">
+    <option value="NO_LIST">No List</option>
+    <option value="FIXED">Fixed</option>
+    <option value="AUCTION">Auction</option>
+  </select><br><br>
+
+  <label>List Date:</label>
+  <input type="date" name="list_date" value="{{ item.list_date }}"><br><br>
+
+  <label>Sale Total:</label>
+  <input type="number" name="sale_total" step="any" value="{{ item.sale_total }}"><br><br>
+
+  <label>Sale Date:</label>
+  <input type="date" name="sale_date" value="{{ item.sale_date }}"><br><br>
+
+  <label>Shipping:</label>
+  <input type="number" name="shipping" step="any" value="{{ item.shipping }}"><br><br>
+
+  <label>Sale Fee:</label>
+  <input type="number" name="sale_fee" step="any" value="{{ item.sale_fee }}"><br><br>
+
+  <label>USD to JPY Rate:</label>
+  <input type="number" name="usd_to_jpy_rate" step="any" value="{{ item.usd_to_jpy_rate }}"><br><br>
+
+  <label>Group Discount:</label>
+  <input type="checkbox" name="group_discount" value="{{ item.group_discount }}"><br><br>
+
+  <label>Object Variant:</label>
+  <select name="object_variant"  value="{{ item.object_variant }}">
+    <option value="STANDARD">Standard</option>
+    <option value="GROUP_PURCHASE">Group Purchase</option>
+    <option value="GROUP_SALE">Group Sale</option>
+  </select><br><br>
+
+  <label>Audit Target:</label>
+  <input type="checkbox" name="audit_target" value="{{ item.audit_target }}"><br><br>
   <button type="submit">Save Changes</button>
 </form>
 
