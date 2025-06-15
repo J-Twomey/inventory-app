@@ -75,3 +75,11 @@
 .faint {
   background-color: black;
 }
+
+.right-aligned {
+    text-align: right;
+}
+
+.centre-aligned {
+    text-align: center;
+}
