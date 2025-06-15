@@ -56,18 +56,19 @@
         <th>Type</th>
         <th>Language</th>
         <th>Grade</th>
-        <th>Intention</th>
+        <th>Intent</th>
         <th>P. Date</th>
         <th>P. Price</th>
         <th>G. Fees</th>
+        <th>T. Cost</th>
         <th>Status</th>
-        <th>List Price</th>
-        <th>List Date</th>
-        <th>Sale Total</th>
-        <th>Sale Date</th>
-        <th>Total Fees</th>
-        <th>Return $</th>
-        <th>Return ¥</th>
+        <th>L. Price</th>
+        <th>L. Date</th>
+        <th>S. Total</th>
+        <th>S. Date</th>
+        <th>T. Fees</th>
+        <th>Ret. $</th>
+        <th>Ret. ¥</th>
         <th>Net ¥</th>
         <th>Net %</th>
         <th>Actions</th>
@@ -92,6 +93,9 @@
           <td class="right-aligned">{{ ('¥' ~ '{:,.0f}'.format(item.purchase_price)) }}</td>
           <td class="right-aligned {{ 'faint' if item.grading_fee_total == 0 else '' }}">
             {{ '' if item.grading_fee_total is none else '¥' ~ '{:,.0f}'.format(item.grading_fee_total) }}
+          </td>
+          <td class="right-aligned {{ 'faint' if item.total_cost == 0 else '' }}">
+            {{ '' if item.total_cost is none else '¥' ~ '{:,.0f}'.format(item.total_cost) }}
           </td>
           <td class="centre-aligned">{{ item.status.name.capitalize() }}</td>
           <td class="right-aligned {{ 'faint' if item.list_price == None else '' }}">
@@ -136,6 +140,7 @@
         <tr id="details-{{ item.id }}" style="display: none;">
           <td colspan="5">
             <strong>GD:</strong> {{ item.group_discount }}<br>
+            <strong>Audit:</strong> {{ item.audit_target }}<br>
             <strong>Details:</strong> {{ item.details }}<br>
           </td>
         </tr>
