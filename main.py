@@ -23,7 +23,6 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 app.include_router(router)
 app.mount('/static', StaticFiles(directory='static'), name='static')
-# templates = Jinja2Templates(directory='templates')
 
 
 def open_browser() -> None:
@@ -33,7 +32,7 @@ def open_browser() -> None:
 
 def main() -> None:
     threading.Thread(target=open_browser).start()
-    uvicorn.run('main:app', host='127.0.0.1', port=8000, reload=True, log_level='debug')
+    uvicorn.run('main:app', host='127.0.0.1', port=8000, reload=True)
 
 
 if __name__ == '__main__':

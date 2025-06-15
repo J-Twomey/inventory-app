@@ -1,5 +1,8 @@
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, DeclarativeBase
+from sqlalchemy.orm import (
+    DeclarativeBase,
+    sessionmaker,
+)
 
 
 SQLALCHEMY_DATABASE_URL = 'sqlite:///./test2.db'
