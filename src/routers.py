@@ -1,0 +1,127 @@
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    Request,
+)
+from fastapi.responses import (
+    HTMLResponse,
+    RedirectResponse,
+)
+from fastapi.templating import Jinja2Templates
+from sqlalchemy.orm import Session
+from starlette.responses import Response
+
+from .crud import (
+    create_item,
+    delete_item_by_id,
+    edit_item,
+    search_for_items,
+)
+from .database import get_db
+from .models import Item
+from .schemas import (
+    ItemCreateForm,
+    ItemSearchForm,
+    ItemUpdate,
+)
+
+
+templates = Jinja2Templates(directory='templates')
+router = APIRouter()
+
+
+@router.get('/', response_class=HTMLResponse)
+def read_root(request: Request) -> Response:
+    return templates.TemplateResponse('index.html', {'request': request})
+
+
+@router.get('/view', response_class=HTMLResponse)
+def view_items(
+        request: Request,
+        db: Session = Depends(get_db),
+        show_limit: int = 20,
+) -> Response:
+    items = db.query(Item).order_by(Item.id.desc()).limit(show_limit).all()
+    items = list(reversed(items))
+    return templates.TemplateResponse(
+        'view.html',
+        {
+            'request': request,
+            'items': items,
+            'form_data': {},
+        },
+    )
+
+
+@router.post('/view', response_class=HTMLResponse)
+def search_view_items(
+        request: Request,
+        search_form: ItemSearchForm = Depends(ItemSearchForm.as_form),
+        db: Session = Depends(get_db),
+) -> Response:
+    search_params = search_form.to_item_search()
+    items = search_for_items(db, search_params)
+    return templates.TemplateResponse(
+        'view.html',
+        {
+            'request': request,
+            'items': items,
+            'form_data': search_params.model_dump(),
+        },
+    )
+
+
+@router.get('/add')
+def show_add_form(request: Request) -> Response:
+    return templates.TemplateResponse('add_item.html', {'request': request})
+
+
+@router.post('/add')
+def submit_add_form(
+        form: ItemCreateForm = Depends(ItemCreateForm.as_form),
+        db: Session = Depends(get_db),
+) -> RedirectResponse:
+    item = form.to_item_create()
+    create_item(db, item)
+    return RedirectResponse(url='/view', status_code=303)
+
+
+@router.post('/add')
+async def debug_form(request: Request):
+    form_data = await request.form()
+    print(dict(form_data))
+    return {'form_data': dict(form_data)}
+
+
+@router.get('/delete/{item_id}')
+def delete_item(
+        item_id: int,
+        db: Session = Depends(get_db),
+) -> RedirectResponse:
+    success = delete_item_by_id(db, item_id)
+    if not success:
+        raise HTTPException(status_code=404, detail='Item not found')
+    return RedirectResponse(url='/view', status_code=303)
+
+
+@router.get('/edit/{item_id}', response_class=HTMLResponse)
+def open_edit_form(
+        item_id: int,
+        request: Request,
+        db: Session = Depends(get_db),
+) -> Response:
+    item = db.query(Item).filter(Item.id == item_id).first()
+    if item is None:
+        raise HTTPException(status_code=404, detail='Item not found')
+    return templates.TemplateResponse('edit_item.html', {'request': request, 'item': item})
+
+
+@router.post('/edit/{item_id}')
+def submit_edit_item(
+        item_id: int,
+        item_update: ItemUpdate = Depends(),
+        db: Session = Depends(get_db),
+) -> RedirectResponse:
+    edit_result = edit_item(db, item_id, item_update)
+    return RedirectResponse('/view', status_code=edit_result)

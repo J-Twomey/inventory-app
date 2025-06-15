@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Item List</title>
+  <link href="/static/css/styles.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<h1>View Items</h1>
+
+<a href="/" class="btn btn-blue btn-small margin-bottom-20 inline">Back To Landing Page</a>
+
+<form method="post" action="/view">
+  <input type="text" name="name" placeholder="Name" value="{{ form_data.name if form_data else '' }}">
+  <input type="text" name="set_name" placeholder="Set Name" value="{{ form_data.set_name if form_data else '' }}">
+  <input type="text" name="category" placeholder="Category" value="{{ form_data.category if form_data else '' }}">
+  <input type="text" name="language" placeholder="Language" value="{{ form_data.language if form_data else '' }}">
+  <input type="text" name="qualifiers" placeholder="Qualifiers (comma-separated)" value="{{ ','.join(form_data.qualifiers) if form_data and form_data.qualifiers else '' }}">
+  <input type="text" name="details" placeholder="Details" value="{{ form_data.details if form_data else '' }}">
+  <input type="date" name="purchase_date" placeholder="Purchase Date" value="{{ form_data.purchase_date if form_data else '' }}">
+  <input type="number" name="purchase_price" placeholder="Purchase Price" value="{{ form_data.purchase_price if form_data else '' }}">
+  <input type="text" name="status" placeholder="Status" value="{{ form_data.status if form_data else '' }}">
+  <input type="text" name="intent" placeholder="Intent" value="{{ form_data.intent if form_data else '' }}">
+  <input type="number" step="any" name="grade" placeholder="Grade" value="{{ form_data.grade if form_data else '' }}">
+  <input type="text" name="grading_company" placeholder="Grading Company" value="{{ form_data.grading_company if form_data else '' }}">
+  <input type="number" name="cert" placeholder="Cert #" value="{{ form_data.cert if form_data else '' }}">
+  <input type="text" name="submission_number" placeholder="Submission #s (comma-separated)" value="{{ ','.join(map(str, form_data.submission_number)) if form_data and form_data.submission_number else '' }}">
+  <input type="text" name="list_type" placeholder="List Type" value="{{ form_data.list_type if form_data else '' }}">
+  <input type="date" name="list_date" placeholder="List Date" value="{{ form_data.list_date if form_data else '' }}">
+  <input type="number" step="any" name="sale_total" placeholder="Sale Total" value="{{ form_data.sale_total if form_data else '' }}">
+  <input type="date" name="sale_date" placeholder="Sale Date" value="{{ form_data.sale_date if form_data else '' }}">
+  <label>
+    <input type="checkbox" name="group_discount" {% if form_data and form_data.group_discount %}checked{% endif %}>
+    Group Discount
+  </label>
+  <input type="text" name="object_variant" placeholder="Object Variant" value="{{ form_data.object_variant if form_data else '' }}">
+  <label>
+    <input type="checkbox" name="audit_target" {% if form_data and form_data.audit_target %}checked{% endif %}>
+    Audit Target
+  </label>
+  <input type="number" name="total_cost" placeholder="Total Cost" value="{{ form_data.total_cost if form_data else '' }}">
+  <input type="number" name="return_jpy" placeholder="Return JPY" value="{{ form_data.return_jpy if form_data else '' }}">
+  <input type="number" name="net_jpy" placeholder="Net JPY" value="{{ form_data.net_jpy if form_data else '' }}">
+    <input type="number" name="net_percent" placeholder="Net %" value="{{ form_data.net_percent if form_data else '' }}">
+
+  <button type="submit">Search</button>
+</form>
+
+<div style="margin-top: 25px; font-size: 14px;">
+  <table border="1" cellpadding="6" cellspacing="0">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Set</th>
+        <th>Type</th>
+        <th>Language</th>
+        <th>Grade</th>
+        <th>Intention</th>
+        <th>P. Date</th>
+        <th>P. Price</th>
+        <th>G. Fees</th>
+        <th>Status</th>
+        <th>List Price</th>
+        <th>List Date</th>
+        <th>Sale Total</th>
+        <th>Sale Date</th>
+        <th>Total Fees</th>
+        <th>Return $</th>
+        <th>Return ¥</th>
+        <th>Net ¥</th>
+        <th>Net %</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in items %}
+        <tr>
+          <td>{{ item.name }}</td>
+          <td>{{ item.set_name }}</td>
+          <td>{{ item.category.name.capitalize() }}</td>
+          <td>{{ item.language.name.capitalize() }}</td>
+          <td class="{{ 'faint' if item.grade == None else '' }}">
+            {% if item.grade is not none %}
+              {{ item.grade|int if item.grade == item.grade|int else item.grade }}
+            {% else %}
+              ''
+            {% endif %}
+          </td>
+          <td>{{ item.intent.name.capitalize() }}</td>
+          <td>{{ item.purchase_date }}</td>
+          <td>{{ ('¥' ~ '{:,.0f}'.format(item.purchase_price)) }}</td>
+          <td class="{{ 'faint' if item.grading_fee_total == 0 else '' }}">
+            {{ '' if item.grading_fee_total is none else '¥' ~ '{:,.0f}'.format(item.grading_fee_total) }}
+          </td>
+          <td>{{ item.status.name.capitalize() }}</td>
+          <td class="{{ 'faint' if item.list_price == None else '' }}">
+            {{ '' if item.list_price is none else ('$' ~ '{:,.2f}'.format(item.list_price)) }}
+          </td>
+          <td class="{{ 'faint' if item.list_date == None else '' }}">
+            {{ '' if item.list_date is none else item.list_date }}
+          </td>
+          <td class="{{ 'faint' if item.sale_total == None else '' }}">
+            {{ '' if item.sale_total is none else ('$' ~ '{:,.2f}'.format(item.sale_total)) }}
+          </td>
+          <td class="{{ 'faint' if item.sale_date == None else '' }}">
+            {{ '' if item.sale_date is none else item.sale_date }}
+          </td>
+          <td class="{{ 'faint' if item.total_fees == None else '' }}">
+            {{ '' if item.total_fees is none else ('$' ~ '{:,.2f}'.format(item.total_fees)) }}
+          </td>
+          <td class="{{ 'faint' if item.return_usd == None else '' }}">
+            {{ '' if item.return_usd is none else ('$' ~ '{:,.2f}'.format(item.return_usd)) }}
+          </td>
+          <td class="{{ 'faint' if item.return_jpy == None else '' }}">
+            {{ '' if item.return_jpy is none else ('¥' ~ '{:,.0f}'.format(item.return_jpy)) }}
+          </td>
+          <td class="{{ 'faint' if item.net_jpy == None else '' }}">
+            {{ '' if item.net_jpy is none else ('¥' ~ '{:,.0f}'.format(item.net_jpy)) }}
+          </td>
+          <td class="{{ 'faint' if item.net_percent == None else '' }}">
+            {{ '' if item.net_percent is none else ( item.net_percent ~ '%') }}
+          </td>
+          <td>
+            <a href="/delete/{{ item.id }}" onclick="return confirm('Are you sure you want to delete this item?')" style="color: red; margin-right: 10px;">
+              Delete
+            </a>
+            <a href="/edit/{{ item.id }}" style="color: purple;">
+              Edit
+            </a>
+          </td>
+          <td>
+            <button onclick="toggleDetails('{{ item.id }}')">Details</button>
+          </td>
+        </tr>
+        <tr id="details-{{ item.id }}" style="display: none;">
+          <td colspan="5">
+            <strong>GD:</strong> {{ item.group_discount }}<br>
+            <strong>Details:</strong> {{ item.details }}<br>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if not items %}
+  <p>No items found.</p>
+{% endif %}
+
+<script>
+  function toggleDetails(id) {
+    const row = document.getElementById(`details-${id}`);
+    row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
+  }
+</script>
+
+</body>
+</html>

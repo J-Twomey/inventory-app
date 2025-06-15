@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Add Item</title>
+  <link href="/static/css/styles.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
+</head>
+<body>
+  <h1>Add New Item</h1>
+  <a href="/" class="btn btn-blue btn-small margin-bottom-20 inline">Back To Landing Page</a>
+<form method="post" action="/add" enctype="application/x-www-form-urlencoded">
+  <label>Name:</label>
+  <input type="text" name="name" required><br><br>
+
+  <label>Set Name:</label>
+  <input type="text" name="set_name" required><br><br>
+
+  <label>Category:</label>
+  <select name="category" required>
+    <option value="CARD">Card</option>
+    <option value="PACK">Pack</option>
+    <option value="BOX">Box</option>
+  </select><br><br>
+
+  <label>Language:</label>
+  <select name="language" required>
+    <option value="JAPANESE">Japanese</option>
+    <option value="ENGLISH">English</option>
+  </select><br><br>
+
+  <label>Qualifiers (comma-separated):</label>
+  <input type="text" name="qualifiers"><br><br>
+
+  <label>Details:</label>
+  <input type="text" name="details"><br><br>
+
+  <label>Purchase Date:</label>
+  <input type="date" name="purchase_date" required><br><br>
+
+  <label>Purchase Price:</label>
+  <input type="number" name="purchase_price" required><br><br>
+
+  <label>Status:</label>
+  <select name="status" required>
+    <option value="CLOSED">Closed</option>
+    <option value="STORAGE">Storage</option>
+  </select><br><br>
+
+  <label>Intent:</label>
+  <select name="intent" required>
+    <option value="KEEP">Keep</option>
+    <option value="GRADE">Grade</option>
+    <option value="SELL">Sell</option>
+    <option value="TBD">TBD</option>
+  </select><br><br>
+
+  <label>Grading Fee (JSON format):</label>
+  <input type="text" name="grading_fee"><br><br>
+
+  <label>Grade:</label>
+  <input type="number" name="grade" step="any"><br><br>
+
+  <label>Grading Company:</label>
+  <select name="grading_company" required>
+    <option value="RAW">Raw</option>
+    <option value="PSA">PSA</option>
+    <option value="CGC">CGC</option>
+    <option value="BGS">BGS</option>
+  </select><br><br>
+
+  <label>Cert #:</label>
+  <input type="number" name="cert"><br><br>
+
+  <label>Submission Numbers (comma-separated):</label>
+  <input type="text" name="submission_number"><br><br>
+
+  <label>List Price:</label>
+  <input type="number" name="list_price" step="any"><br><br>
+
+  <label>List Type:</label>
+  <select name="list_type" required>
+    <option value="NO_LIST">No List</option>
+    <option value="FIXED">Fixed</option>
+    <option value="AUCTION">Auction</option>
+  </select><br><br>
+
+  <label>List Date:</label>
+  <input type="date" name="list_date"><br><br>
+
+  <label>Sale Total:</label>
+  <input type="number" name="sale_total" step="any"><br><br>
+
+  <label>Sale Date:</label>
+  <input type="date" name="sale_date"><br><br>
+
+  <label>Shipping:</label>
+  <input type="number" name="shipping" step="any"><br><br>
+
+  <label>Sale Fee:</label>
+  <input type="number" name="sale_fee" step="any"><br><br>
+
+  <label>USD to JPY Rate:</label>
+  <input type="number" name="usd_to_jpy_rate" step="any"><br><br>
+
+  <label>Group Discount:</label>
+  <input type="checkbox" name="group_discount"><br><br>
+
+  <label>Object Variant:</label>
+  <select name="object_variant" required>
+    <option value="STANDARD">Standard</option>
+    <option value="GROUP_PURCHASE">Group Purchase</option>
+    <option value="GROUP_SALE">Group Sale</option>
+  </select><br><br>
+
+  <label>Audit Target:</label>
+  <input type="checkbox" name="audit_target"><br><br>
+
+  <button type="submit">Add Item</button>
+</form>
+</body>
+</html>

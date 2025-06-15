@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Items</title>
+</head>
+<body>
+    <h1>Item Edit</h1>
+
+<form method="post" action="/edit/{{ item.id }}">
+  <label>Name: <input type="text" name="name" value="{{ item.name }}"></label><br>
+  <label>Category: <input type="text" name="category" value="{{ item.category }}"></label><br>
+  <label>Price: <input type="number" name="price" value="{{ item.price }}"></label><br>
+  <label>Purchase Date: <input type="text" name="purchase_date" value="{{ item.purchase_date }}"></label><br>
+  <button type="submit">Save Changes</button>
+</form>
+
+    {% if items %}
+        <h2>Matching Items</h2>
+        <ul>
+        {% for item in items %}
+            <li>
+                {{ item.name }} ({{ item.category }}, {{ item.price }}, {{ item.purchase_date }})
+                <a href="/edit/{{ item.id }}">Edit</a>
+            </li>
+        {% endfor %}
+        </ul>
+    {% elif request.method == 'POST' %}
+        <p>No matching items found.</p>
+    {% endif %}
+</body>
+</html>
