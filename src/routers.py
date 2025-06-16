@@ -87,13 +87,6 @@ def submit_add_form(
     return RedirectResponse(url='/view', status_code=303)
 
 
-@router.post('/add')
-async def debug_form(request: Request):
-    form_data = await request.form()
-    print(dict(form_data))
-    return {'form_data': dict(form_data)}
-
-
 @router.get('/delete/{item_id}')
 def delete_item(
         item_id: int,
