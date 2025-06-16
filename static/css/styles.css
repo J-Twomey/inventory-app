@@ -48,6 +48,14 @@
   background-color: #dc2626;
 }
 
+.btn-purple {
+  background-color: #800080;
+}
+
+.btn-purple:hover {
+  background-color: #4d004d;
+}
+
 /* Size variants */
 .btn-small {
   font-size: 0.8rem;
