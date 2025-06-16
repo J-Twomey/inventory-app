@@ -169,7 +169,7 @@ class Item(Base):
         elif self.total_cost == 0:
             return 0.
         else:
-            return round(self.net_jpy / self.total_cost, 2)
+            return round(100 * self.net_jpy / self.total_cost, 2)
 
     @net_percent.expression  # type: ignore[no-redef]
     def net_percent(cls) -> ColumnElement[float | None]:

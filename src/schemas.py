@@ -117,7 +117,7 @@ class ItemBase(BaseModel):
         elif self.total_cost == 0:
             return 0.
         else:
-            return round(self.net_jpy / self.total_cost, 2)
+            return round(100 * self.net_jpy / self.total_cost, 2)
 
     @field_validator('*', mode='before')
     @classmethod
