@@ -23,7 +23,7 @@ from .models import Item
 from .schemas import (
     ItemCreateForm,
     ItemSearchForm,
-    ItemUpdate,
+    ItemUpdateForm,
 )
 
 
@@ -120,8 +120,9 @@ def open_edit_form(
 @router.post('/edit/{item_id}')
 def submit_edit_item(
         item_id: int,
-        item_update: ItemUpdate = Depends(),
+        update_form: ItemUpdateForm = Depends(ItemUpdateForm.as_form),
         db: Session = Depends(get_db),
 ) -> RedirectResponse:
-    edit_result = edit_item(db, item_id, item_update)
+    edit_params = update_form.to_item_update()
+    edit_result = edit_item(db, item_id, edit_params)
     return RedirectResponse('/view', status_code=edit_result)

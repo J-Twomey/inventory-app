@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from .models import Item
 from .schemas import (
     ItemCreate,
-    ItemSearchParams,
+    ItemSearch,
     ItemUpdate,
 )
 
@@ -66,7 +66,7 @@ def delete_item_by_id(
 
 def search_for_items(
         db: Session,
-        search_params: ItemSearchParams,
+        search_params: ItemSearch,
 ) -> Sequence[Item]:
     search_values = search_params.model_dump(exclude_unset=True)
 
@@ -106,4 +106,4 @@ def edit_item(
 
     db.commit()
     db.refresh(item)
-    return 200
+    return 303

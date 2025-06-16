@@ -137,18 +137,60 @@
   <button type="submit">Save Changes</button>
 </form>
 
-    {% if items %}
-        <h2>Matching Items</h2>
-        <ul>
-        {% for item in items %}
-            <li>
-                {{ item.name }} ({{ item.category }}, {{ item.price }}, {{ item.purchase_date }})
-                <a href="/edit/{{ item.id }}">Edit</a>
-            </li>
-        {% endfor %}
-        </ul>
-    {% elif request.method == 'POST' %}
-        <p>No matching items found.</p>
-    {% endif %}
+{% if items %}
+    <h2>Matching Items</h2>
+    <ul>
+    {% for item in items %}
+        <li>
+            {{ item.name }} ({{ item.category }}, {{ item.price }}, {{ item.purchase_date }})
+            <a href="/edit/{{ item.id }}">Edit</a>
+        </li>
+    {% endfor %}
+    </ul>
+{% elif request.method == 'POST' %}
+    <p>No matching items found.</p>
+{% endif %}
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.querySelector('form');
+    if (!form) return;
+
+    const originalValues = {};
+    for (const input of form.elements) {
+      if (!input.name) continue;
+
+      if (
+        ['text', 'number', 'hidden'].includes(input.type) ||
+        input.tagName.toLowerCase() === 'select'
+      ) {
+        originalValues[input.name] = input.value;
+      } else if (input.type === 'checkbox') {
+        originalValues[input.name] = input.checked;
+      }
+    }
+
+    form.addEventListener('submit', () => {
+      for (const input of form.elements) {
+        const name = input.name;
+        if (!name) continue;
+
+        if (
+          ['text', 'number', 'hidden'].includes(input.type) ||
+          input.tagName.toLowerCase() === 'select'
+        ) {
+          if (input.value === originalValues[name]) {
+            input.disabled = true;
+          }
+        } else if (input.type === 'checkbox') {
+          if (input.checked === originalValues[name]) {
+            input.disabled = true;
+          }
+        }
+      }
+    });
+  });
+</script>
+
 </body>
 </html>

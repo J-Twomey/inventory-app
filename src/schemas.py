@@ -1,5 +1,6 @@
 import json
 from dataclasses import dataclass
+
 from datetime import (
     date,
     datetime,
@@ -164,7 +165,7 @@ class ItemBase(BaseModel):
 
 
 class ItemCreate(ItemBase):
-    pass  # for now, same as base, used for POST requests
+    pass
 
 
 @dataclass
@@ -295,11 +296,175 @@ class ItemCreateForm:
         )
 
 
-class ItemUpdate(ItemBase):
-    pass
+class ItemUpdate(BaseModel):
+    name: Annotated[str | None, Form(None)] = None
+    set_name: Annotated[str | None, Form(None)] = None
+    category: Annotated[Category | None, Form(None)] = None
+    language: Annotated[Language | None, Form(None)] = None
+    qualifiers: Annotated[list[Qualifier] | None, Form(None)] = None
+    details: Annotated[str | None, Form(None)] = None
+    purchase_date: Annotated[date | None, Form(None)] = None
+    purchase_price: Annotated[int | None, Form(None)] = None
+    status: Annotated[Status | None, Form(None)] = None
+    intent: Annotated[Intent | None, Form(None)] = None
+    grading_fee: Annotated[dict[int, int] | None, Form(None)] = None
+    grade: Annotated[float | None, Form(None)] = None
+    grading_company: Annotated[GradingCompany | None, Form(None)] = None
+    cert: Annotated[int | None, Form(None)] = None
+    submission_number: Annotated[list[int] | None, Form(None)] = None
+    list_price: Annotated[float | None, Form(None)] = None
+    list_type: Annotated[ListingType | None, Form(None)] = None
+    list_date: Annotated[date | None, Form(None)] = None
+    sale_total: Annotated[float | None, Form(None)] = None
+    sale_date: Annotated[date | None, Form(None)] = None
+    shipping: Annotated[float | None, Form(None)] = None
+    sale_fee: Annotated[float | None, Form(None)] = None
+    usd_to_jpy: Annotated[float | None, Form(None)] = None
+    group_discount: Annotated[bool | None, Form(None)] = None
+    object_variant: Annotated[ObjectVariant | None, Form(None)] = None
+    audit_target: Annotated[bool | None, Form(None)] = None
 
 
-class ItemSearchParams(BaseModel):
+@dataclass
+class ItemUpdateForm:
+    name: str | None = None
+    set_name: str | None = None
+    category: str | None = None
+    language: str | None = None
+    qualifiers: str | None = None
+    details: str | None = None
+    purchase_date: str | None = None
+    purchase_price: str | None = None
+    status: str | None = None
+    intent: str | None = None
+    grading_fee: str | None = None
+    grade: str | None = None
+    grading_company: str | None = None
+    cert: str | None = None
+    submission_number: str | None = None
+    list_price: str | None = None
+    list_type: str | None = None
+    list_date: str | None = None
+    sale_total: str | None = None
+    sale_date: str | None = None
+    shipping: str | None = None
+    sale_fee: str | None = None
+    usd_to_jpy: str | None = None
+    group_discount: str | bool | None = None
+    object_variant: str | None = None
+    audit_target: str | bool | None = None
+
+    @classmethod
+    def as_form(
+        cls,
+        name: Annotated[str | None, Form()] = None,
+        set_name: Annotated[str | None, Form()] = None,
+        category: Annotated[str | None, Form()] = None,
+        language: Annotated[str | None, Form()] = None,
+        qualifiers: Annotated[str | None, Form()] = None,
+        details: Annotated[str | None, Form()] = None,
+        purchase_date: Annotated[str | None, Form()] = None,
+        purchase_price: Annotated[str | None, Form()] = None,
+        status: Annotated[str | None, Form()] = None,
+        intent: Annotated[str | None, Form()] = None,
+        grading_fee: Annotated[str | None, Form()] = None,
+        grade: Annotated[str | None, Form()] = None,
+        grading_company: Annotated[str | None, Form()] = None,
+        cert: Annotated[str | None, Form()] = None,
+        submission_number: Annotated[str | None, Form()] = None,
+        list_price: Annotated[str | None, Form()] = None,
+        list_type: Annotated[str | None, Form()] = None,
+        list_date: Annotated[str | None, Form()] = None,
+        sale_total: Annotated[str | None, Form()] = None,
+        sale_date: Annotated[str | None, Form()] = None,
+        shipping: Annotated[str | None, Form()] = None,
+        sale_fee: Annotated[str | None, Form()] = None,
+        usd_to_jpy: Annotated[str | None, Form()] = None,
+        object_variant: Annotated[str | None, Form()] = None,
+        group_discount: Annotated[bool | None, Form()] = None,
+        audit_target: Annotated[bool | None, Form()] = None,
+    ) -> 'ItemUpdateForm':
+        return cls(
+            name=name,
+            set_name=set_name,
+            category=category,
+            language=language,
+            qualifiers=qualifiers,
+            details=details,
+            purchase_date=purchase_date,
+            purchase_price=purchase_price,
+            status=status,
+            intent=intent,
+            grading_fee=grading_fee,
+            grade=grade,
+            grading_company=grading_company,
+            cert=cert,
+            submission_number=submission_number,
+            list_price=list_price,
+            list_type=list_type,
+            list_date=list_date,
+            sale_total=sale_total,
+            sale_date=sale_date,
+            shipping=shipping,
+            sale_fee=sale_fee,
+            usd_to_jpy=usd_to_jpy,
+            group_discount=group_discount,
+            object_variant=object_variant,
+            audit_target=audit_target,
+        )
+
+    def to_item_update(self) -> ItemUpdate:
+        update_vals: dict[str, Any] = {}
+        set_if_value(update_vals, 'name', parse_nullable_string(self.name))
+        set_if_value(update_vals, 'set_name', parse_nullable_string(self.set_name))
+        set_if_value(
+            update_vals,
+            'category',
+            parse_nullable_enum(self.category, Category, 'category'),
+        )
+        set_if_value(
+            update_vals,
+            'language',
+            parse_nullable_enum(self.language, Language, 'language'),
+        )
+        set_if_value(update_vals, 'qualifiers', parse_to_qualifiers_list(self.qualifiers))
+        set_if_value(update_vals, 'details', parse_nullable_string(self.details))
+        set_if_value(update_vals, 'purchase_date', parse_nullable_date(self.purchase_date))
+        set_if_value(update_vals, 'purchase_price', parse_nullable_int(self.purchase_price))
+        set_if_value(update_vals, 'status', parse_nullable_enum(self.status, Status, 'status'))
+        set_if_value(update_vals, 'intent', parse_nullable_enum(self.intent, Intent, 'intent'))
+        set_if_value(update_vals, 'grading_fee', parse_to_nullable_dict(self.grading_fee))
+        set_if_value(update_vals, 'grade', parse_nullable_float(self.grade))
+        set_if_value(
+            update_vals,
+            'grading_company',
+            parse_nullable_enum(self.grading_company, GradingCompany, 'grading_company'),
+        )
+        set_if_value(update_vals, 'cert', parse_nullable_int(self.cert))
+        set_if_value(update_vals, 'submission_number', parse_to_int_list(self.submission_number))
+        set_if_value(update_vals, 'list_price', parse_nullable_float(self.list_price))
+        set_if_value(
+            update_vals,
+            'list_type',
+            parse_nullable_enum(self.list_type, ListingType, 'list_type'),
+        )
+        set_if_value(update_vals, 'list_date', parse_nullable_date(self.list_date))
+        set_if_value(update_vals, 'sale_total', parse_nullable_float(self.sale_total))
+        set_if_value(update_vals, 'sale_date', parse_nullable_date(self.sale_date))
+        set_if_value(update_vals, 'shipping', parse_nullable_float(self.shipping))
+        set_if_value(update_vals, 'sale_fee', parse_nullable_float(self.sale_fee))
+        set_if_value(update_vals, 'usd_to_jpy', parse_nullable_float(self.usd_to_jpy))
+        set_if_value(update_vals, 'group_discount', parse_nullable_bool(self.group_discount))
+        set_if_value(
+            update_vals,
+            'object_variant',
+            parse_nullable_enum(self.object_variant, ObjectVariant, 'object_variant'),
+        )
+        set_if_value(update_vals, 'audit_target', parse_nullable_bool(self.audit_target))
+        return ItemUpdate(**update_vals)
+
+
+class ItemSearch(BaseModel):
     name: Annotated[str | None, Form(None)] = None
     set_name: Annotated[str | None, Form(None)] = None
     category: Annotated[Category | None, Form(None)] = None
@@ -412,7 +577,7 @@ class ItemSearchForm:
             net_percent=net_percent,
         )
 
-    def to_item_search(self) -> ItemSearchParams:
+    def to_item_search(self) -> ItemSearch:
         if self.purchase_date == '' or self.purchase_date is None:
             purchase_date_ = None
         else:
@@ -425,7 +590,7 @@ class ItemSearchForm:
             sale_date_ = None
         else:
             sale_date_ = datetime.strptime(self.sale_date, '%Y-%m-%d').date()
-        return ItemSearchParams(
+        return ItemSearch(
             name=parse_nullable_string(self.name),
             set_name=parse_nullable_string(self.set_name),
             category=parse_nullable_enum(self.category, Category, 'category'),
@@ -513,6 +678,17 @@ def parse_to_dict(v: str) -> dict[int, int]:
         raise ValueError('grading_fee must be valid JSON')
 
 
+def parse_to_nullable_dict(v: str | None) -> dict[int, int] | None:
+    if v == '' or v is None:
+        return None
+    else:
+        try:
+            parsed: dict[str, str] = json.loads(v)
+            return {int(k): int(v) for k, v in parsed.items()}
+        except Exception:
+            raise ValueError('grading_fee must be valid JSON')
+
+
 def parse_nullable_string(v: str | None) -> str | None:
     if v == '' or v is None:
         return None
@@ -548,3 +724,18 @@ def parse_nullable_bool(v: str | bool | None) -> bool | None:
         return None
     else:
         return False
+
+
+def parse_nullable_date(date_str: str | None) -> date | None:
+    if date_str is None or date_str == '':
+        return None
+    return datetime.strptime(date_str, '%Y-%m-%d').date()
+
+
+def set_if_value(
+        d: dict[str, Any],
+        k: str,
+        v: Any,
+) -> None:
+    if v is not None and v != '' and v != [] and v != {}:
+        d[k] = v
