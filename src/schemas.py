@@ -38,7 +38,7 @@ T = TypeVar('T', bound=Enum)
 
 
 class ItemBase(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(extra='forbid')
 
     name: Annotated[str, Form()]
     set_name: Annotated[str, Form()]
@@ -297,6 +297,8 @@ class ItemCreateForm:
 
 
 class ItemUpdate(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+
     name: Annotated[str | None, Form(None)] = None
     set_name: Annotated[str | None, Form(None)] = None
     category: Annotated[Category | None, Form(None)] = None
@@ -465,6 +467,8 @@ class ItemUpdateForm:
 
 
 class ItemSearch(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+
     name: Annotated[str | None, Form(None)] = None
     set_name: Annotated[str | None, Form(None)] = None
     category: Annotated[Category | None, Form(None)] = None
