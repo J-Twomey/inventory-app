@@ -67,17 +67,17 @@ class ItemBase(BaseModel):
     object_variant: Annotated[ObjectVariant, Form()]
     audit_target: Annotated[bool, Form()] = False
 
-    @computed_field  # type: ignore[misc]
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def grading_fee_total(self) -> int:
         return sum(self.grading_fee.values())
 
-    @computed_field  # type: ignore[misc]
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def total_cost(self) -> int:
         return self.purchase_price + self.grading_fee_total
 
-    @computed_field  # type: ignore[misc]
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def total_fees(self) -> float | None:
         if self.shipping is None or self.sale_fee is None:
@@ -85,7 +85,7 @@ class ItemBase(BaseModel):
         else:
             return self.shipping + self.sale_fee
 
-    @computed_field  # type: ignore[misc]
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def return_usd(self) -> float | None:
         if self.sale_total is None or self.total_fees is None:
@@ -93,7 +93,7 @@ class ItemBase(BaseModel):
         else:
             return self.sale_total - self.total_fees
 
-    @computed_field  # type: ignore[misc]
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def return_jpy(self) -> int | None:
         if self.return_usd is None or self.usd_to_jpy_rate is None:
@@ -101,7 +101,7 @@ class ItemBase(BaseModel):
         else:
             return round(self.return_usd * self.usd_to_jpy_rate)
 
-    @computed_field  # type: ignore[misc]
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def net_jpy(self) -> int | None:
         if self.return_jpy is None:
@@ -109,7 +109,7 @@ class ItemBase(BaseModel):
         else:
             return round(self.return_jpy - self.total_cost)
 
-    @computed_field  # type: ignore[misc]
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def net_percent(self) -> float | None:
         if self.net_jpy is None:
@@ -646,8 +646,6 @@ def parse_enum(
         enum_cls: Type[T],
         enum_name: str,
 ) -> T:
-    if isinstance(value, enum_cls):
-        return value
     try:
         return enum_cls[value.upper()]
     except KeyError:
@@ -659,9 +657,7 @@ def parse_nullable_enum(
         enum_cls: Type[T],
         enum_name: str,
 ) -> T | None:
-    if isinstance(value, enum_cls):
-        return value
-    elif value == '' or value is None:
+    if value == '' or value is None:
         return None
     else:
         try:
