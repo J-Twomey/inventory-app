@@ -48,7 +48,7 @@ def get_items(
         db: Session,
         skip: int = 0,
         limit: int = 100,
-):
+) -> list[Item]:
     return db.query(Item).offset(skip).limit(limit).all()
 
 

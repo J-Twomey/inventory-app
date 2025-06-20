@@ -143,14 +143,18 @@ class ItemBase(BaseModel):
     def parse_submission_numbers(cls, v: Any) -> list[int]:
         if isinstance(v, str):
             return [int(x.strip()) for x in v.split(',') if x.strip()]
-        return v
+        elif isinstance(v, list) and all(isinstance(x, int) for x in v):
+            return v
+        raise ValueError('submission_number must be provided as str or list[int]')
 
     @field_validator('qualifiers', mode='before')
     @classmethod
     def parse_qualifiers(cls, v: Any) -> list[Qualifier]:
         if isinstance(v, str):
             return [Qualifier[x.strip()] for x in v.split(',') if x.strip()]
-        return v
+        elif isinstance(v, list) and all(isinstance(x, Qualifier) for x in v):
+            return v
+        raise ValueError('qualifiers must be provided as str or list[Qualifier]')
 
     @field_validator('grading_fee', mode='before')
     @classmethod
@@ -161,7 +165,13 @@ class ItemBase(BaseModel):
                 return {int(k): int(v) for k, v in parsed.items()}
             except Exception:
                 raise ValueError('grading_fee must be valid JSON')
-        return v
+        elif (
+            isinstance(v, dict)
+            and all(isinstance(x, int) for x in v)
+            and all(isinstance(z, int) for z in v.values())
+        ):
+            return v
+        raise ValueError('grading_fee must be provided as str or dict[int, int]')
 
 
 class ItemCreate(ItemBase):

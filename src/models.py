@@ -42,16 +42,16 @@ NullableFloat = Mapped[float | None]
 NullableInt = Mapped[int | None]
 
 
-def NullableDateColumn(**kwargs) -> NullableDate:
-    return mapped_column(Date, nullable=True, **kwargs)
+def NullableDateColumn() -> NullableDate:
+    return mapped_column(Date, nullable=True)
 
 
-def NullableFloatColumn(**kwargs) -> NullableFloat:
-    return mapped_column(Float, nullable=True, **kwargs)
+def NullableFloatColumn() -> NullableFloat:
+    return mapped_column(Float, nullable=True)
 
 
-def NullableIntColumn(**kwargs) -> NullableInt:
-    return mapped_column(Integer, nullable=True, **kwargs)
+def NullableIntColumn() -> NullableInt:
+    return mapped_column(Integer, nullable=True)
 
 
 class Item(Base):
