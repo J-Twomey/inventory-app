@@ -57,7 +57,7 @@ def delete_item_by_id(
         db: Session,
         item_id: int,
 ) -> bool:
-    item = db.query(Item).filter(Item.id == item_id).first()
+    item = get_item(db, item_id)
     if item is None:
         return False
     db.delete(item)
@@ -85,8 +85,8 @@ def search_for_items(
             column = getattr(Item, field)
             filters.append(column == value)
 
-    stmt = select(Item).where(and_(*filters))
-    result = db.execute(stmt)
+    statement = select(Item).where(and_(*filters))
+    result = db.execute(statement)
     return result.scalars().all()
 
 
@@ -95,8 +95,8 @@ def edit_item(
         item_id: int,
         item_update: ItemUpdate,
 ) -> int:
-    item = db.query(Item).filter(Item.id == item_id).first()
-    if not item:
+    item = get_item(db, item_id)
+    if item is None:
         return 404
     update_data = item_update.model_dump(exclude_unset=True)
     for key, value in update_data.items():
