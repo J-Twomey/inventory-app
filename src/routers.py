@@ -16,6 +16,7 @@ from .crud import (
     create_item,
     delete_item_by_id,
     edit_item,
+    get_newest_items,
     search_for_items,
 )
 from .database import get_db
@@ -42,6 +43,7 @@ def view_items(
         db: Session = Depends(get_db),
         show_limit: int = 20,
 ) -> Response:
+    items = get_newest_items(db, skip=0, limit=show_limit)
     items = db.query(Item).order_by(Item.id.desc()).limit(show_limit).all()
     items = list(reversed(items))
     return templates.TemplateResponse(

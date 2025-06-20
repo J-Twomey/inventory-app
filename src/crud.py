@@ -44,12 +44,13 @@ def get_item(
     return db.query(Item).filter(Item.id == item_id).first()
 
 
-def get_items(
+def get_newest_items(
         db: Session,
         skip: int = 0,
         limit: int = 100,
 ) -> list[Item]:
-    return db.query(Item).offset(skip).limit(limit).all()
+    items = db.query(Item).order_by(Item.id.desc()).offset(skip).limit(limit).all()
+    return list(reversed(items))
 
 
 def delete_item_by_id(
