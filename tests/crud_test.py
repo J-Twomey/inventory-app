@@ -1,9 +1,11 @@
 from datetime import date
 
+import pytest
 from sqlalchemy.orm import Session
 
 import src.crud as crud
 import src.item_enums as item_enums
+import src.schemas as schemas
 from .conftest import ItemFactory
 
 
@@ -71,7 +73,7 @@ def test_get_items_return_all_items(
         item_factory: ItemFactory,
 ) -> None:
     item_names = ['one', 'two', 'three']
-    items = [item_factory.get(n) for n in item_names]
+    items = [item_factory.get(name=n) for n in item_names]
     ids = []
     for item in items:
         db_item = crud.create_item(db_session, item)
@@ -89,7 +91,7 @@ def test_get_items_skip_newest_item(
         item_factory: ItemFactory,
 ) -> None:
     item_names = ['one', 'two', 'three']
-    items = [item_factory.get(n) for n in item_names]
+    items = [item_factory.get(name=n) for n in item_names]
     ids = []
     for item in items:
         db_item = crud.create_item(db_session, item)
@@ -107,7 +109,7 @@ def test_get_items_take_two_items(
         item_factory: ItemFactory,
 ) -> None:
     item_names = ['one', 'two', 'three']
-    items = [item_factory.get(n) for n in item_names]
+    items = [item_factory.get(name=n) for n in item_names]
     ids = []
     for item in items:
         db_item = crud.create_item(db_session, item)
@@ -125,7 +127,7 @@ def test_get_items_skip_all_items(
         item_factory: ItemFactory,
 ) -> None:
     item_names = ['one', 'two', 'three']
-    items = [item_factory.get(n) for n in item_names]
+    items = [item_factory.get(name=n) for n in item_names]
     for item in items:
         crud.create_item(db_session, item)
     result = crud.get_newest_items(db_session, skip=3, limit=100)
@@ -142,7 +144,7 @@ def test_delete_item_by_id_success(
         item_factory: ItemFactory,
 ) -> None:
     item_names = ['one', 'two']
-    items = [item_factory.get(n) for n in item_names]
+    items = [item_factory.get(name=n) for n in item_names]
     ids = []
     for item in items:
         db_item = crud.create_item(db_session, item)
@@ -158,7 +160,7 @@ def test_delete_item_by_id_failure(
         item_factory: ItemFactory,
 ) -> None:
     item_names = ['one', 'two']
-    items = [item_factory.get(n) for n in item_names]
+    items = [item_factory.get(name=n) for n in item_names]
     ids = []
     for item in items:
         db_item = crud.create_item(db_session, item)
@@ -167,3 +169,93 @@ def test_delete_item_by_id_failure(
     assert result is False
     for id in ids:
         assert crud.get_item(db_session, id) is not None
+
+
+def test_search_for_items_no_filters(
+        db_session: Session,
+        item_factory: ItemFactory,
+) -> None:
+    item_names = ['one', 'two']
+    items = [item_factory.get(name=n) for n in item_names]
+    for item in items:
+        crud.create_item(db_session, item)
+    search_params = schemas.ItemSearchForm().to_item_search()
+    result = crud.search_for_items(db_session, search_params)
+    assert len(result) == 2
+
+
+def test_search_for_items_simple_case(
+        db_session: Session,
+        item_factory: ItemFactory,
+) -> None:
+    item_names = ['one', 'two']
+    items = [item_factory.get(name=n) for n in item_names]
+    for item in items:
+        crud.create_item(db_session, item)
+    search_params = schemas.ItemSearchForm(name='two').to_item_search()
+    result = crud.search_for_items(db_session, search_params)
+    assert len(result) == 1
+    assert result[0].name == 'two'
+
+
+def test_search_for_items_multiple_search_criteria(
+        db_session: Session,
+        item_factory: ItemFactory,
+) -> None:
+    item_grading_companies = [
+        item_enums.GradingCompany.RAW,
+        item_enums.GradingCompany.PSA,
+        item_enums.GradingCompany.PSA,
+        item_enums.GradingCompany.PSA,
+    ]
+    item_languages = [
+        item_enums.Language.KOREAN,
+        item_enums.Language.KOREAN,
+        item_enums.Language.KOREAN,
+        item_enums.Language.GERMAN,
+    ]
+    items = [
+        item_factory.get(grading_company=gc, language=lang) for gc, lang in zip(
+            item_grading_companies,
+            item_languages,
+        )
+    ]
+    for item in items:
+        crud.create_item(db_session, item)
+    search_params = schemas.ItemSearchForm(
+        language='KOREAN',
+        grading_company='PSA',
+    ).to_item_search()
+    result = crud.search_for_items(db_session, search_params)
+    assert len(result) == 2
+    assert all(
+        getattr(r, field_name) == fv for r, field_name, fv in zip(
+            result,
+            ('language', 'grading_company'),
+            (item_enums.Language.KOREAN, item_enums.GradingCompany.PSA),
+        )
+    )
+
+
+@pytest.mark.xfail
+def test_search_for_items_qualifiers_union_search(
+        db_session: Session,
+        item_factory: ItemFactory,
+) -> None:
+    item_qualifiers = [
+        [item_enums.Qualifier.NON_HOLO],
+        [item_enums.Qualifier.NON_HOLO, item_enums.Qualifier.CRYSTAL],
+        [item_enums.Qualifier.FIRST_EDITION],
+        [item_enums.Qualifier.CRYSTAL],
+        [],
+    ]
+    items = [item_factory.get(qualifiers=q) for q in item_qualifiers]
+    for item in items:
+        crud.create_item(db_session, item)
+    search_params = schemas.ItemSearchForm(qualifiers='[NON_HOLO, CRYSTAL]').to_item_search()
+    result = crud.search_for_items(db_session, search_params)
+    assert len(result) == 3
+    # assert all(
+    #     (item_enums.Qualifier.NON_HOLO in r.qualifiers) or
+    #     (item_enums.Qualifier.CRYSTAL in r.qualifiers) for r in result
+    # )
