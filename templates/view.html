@@ -141,8 +141,12 @@
           <td colspan="5">
             <strong>GD:</strong> {{ item.group_discount }}<br>
             <strong>Audit:</strong> {{ item.audit_target }}<br>
+            <strong>Exchange Rate:</strong> {{ item.usd_to_jpy_rate }}<br>
+            <strong>Qualifiers:</strong>
+                {% for q in item.qualifiers %}
+                    {{ q.name.lower().replace('_', ' ').title() }}{% if not loop.last %}, {% endif %}
+                {% endfor %}<br>
             <strong>Details:</strong> {{ item.details }}<br>
-            <strong>Exchange:</strong> {{ item.usd_to_jpy_rate }}<br>
           </td>
         </tr>
       {% endfor %}
