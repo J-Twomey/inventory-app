@@ -42,8 +42,14 @@
     <option value="INDONESIAN">Indonesian</option>
   </select><br><br>
 
-  <label>Qualifiers (comma-separated):</label>
-  <input type="text" name="qualifiers"><br><br>
+  <label>Qualifiers:</label><br>
+  {% for qualifier in qualifier_enum %}
+    <label>
+      <input type="checkbox" name="qualifiers" value="{{ qualifier.name }}">
+      {{ qualifier.name.replace('_', ' ').title() }}
+    </label><br>
+  {% endfor %}
+  <br><br>
 
   <label>Details:</label>
   <input type="text" name="details"><br><br>

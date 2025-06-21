@@ -184,7 +184,7 @@ class ItemCreateForm:
     set_name: str
     category: str
     language: str
-    qualifiers: str
+    qualifiers: list[str]
     details: str
     purchase_date: str
     purchase_price: str
@@ -214,7 +214,7 @@ class ItemCreateForm:
         set_name: Annotated[str, Form()],
         category: Annotated[str, Form()],
         language: Annotated[str, Form()],
-        qualifiers: Annotated[str, Form()],
+        qualifiers: Annotated[list[str], Form()],
         details: Annotated[str, Form()],
         purchase_date: Annotated[str, Form()],
         purchase_price: Annotated[str, Form()],
@@ -281,7 +281,7 @@ class ItemCreateForm:
             set_name=self.set_name,
             category=parse_enum(self.category, Category, 'category'),
             language=parse_enum(self.language, Language, 'language'),
-            qualifiers=parse_to_qualifiers_list(self.qualifiers),
+            qualifiers=parse_to_qualifiers_list_new(self.qualifiers),
             details=parse_nullable_string(self.details),
             purchase_date=purchase_date_,
             purchase_price=int(self.purchase_price),
@@ -678,6 +678,13 @@ def parse_to_qualifiers_list(values: str | None) -> list[Qualifier]:
         return []
     else:
         return [Qualifier[x.strip()] for x in values.split(',') if x.strip()]
+
+
+def parse_to_qualifiers_list_new(values: list[str] | None) -> list[Qualifier]:
+    if values is None:
+        return []
+    else:
+        return [Qualifier[x] for x in values]
 
 
 def parse_to_dict(v: str) -> dict[int, int]:

@@ -20,6 +20,7 @@ from .crud import (
     search_for_items,
 )
 from .database import get_db
+from .item_enums import Qualifier
 from .models import Item
 from .schemas import (
     ItemCreateForm,
@@ -76,7 +77,13 @@ def search_view_items(
 
 @router.get('/add')
 def show_add_form(request: Request) -> Response:
-    return templates.TemplateResponse('add_item.html', {'request': request})
+    return templates.TemplateResponse(
+        'add_item.html',
+        {
+            'request': request,
+            'qualifier_enum': Qualifier,
+        },
+    )
 
 
 @router.post('/add')
