@@ -2,12 +2,17 @@ import json
 from enum import Enum
 from typing import (
     Any,
+    cast,
     Generic,
     Type,
     TypeVar,
 )
 
-from sqlalchemy.types import TypeDecorator, TEXT
+from sqlalchemy.types import (
+    Integer,
+    TypeDecorator,
+    TEXT,
+)
 
 
 class Category(Enum):
@@ -98,7 +103,7 @@ class EnumList(TypeDecorator, Generic[E]):
     ) -> str | None:
         if value is None:
             return None
-        return json.dumps([v.name for v in value])
+        return json.dumps([v.value for v in value])
 
     def process_result_value(
             self,
@@ -107,5 +112,34 @@ class EnumList(TypeDecorator, Generic[E]):
     ) -> list[E] | None:
         if value is None:
             return None
-        names: list[str] = json.loads(value)
-        return [self.enum_class[name] for name in names]
+        raw: list[int] = json.loads(value)
+        return [self.enum_class(v) for v in raw]
+
+
+class IntEnum(TypeDecorator):
+    impl = Integer
+
+    def __init__(
+            self,
+            enum_class: Type[E],
+    ) -> None:
+        self.enum_class = enum_class
+        super().__init__()
+
+    def process_bind_param(
+            self,
+            value: E | None,
+            dialect: Any,
+    ) -> int | None:
+        if value is None:
+            return None
+        return cast(int, value.value)
+
+    def process_result_value(
+            self,
+            value: int | None,
+            dialect: Any,
+    ) -> E | None:
+        if value is None:
+            return None
+        return cast(E, self.enum_class(value))

@@ -77,8 +77,10 @@ def search_for_items(
             continue
 
         if field == 'qualifiers':
-            for qualifier in value:
-                filters.append(Item.qualifiers.contains([qualifier]))
+            enum_values = [q.value for q in value]
+
+            for val in enum_values:
+                filters.append(Item.qualifiers.contains([val]))
         elif field == 'submission_number':
             filters.append(Item.submission_number.overlap(value))
         else:

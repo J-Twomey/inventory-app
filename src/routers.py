@@ -52,6 +52,7 @@ def view_items(
         {
             'request': request,
             'items': items,
+            'qualifier_enum': Qualifier,
             'form_data': {},
         },
     )
@@ -116,7 +117,14 @@ def open_edit_form(
     item = db.query(Item).filter(Item.id == item_id).first()
     if item is None:
         raise HTTPException(status_code=404, detail='Item not found')
-    return templates.TemplateResponse('edit_item.html', {'request': request, 'item': item})
+    return templates.TemplateResponse(
+        'edit_item.html',
+        {
+            'request': request,
+            'item': item,
+            'qualifier_enum': Qualifier,
+        },
+    )
 
 
 @router.post('/edit/{item_id}')

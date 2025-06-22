@@ -1,5 +1,8 @@
 import json
-from dataclasses import dataclass
+from dataclasses import (
+    dataclass,
+    field,
+)
 
 from datetime import (
     date,
@@ -184,7 +187,6 @@ class ItemCreateForm:
     set_name: str
     category: str
     language: str
-    qualifiers: list[str]
     details: str
     purchase_date: str
     purchase_price: str
@@ -204,8 +206,9 @@ class ItemCreateForm:
     sale_fee: str
     usd_to_jpy_rate: str
     object_variant: str
-    group_discount: str | bool | None = None
-    audit_target: str | bool | None = None
+    group_discount: bool
+    audit_target: bool
+    qualifiers: list[str] = field(default_factory=list)
 
     @classmethod
     def as_form(
@@ -214,7 +217,6 @@ class ItemCreateForm:
         set_name: Annotated[str, Form()],
         category: Annotated[str, Form()],
         language: Annotated[str, Form()],
-        qualifiers: Annotated[list[str], Form()],
         details: Annotated[str, Form()],
         purchase_date: Annotated[str, Form()],
         purchase_price: Annotated[str, Form()],
@@ -234,6 +236,7 @@ class ItemCreateForm:
         sale_fee: Annotated[str, Form()],
         usd_to_jpy_rate: Annotated[str, Form()],
         object_variant: Annotated[str, Form()],
+        qualifiers: Annotated[list[str], Form(default_factory=list)],
         group_discount: Annotated[bool, Form()] = False,
         audit_target: Annotated[bool, Form()] = False,
     ) -> 'ItemCreateForm':
@@ -300,9 +303,9 @@ class ItemCreateForm:
             shipping=parse_nullable_float(self.shipping),
             sale_fee=parse_nullable_float(self.sale_fee),
             usd_to_jpy_rate=parse_nullable_float(self.usd_to_jpy_rate),
-            group_discount=parse_bool(self.group_discount),
+            group_discount=self.group_discount,
             object_variant=parse_enum(self.object_variant, ObjectVariant, 'object_variant'),
-            audit_target=parse_bool(self.audit_target),
+            audit_target=self.audit_target,
         )
 
 
@@ -512,7 +515,7 @@ class ItemSearchForm:
     set_name: str | None = None
     category: str | None = None
     language: str | None = None
-    qualifiers: str | None = None
+    qualifiers: list[str] | None = None
     details: str | None = None
     purchase_date: str | None = None
     purchase_price: str | None = None
@@ -541,7 +544,7 @@ class ItemSearchForm:
         set_name: Annotated[str, Form()],
         category: Annotated[str, Form()],
         language: Annotated[str, Form()],
-        qualifiers: Annotated[str, Form()],
+        qualifiers: Annotated[list[str], Form()],
         details: Annotated[str, Form()],
         purchase_date: Annotated[str, Form()],
         purchase_price: Annotated[str, Form()],
@@ -609,7 +612,7 @@ class ItemSearchForm:
             set_name=parse_nullable_string(self.set_name),
             category=parse_nullable_enum(self.category, Category, 'category'),
             language=parse_nullable_enum(self.language, Language, 'language'),
-            qualifiers=parse_to_qualifiers_list(self.qualifiers),
+            qualifiers=parse_to_qualifiers_list_new(self.qualifiers),
             details=parse_nullable_string(self.details),
             purchase_date=purchase_date_,
             purchase_price=parse_nullable_int(self.purchase_price),
@@ -684,7 +687,7 @@ def parse_to_qualifiers_list_new(values: list[str] | None) -> list[Qualifier]:
     if values is None:
         return []
     else:
-        return [Qualifier[x] for x in values]
+        return [Qualifier[x.upper()] for x in values]
 
 
 def parse_to_dict(v: str) -> dict[int, int]:
@@ -725,13 +728,6 @@ def parse_nullable_int(v: str | None) -> int | None:
         return None
     else:
         return int(v)
-
-
-def parse_bool(v: str | bool | None) -> bool:
-    if v == 'on':
-        return True
-    else:
-        return False
 
 
 def parse_nullable_bool(v: str | bool | None) -> bool | None:

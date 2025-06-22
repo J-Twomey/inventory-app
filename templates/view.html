@@ -16,7 +16,16 @@
   <input type="text" name="set_name" placeholder="Set Name" value="{{ form_data.set_name if form_data else '' }}">
   <input type="text" name="category" placeholder="Category" value="{{ form_data.category if form_data else '' }}">
   <input type="text" name="language" placeholder="Language" value="{{ form_data.language if form_data else '' }}">
-  <input type="text" name="qualifiers" placeholder="Qualifiers (comma-separated)" value="{{ ','.join(form_data.qualifiers) if form_data and form_data.qualifiers else '' }}">
+
+  <label>Qualifiers:</label><br>
+  {% for qualifier in qualifier_enum %}
+    <label>
+      <input type="checkbox" name="qualifiers" value="{{ qualifier.name }}" {% if form_data and qualifier.name in form_data.qualifiers %}checked{% endif %}>
+      {{ qualifier.name.replace('_', ' ').title() }}
+    </label><br>
+  {% endfor %}
+  <br><br>
+
   <input type="text" name="details" placeholder="Details" value="{{ form_data.details if form_data else '' }}">
   <input type="date" name="purchase_date" placeholder="Purchase Date" value="{{ form_data.purchase_date if form_data else '' }}">
   <input type="number" name="purchase_price" placeholder="Purchase Price" value="{{ form_data.purchase_price if form_data else '' }}">
@@ -42,7 +51,7 @@
   <input type="number" name="total_cost" placeholder="Total Cost" value="{{ form_data.total_cost if form_data else '' }}">
   <input type="number" name="return_jpy" placeholder="Return JPY" value="{{ form_data.return_jpy if form_data else '' }}">
   <input type="number" name="net_jpy" placeholder="Net JPY" value="{{ form_data.net_jpy if form_data else '' }}">
-    <input type="number" name="net_percent" placeholder="Net %" value="{{ form_data.net_percent if form_data else '' }}">
+  <input type="number" name="net_percent" placeholder="Net %" value="{{ form_data.net_percent if form_data else '' }}">
 
   <button type="submit">Search</button>
 </form>

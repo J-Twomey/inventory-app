@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 import src.crud as crud
 import src.item_enums as item_enums
+import src.models as models
 import src.schemas as schemas
 from .conftest import ItemFactory
 
@@ -15,7 +16,8 @@ def test_create_item_all_nullables_none(
 ) -> None:
     item = item_factory.get()
     db_item = crud.create_item(db_session, item)
-    assert db_item.id is not None
+    item_from_db = db_session.query(models.Item).first()
+    assert db_item.id is not None and db_item == item_from_db
     assert db_item.name == 'TESTER'
 
 
@@ -41,9 +43,24 @@ def test_create_item_all_nullables_provided(
         usd_to_jpy_rate=150.0,
     )
     db_item = crud.create_item(db_session, item)
-    assert db_item.id is not None
+    item_from_db = db_session.query(models.Item).first()
+    assert db_item.id is not None and db_item == item_from_db
     assert db_item.name == 'TESTER'
     assert db_item.grading_fee_total == 999
+
+
+def test_create_item_multiple_qualifiers(
+        db_session: Session,
+        item_factory: ItemFactory,
+) -> None:
+    input_qualifiers = [item_enums.Qualifier.REVERSE_HOLO, item_enums.Qualifier.CRYSTAL]
+    item = item_factory.get(
+        qualifiers=input_qualifiers,
+    )
+    db_item = crud.create_item(db_session, item)
+    item_from_db = db_session.query(models.Item).first()
+    assert db_item.id is not None and db_item == item_from_db
+    assert db_item.qualifiers == input_qualifiers
 
 
 def test_get_item_returns_correct_item(
@@ -238,7 +255,7 @@ def test_search_for_items_multiple_search_criteria(
 
 
 @pytest.mark.xfail
-def test_search_for_items_qualifiers_union_search(
+def test_search_for_items_multiple_qualifiers(
         db_session: Session,
         item_factory: ItemFactory,
 ) -> None:
@@ -252,10 +269,7 @@ def test_search_for_items_qualifiers_union_search(
     items = [item_factory.get(qualifiers=q) for q in item_qualifiers]
     for item in items:
         crud.create_item(db_session, item)
-    search_params = schemas.ItemSearchForm(qualifiers='[NON_HOLO, CRYSTAL]').to_item_search()
+    search_params = schemas.ItemSearchForm(qualifiers=['NON_HOLO', 'CRYSTAL']).to_item_search()
     result = crud.search_for_items(db_session, search_params)
-    assert len(result) == 3
-    # assert all(
-    #     (item_enums.Qualifier.NON_HOLO in r.qualifiers) or
-    #     (item_enums.Qualifier.CRYSTAL in r.qualifiers) for r in result
-    # )
+    assert len(result) == 1
+    assert result[0].qualifiers == [item_enums.Qualifier.NON_HOLO, item_enums.Qualifier.CRYSTAL]

@@ -5,7 +5,6 @@ from sqlalchemy import (
     case,
     cast,
     Date,
-    Enum as SQLAlchemyEnum,
     Float,
     func,
     Integer,
@@ -27,6 +26,7 @@ from .database import Base
 from .item_enums import (
     Category,
     EnumList,
+    IntEnum,
     Language,
     Qualifier,
     Status,
@@ -60,22 +60,22 @@ class Item(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String)
     set_name: Mapped[str] = mapped_column(String)
-    category: Mapped[Category] = mapped_column(SQLAlchemyEnum(Category))
-    language: Mapped[Language] = mapped_column(SQLAlchemyEnum(Language))
+    category: Mapped[Category] = mapped_column(IntEnum(Category))
+    language: Mapped[Language] = mapped_column(IntEnum(Language))
     qualifiers: Mapped[list[Qualifier] | None] = mapped_column(EnumList(Qualifier))
     details: Mapped[str | None] = mapped_column(String, nullable=True)
     purchase_date: Mapped[date] = mapped_column(Date)
     purchase_price: Mapped[int] = mapped_column(Integer)
-    status: Mapped[Status] = mapped_column(SQLAlchemyEnum(Status))
-    intent: Mapped[Intent] = mapped_column(SQLAlchemyEnum(Intent))
+    status: Mapped[Status] = mapped_column(IntEnum(Status))
+    intent: Mapped[Intent] = mapped_column(IntEnum(Intent))
     grading_fee: Mapped[dict[int, int]] = mapped_column(JSON)
     grading_fee_total: Mapped[int] = mapped_column(Integer)
     grade: NullableFloat = NullableFloatColumn()
-    grading_company: Mapped[GradingCompany] = mapped_column(SQLAlchemyEnum(GradingCompany))
+    grading_company: Mapped[GradingCompany] = mapped_column(IntEnum(GradingCompany))
     cert: NullableInt = NullableIntColumn()
     submission_number: Mapped[list[int]] = mapped_column(JSON)
     list_price: NullableFloat = NullableFloatColumn()
-    list_type: Mapped[ListingType] = mapped_column(SQLAlchemyEnum(ListingType))
+    list_type: Mapped[ListingType] = mapped_column(IntEnum(ListingType))
     list_date: NullableDate = NullableDateColumn()
     sale_total: NullableFloat = NullableFloatColumn()
     sale_date: NullableDate = NullableDateColumn()
@@ -83,7 +83,7 @@ class Item(Base):
     sale_fee: NullableFloat = NullableFloatColumn()
     usd_to_jpy_rate: NullableFloat = NullableFloatColumn()
     group_discount: Mapped[bool] = mapped_column(Boolean)
-    object_variant: Mapped[ObjectVariant] = mapped_column(SQLAlchemyEnum(ObjectVariant))
+    object_variant: Mapped[ObjectVariant] = mapped_column(IntEnum(ObjectVariant))
     audit_target: Mapped[bool] = mapped_column(Boolean)
 
     @hybrid_property

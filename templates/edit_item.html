@@ -48,8 +48,20 @@
     <option value="INDONESIAN">Indonesian</option>
   </select><br><br>
 
-  <label>Qualifiers (comma-separated):</label>
-  <input type="text" name="qualifiers" value="{{ item.qualifiers }}"><br><br>
+  <label>Qualifiers:</label><br>
+  {% if item %}
+    {% set selected_qualifiers = item.qualifiers | list %}
+  {% else %}
+    {% set selected_qualifiers = [] %}
+  {% endif %}
+
+  {% for qualifier in qualifier_enum %}
+    <label>
+      <input type="checkbox" name="qualifiers" value="{{ qualifier.name }}" {% if item and qualifier in selected_qualifiers %}checked{% endif %}>
+      {{ qualifier.name.replace('_', ' ').title() }}
+    </label><br>
+  {% endfor %}
+  <br><br>
 
   <label>Details:</label>
   <input type="text" name="details" value="{{ item.details }}"><br><br>
@@ -95,8 +107,8 @@
   <label>Cert #:</label>
   <input type="number" name="cert" value="{{ item.cert }}"><br><br>
 
-  <label>Submission Numbers (comma-separated):</label>
-  <input type="text" name="submission_number" value="{{ item.submission_number }}"><br><br>
+  <label>Submission Numbers:</label>
+  <input type="text" name="submission_number" value="{{ item.submission_number | join(', ') }}"><br><br>
 
   <label>List Price:</label>
   <input type="number" name="list_price" step="any" value="{{ item.list_price }}"><br><br>
