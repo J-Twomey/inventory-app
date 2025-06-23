@@ -88,6 +88,7 @@ E = TypeVar('E', bound=Enum)
 
 class EnumList(TypeDecorator, Generic[E]):
     impl = TEXT
+    cache_ok = True
 
     def __init__(
             self,
@@ -118,6 +119,7 @@ class EnumList(TypeDecorator, Generic[E]):
 
 class IntEnum(TypeDecorator):
     impl = Integer
+    cache_ok = True
 
     def __init__(
             self,
