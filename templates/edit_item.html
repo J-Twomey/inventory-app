@@ -107,9 +107,6 @@
   <label>Cert #:</label>
   <input type="number" name="cert" value="{{ item.cert }}"><br><br>
 
-  <label>Submission Numbers:</label>
-  <input type="text" name="submission_number" value="{{ item.submission_number | join(', ') }}"><br><br>
-
   <label>List Price:</label>
   <input type="number" name="list_price" step="any" value="{{ item.list_price }}"><br><br>
 
@@ -139,7 +136,7 @@
   <input type="number" name="usd_to_jpy_rate" step="any" value="{{ item.usd_to_jpy_rate }}"><br><br>
 
   <label>Group Discount:</label>
-  <input type="checkbox" name="group_discount" value="{{ item.group_discount }}"><br><br>
+  <input type="checkbox" name="group_discount" {% if item.group_discount %}checked{% endif %}><br><br>
 
   <label>Object Variant:</label>
   <select name="object_variant"  value="{{ item.object_variant }}">
@@ -149,7 +146,8 @@
   </select><br><br>
 
   <label>Audit Target:</label>
-  <input type="checkbox" name="audit_target" value="{{ item.audit_target }}"><br><br>
+  <input type="checkbox" name="audit_target" {% if item.audit_target %}checked{% endif %}><br><br>
+
   <button type="submit">Save Changes</button>
 </form>
 

@@ -16,7 +16,10 @@ from typing import (
     TypeVar,
 )
 
-from fastapi import Form
+from fastapi import (
+    Form,
+    Query,
+)
 from pydantic import (
     BaseModel,
     computed_field,
@@ -57,7 +60,6 @@ class ItemBase(BaseModel):
     grade: Annotated[float | None, Form()] = None
     grading_company: Annotated[GradingCompany, Form()]
     cert: Annotated[int | None, Form()] = None
-    submission_number: Annotated[list[int], Form(default_factory=list)]
     list_price: Annotated[float | None, Form()] = None
     list_type: Annotated[ListingType, Form()]
     list_date: Annotated[date | None, Form()] = None
@@ -74,6 +76,11 @@ class ItemBase(BaseModel):
     @property
     def grading_fee_total(self) -> int:
         return sum(self.grading_fee.values())
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def submission_numbers(self) -> list[int]:
+        return list(self.grading_fee)
 
     @computed_field  # type: ignore[prop-decorator]
     @property
@@ -132,7 +139,6 @@ class ItemBase(BaseModel):
         if info.field_name in {
             'qualifiers',
             'grading_fee',
-            'submission_number',
             'group_discount',
             'audit_target',
         }:
@@ -140,15 +146,6 @@ class ItemBase(BaseModel):
         if v == '':
             return None
         return v
-
-    @field_validator('submission_number', mode='before')
-    @classmethod
-    def parse_submission_numbers(cls, v: Any) -> list[int]:
-        if isinstance(v, str):
-            return [int(x.strip()) for x in v.split(',') if x.strip()]
-        elif isinstance(v, list) and all(isinstance(x, int) for x in v):
-            return v
-        raise ValueError('submission_number must be provided as str or list[int]')
 
     @field_validator('qualifiers', mode='before')
     @classmethod
@@ -196,7 +193,6 @@ class ItemCreateForm:
     grade: str
     grading_company: str
     cert: str
-    submission_number: str
     list_price: str
     list_type: str
     list_date: str
@@ -226,7 +222,6 @@ class ItemCreateForm:
         grade: Annotated[str, Form()],
         grading_company: Annotated[str, Form()],
         cert: Annotated[str, Form()],
-        submission_number: Annotated[str, Form()],
         list_price: Annotated[str, Form()],
         list_type: Annotated[str, Form()],
         list_date: Annotated[str, Form()],
@@ -255,7 +250,6 @@ class ItemCreateForm:
             grade=grade,
             grading_company=grading_company,
             cert=cert,
-            submission_number=submission_number,
             list_price=list_price,
             list_type=list_type,
             list_date=list_date,
@@ -294,7 +288,6 @@ class ItemCreateForm:
             grade=parse_nullable_float(self.grade),
             grading_company=parse_enum(self.grading_company, GradingCompany, 'grading_company'),
             cert=parse_nullable_int(self.cert),
-            submission_number=parse_to_int_list(self.submission_number),
             list_price=parse_nullable_float(self.list_price),
             list_type=parse_enum(self.list_type, ListingType, 'list_type'),
             list_date=list_date_,
@@ -312,32 +305,31 @@ class ItemCreateForm:
 class ItemUpdate(BaseModel):
     model_config = ConfigDict(extra='forbid')
 
-    name: Annotated[str | None, Form(None)] = None
-    set_name: Annotated[str | None, Form(None)] = None
-    category: Annotated[Category | None, Form(None)] = None
-    language: Annotated[Language | None, Form(None)] = None
-    qualifiers: Annotated[list[Qualifier] | None, Form(None)] = None
-    details: Annotated[str | None, Form(None)] = None
-    purchase_date: Annotated[date | None, Form(None)] = None
-    purchase_price: Annotated[int | None, Form(None)] = None
-    status: Annotated[Status | None, Form(None)] = None
-    intent: Annotated[Intent | None, Form(None)] = None
-    grading_fee: Annotated[dict[int, int] | None, Form(None)] = None
-    grade: Annotated[float | None, Form(None)] = None
-    grading_company: Annotated[GradingCompany | None, Form(None)] = None
-    cert: Annotated[int | None, Form(None)] = None
-    submission_number: Annotated[list[int] | None, Form(None)] = None
-    list_price: Annotated[float | None, Form(None)] = None
-    list_type: Annotated[ListingType | None, Form(None)] = None
-    list_date: Annotated[date | None, Form(None)] = None
-    sale_total: Annotated[float | None, Form(None)] = None
-    sale_date: Annotated[date | None, Form(None)] = None
-    shipping: Annotated[float | None, Form(None)] = None
-    sale_fee: Annotated[float | None, Form(None)] = None
-    usd_to_jpy: Annotated[float | None, Form(None)] = None
-    group_discount: Annotated[bool | None, Form(None)] = None
-    object_variant: Annotated[ObjectVariant | None, Form(None)] = None
-    audit_target: Annotated[bool | None, Form(None)] = None
+    name: Annotated[str | None, Form()] = None
+    set_name: Annotated[str | None, Form()] = None
+    category: Annotated[Category | None, Form()] = None
+    language: Annotated[Language | None, Form()] = None
+    qualifiers: Annotated[list[Qualifier] | None, Form()] = None
+    details: Annotated[str | None, Form()] = None
+    purchase_date: Annotated[date | None, Form()] = None
+    purchase_price: Annotated[int | None, Form()] = None
+    status: Annotated[Status | None, Form()] = None
+    intent: Annotated[Intent | None, Form()] = None
+    grading_fee: Annotated[dict[int, int] | None, Form()] = None
+    grade: Annotated[float | None, Form()] = None
+    grading_company: Annotated[GradingCompany | None, Form()] = None
+    cert: Annotated[int | None, Form()] = None
+    list_price: Annotated[float | None, Form()] = None
+    list_type: Annotated[ListingType | None, Form()] = None
+    list_date: Annotated[date | None, Form()] = None
+    sale_total: Annotated[float | None, Form()] = None
+    sale_date: Annotated[date | None, Form()] = None
+    shipping: Annotated[float | None, Form()] = None
+    sale_fee: Annotated[float | None, Form()] = None
+    usd_to_jpy: Annotated[float | None, Form()] = None
+    group_discount: Annotated[bool, Form()] = False
+    object_variant: Annotated[ObjectVariant | None, Form()] = None
+    audit_target: Annotated[bool, Form()] = False
 
 
 @dataclass
@@ -356,7 +348,6 @@ class ItemUpdateForm:
     grade: str | None = None
     grading_company: str | None = None
     cert: str | None = None
-    submission_number: str | None = None
     list_price: str | None = None
     list_type: str | None = None
     list_date: str | None = None
@@ -365,9 +356,9 @@ class ItemUpdateForm:
     shipping: str | None = None
     sale_fee: str | None = None
     usd_to_jpy: str | None = None
-    group_discount: str | bool | None = None
+    group_discount: bool = False
     object_variant: str | None = None
-    audit_target: str | bool | None = None
+    audit_target: bool = False
 
     @classmethod
     def as_form(
@@ -386,7 +377,6 @@ class ItemUpdateForm:
         grade: Annotated[str | None, Form()] = None,
         grading_company: Annotated[str | None, Form()] = None,
         cert: Annotated[str | None, Form()] = None,
-        submission_number: Annotated[str | None, Form()] = None,
         list_price: Annotated[str | None, Form()] = None,
         list_type: Annotated[str | None, Form()] = None,
         list_date: Annotated[str | None, Form()] = None,
@@ -396,8 +386,8 @@ class ItemUpdateForm:
         sale_fee: Annotated[str | None, Form()] = None,
         usd_to_jpy: Annotated[str | None, Form()] = None,
         object_variant: Annotated[str | None, Form()] = None,
-        group_discount: Annotated[bool | None, Form()] = None,
-        audit_target: Annotated[bool | None, Form()] = None,
+        group_discount: Annotated[bool, Form()] = False,
+        audit_target: Annotated[bool, Form()] = False,
     ) -> 'ItemUpdateForm':
         return cls(
             name=name,
@@ -414,7 +404,6 @@ class ItemUpdateForm:
             grade=grade,
             grading_company=grading_company,
             cert=cert,
-            submission_number=submission_number,
             list_price=list_price,
             list_type=list_type,
             list_date=list_date,
@@ -456,7 +445,6 @@ class ItemUpdateForm:
             parse_nullable_enum(self.grading_company, GradingCompany, 'grading_company'),
         )
         set_if_value(update_vals, 'cert', parse_nullable_int(self.cert))
-        set_if_value(update_vals, 'submission_number', parse_to_int_list(self.submission_number))
         set_if_value(update_vals, 'list_price', parse_nullable_float(self.list_price))
         set_if_value(
             update_vals,
@@ -469,44 +457,43 @@ class ItemUpdateForm:
         set_if_value(update_vals, 'shipping', parse_nullable_float(self.shipping))
         set_if_value(update_vals, 'sale_fee', parse_nullable_float(self.sale_fee))
         set_if_value(update_vals, 'usd_to_jpy', parse_nullable_float(self.usd_to_jpy))
-        set_if_value(update_vals, 'group_discount', parse_nullable_bool(self.group_discount))
+        set_if_value(update_vals, 'group_discount', self.group_discount)
         set_if_value(
             update_vals,
             'object_variant',
             parse_nullable_enum(self.object_variant, ObjectVariant, 'object_variant'),
         )
-        set_if_value(update_vals, 'audit_target', parse_nullable_bool(self.audit_target))
+        set_if_value(update_vals, 'audit_target', self.audit_target)
         return ItemUpdate(**update_vals)
 
 
 class ItemSearch(BaseModel):
     model_config = ConfigDict(extra='forbid')
 
-    name: Annotated[str | None, Form(None)] = None
-    set_name: Annotated[str | None, Form(None)] = None
-    category: Annotated[Category | None, Form(None)] = None
-    language: Annotated[Language | None, Form(None)] = None
-    qualifiers: Annotated[list[Qualifier], Form(default_factory=list)]
-    details: Annotated[str | None, Form(None)] = None
-    purchase_date: Annotated[date | None, Form(None)] = None
-    purchase_price: Annotated[int | None, Form(None)] = None
-    status: Annotated[Status | None, Form(None)] = None
-    intent: Annotated[Intent | None, Form(None)] = None
-    grade: Annotated[float | None, Form(None)] = None
-    grading_company: Annotated[GradingCompany | None, Form(None)] = None
-    cert: Annotated[int | None, Form(None)] = None
-    submission_number: Annotated[list[int], Form(default_factory=list)]
-    list_type: Annotated[ListingType | None, Form(None)] = None
-    list_date: Annotated[date | None, Form(None)] = None
-    sale_total: Annotated[float | None, Form(None)] = None
-    sale_date: Annotated[date | None, Form(None)] = None
-    group_discount: Annotated[bool | None, Form(None)] = None
-    object_variant: Annotated[ObjectVariant | None, Form(None)] = None
-    audit_target: Annotated[bool | None, Form(None)] = None
-    total_cost: Annotated[int | None, Form(None)] = None
-    return_jpy: Annotated[int | None, Form(None)] = None
-    net_jpy: Annotated[int | None, Form(None)] = None
-    net_percent: Annotated[float | None, Form(None)] = None
+    name: Annotated[str | None, Form()] = None
+    set_name: Annotated[str | None, Form()] = None
+    category: Annotated[Category | None, Form()] = None
+    language: Annotated[Language | None, Form()] = None
+    qualifiers: Annotated[list[Qualifier], Form()] = []
+    details: Annotated[str | None, Form()] = None
+    purchase_date: Annotated[date | None, Form()] = None
+    purchase_price: Annotated[int | None, Form()] = None
+    status: Annotated[Status | None, Form()] = None
+    intent: Annotated[Intent | None, Form()] = None
+    grade: Annotated[float | None, Form()] = None
+    grading_company: Annotated[GradingCompany | None, Form()] = None
+    cert: Annotated[int | None, Form()] = None
+    list_type: Annotated[ListingType | None, Form()] = None
+    list_date: Annotated[date | None, Form()] = None
+    sale_total: Annotated[float | None, Form()] = None
+    sale_date: Annotated[date | None, Form()] = None
+    group_discount: Annotated[bool | None, Form()] = None
+    object_variant: Annotated[ObjectVariant | None, Form()] = None
+    audit_target: Annotated[bool | None, Form()] = None
+    total_cost: Annotated[int | None, Form()] = None
+    return_jpy: Annotated[int | None, Form()] = None
+    net_jpy: Annotated[int | None, Form()] = None
+    net_percent: Annotated[float | None, Form()] = None
 
 
 @dataclass
@@ -524,47 +511,45 @@ class ItemSearchForm:
     grade: str | None = None
     grading_company: str | None = None
     cert: str | None = None
-    submission_number: str | None = None
     list_type: str | None = None
     list_date: str | None = None
     sale_total: str | None = None
     sale_date: str | None = None
-    group_discount: str | bool | None = None
+    group_discount: str | None = None
     object_variant: str | None = None
-    audit_target: str | bool | None = None
+    audit_target: str | None = None
     total_cost: str | None = None
     return_jpy: str | None = None
     net_jpy: str | None = None
     net_percent: str | None = None
 
     @classmethod
-    def as_form(
+    def as_query(
         cls,
-        name: Annotated[str, Form()],
-        set_name: Annotated[str, Form()],
-        category: Annotated[str, Form()],
-        language: Annotated[str, Form()],
-        qualifiers: Annotated[list[str], Form()],
-        details: Annotated[str, Form()],
-        purchase_date: Annotated[str, Form()],
-        purchase_price: Annotated[str, Form()],
-        status: Annotated[str, Form()],
-        intent: Annotated[str, Form()],
-        grade: Annotated[str, Form()],
-        grading_company: Annotated[str, Form()],
-        cert: Annotated[str, Form()],
-        submission_number: Annotated[str, Form()],
-        list_type: Annotated[str, Form()],
-        list_date: Annotated[str, Form()],
-        sale_total: Annotated[str, Form()],
-        sale_date: Annotated[str, Form()],
-        object_variant: Annotated[str, Form()],
-        total_cost: Annotated[str, Form()],
-        return_jpy: Annotated[str, Form()],
-        net_jpy: Annotated[str, Form()],
-        net_percent: Annotated[str, Form()],
-        group_discount: Annotated[bool, Form()] = False,
-        audit_target: Annotated[bool, Form()] = False,
+        name: Annotated[str | None, Query()] = None,
+        set_name: Annotated[str | None, Query()] = None,
+        category: Annotated[str | None, Query()] = None,
+        language: Annotated[str | None, Query()] = None,
+        qualifiers: Annotated[list[str], Query()] = [],
+        details: Annotated[str | None, Query()] = None,
+        purchase_date: Annotated[str | None, Query()] = None,
+        purchase_price: Annotated[str | None, Query()] = None,
+        status: Annotated[str | None, Query()] = None,
+        intent: Annotated[str | None, Query()] = None,
+        grade: Annotated[str | None, Query()] = None,
+        grading_company: Annotated[str | None, Query()] = None,
+        cert: Annotated[str | None, Query()] = None,
+        list_type: Annotated[str | None, Query()] = None,
+        list_date: Annotated[str | None, Query()] = None,
+        sale_total: Annotated[str | None, Query()] = None,
+        sale_date: Annotated[str | None, Query()] = None,
+        object_variant: Annotated[str | None, Query()] = None,
+        total_cost: Annotated[str | None, Query()] = None,
+        return_jpy: Annotated[str | None, Query()] = None,
+        net_jpy: Annotated[str | None, Query()] = None,
+        net_percent: Annotated[str | None, Query()] = None,
+        group_discount: Annotated[str | None, Query()] = None,
+        audit_target: Annotated[str | None, Query()] = None,
     ) -> 'ItemSearchForm':
         return cls(
             name=name,
@@ -580,7 +565,6 @@ class ItemSearchForm:
             grade=grade,
             grading_company=grading_company,
             cert=cert,
-            submission_number=submission_number,
             list_type=list_type,
             list_date=list_date,
             sale_total=sale_total,
@@ -625,7 +609,6 @@ class ItemSearchForm:
                 'grading_company',
             ),
             cert=parse_nullable_int(self.cert),
-            submission_number=parse_to_int_list(self.submission_number),
             list_type=parse_nullable_enum(self.list_type, ListingType, 'list_type'),
             list_date=list_date_,
             sale_total=parse_nullable_float(self.sale_total),
@@ -667,13 +650,6 @@ def parse_nullable_enum(
             return enum_cls[value.upper()]
         except KeyError:
             raise ValueError(f'Invalid {enum_name}: {value}')
-
-
-def parse_to_int_list(values: str | None) -> list[int]:
-    if values is None:
-        return []
-    else:
-        return [int(x.strip()) for x in values.split(',') if x.strip()]
 
 
 def parse_to_qualifiers_list(values: str | None) -> list[Qualifier]:
@@ -730,11 +706,11 @@ def parse_nullable_int(v: str | None) -> int | None:
         return int(v)
 
 
-def parse_nullable_bool(v: str | bool | None) -> bool | None:
-    if v == 'on':
-        return True
-    elif v == '':
+def parse_nullable_bool(v: str | None) -> bool | None:
+    if v is None or v == '':
         return None
+    elif v.lower() == 'true':
+        return True
     else:
         return False
 

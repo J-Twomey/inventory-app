@@ -42,36 +42,26 @@ def read_root(request: Request) -> Response:
 def view_items(
         request: Request,
         db: Session = Depends(get_db),
+        search_form: ItemSearchForm = Depends(ItemSearchForm.as_query),
         show_limit: int = 20,
 ) -> Response:
-    items = get_newest_items(db, skip=0, limit=show_limit)
-    items = db.query(Item).order_by(Item.id.desc()).limit(show_limit).all()
-    items = list(reversed(items))
+    search_data = search_form.to_item_search()
+    search_values = {
+        k: v for k, v in search_data.model_dump(exclude_none=True).items()
+        if not (isinstance(v, list) and not v)
+    }
+    if not search_values:
+        items = get_newest_items(db, skip=0, limit=show_limit)
+    else:
+        items = search_for_items(db, search_data)
+        items = items[:show_limit]
     return templates.TemplateResponse(
         'view.html',
         {
             'request': request,
             'items': items,
             'qualifier_enum': Qualifier,
-            'form_data': {},
-        },
-    )
-
-
-@router.post('/view', response_class=HTMLResponse)
-def search_view_items(
-        request: Request,
-        search_form: ItemSearchForm = Depends(ItemSearchForm.as_form),
-        db: Session = Depends(get_db),
-) -> Response:
-    search_params = search_form.to_item_search()
-    items = search_for_items(db, search_params)
-    return templates.TemplateResponse(
-        'view.html',
-        {
-            'request': request,
-            'items': items,
-            'form_data': search_params.model_dump(),
+            'form_data': search_form,
         },
     )
 

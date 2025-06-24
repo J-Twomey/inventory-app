@@ -82,7 +82,7 @@ def search_for_items(
             for val in enum_values:
                 filters.append(Item.qualifiers.contains([val]))
         elif field == 'submission_number':
-            filters.append(Item.submission_number.overlap(value))
+            raise NotImplementedError
         else:
             column = getattr(Item, field)
             filters.append(column == value)

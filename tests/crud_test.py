@@ -32,7 +32,6 @@ def test_create_item_all_nullables_provided(
         grade=10.,
         grading_company=item_enums.GradingCompany.PSA,
         cert=123456789,
-        submission_number=[1, 2],
         list_price=500.,
         list_type=item_enums.ListingType.FIXED,
         list_date=date(2025, 10, 10),

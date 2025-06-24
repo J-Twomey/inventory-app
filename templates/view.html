@@ -11,11 +11,11 @@
 
 <a href="/" class="btn btn-purple btn-small margin-bottom-20 inline">Back To Landing Page</a>
 
-<form method="post" action="/view">
-  <input type="text" name="name" placeholder="Name" value="{{ form_data.name if form_data else '' }}">
-  <input type="text" name="set_name" placeholder="Set Name" value="{{ form_data.set_name if form_data else '' }}">
-  <input type="text" name="category" placeholder="Category" value="{{ form_data.category if form_data else '' }}">
-  <input type="text" name="language" placeholder="Language" value="{{ form_data.language if form_data else '' }}">
+<form method="get" action="/view">
+  <input type="text" name="name" placeholder="Name" value="{{ form_data.name if form_data and form_data.name is not none else '' }}">
+  <input type="text" name="set_name" placeholder="Set Name" value="{{ form_data.set_name if form_data and form_data.set_name is not none else '' }}">
+  <input type="text" name="category" placeholder="Category" value="{{ form_data.category if form_data and form_data.category is not none else '' }}">
+  <input type="text" name="language" placeholder="Language" value="{{ form_data.language if form_data and form_data.language is not none else '' }}">
 
   <label>Qualifiers:</label><br>
   {% for qualifier in qualifier_enum %}
@@ -26,28 +26,35 @@
   {% endfor %}
   <br><br>
 
-  <input type="text" name="details" placeholder="Details" value="{{ form_data.details if form_data else '' }}">
+  <input type="text" name="details" placeholder="Details" value="{{ form_data.details if form_data and form_data.details is not none else '' }}">
   <input type="date" name="purchase_date" placeholder="Purchase Date" value="{{ form_data.purchase_date if form_data else '' }}">
   <input type="number" name="purchase_price" placeholder="Purchase Price" value="{{ form_data.purchase_price if form_data else '' }}">
-  <input type="text" name="status" placeholder="Status" value="{{ form_data.status if form_data else '' }}">
-  <input type="text" name="intent" placeholder="Intent" value="{{ form_data.intent if form_data else '' }}">
+  <input type="text" name="status" placeholder="Status" value="{{ form_data.status if form_data and form_data.status is not none else '' }}">
+  <input type="text" name="intent" placeholder="Intent" value="{{ form_data.intent if form_data and form_data.intent is not none else '' }}">
   <input type="number" step="any" name="grade" placeholder="Grade" value="{{ form_data.grade if form_data else '' }}">
-  <input type="text" name="grading_company" placeholder="Grading Company" value="{{ form_data.grading_company if form_data else '' }}">
+  <input type="text" name="grading_company" placeholder="Grading Company" value="{{ form_data.grading_company if form_data and form_data.grading_company is not none else '' }}">
   <input type="number" name="cert" placeholder="Cert #" value="{{ form_data.cert if form_data else '' }}">
-  <input type="text" name="submission_number" placeholder="Submission #s (comma-separated)" value="{{ ','.join(map(str, form_data.submission_number)) if form_data and form_data.submission_number else '' }}">
-  <input type="text" name="list_type" placeholder="List Type" value="{{ form_data.list_type if form_data else '' }}">
+  <input type="text" name="list_type" placeholder="List Type" value="{{ form_data.list_type if form_data and form_data.list_type is not none else '' }}">
   <input type="date" name="list_date" placeholder="List Date" value="{{ form_data.list_date if form_data else '' }}">
   <input type="number" step="any" name="sale_total" placeholder="Sale Total" value="{{ form_data.sale_total if form_data else '' }}">
   <input type="date" name="sale_date" placeholder="Sale Date" value="{{ form_data.sale_date if form_data else '' }}">
-  <label>
-    <input type="checkbox" name="group_discount" {% if form_data and form_data.group_discount %}checked{% endif %}>
-    Group Discount
-  </label>
-  <input type="text" name="object_variant" placeholder="Object Variant" value="{{ form_data.object_variant if form_data else '' }}">
-  <label>
-    <input type="checkbox" name="audit_target" {% if form_data and form_data.audit_target %}checked{% endif %}>
-    Audit Target
-  </label>
+
+  <label for="group_discount">Group Discount:</label>
+  <select name="group_discount" id="group_discount">
+    <option value="">Any</option>
+    <option value="true" {% if form_data and form_data.group_discount is true %}selected{% endif %}>True</option>
+    <option value="false" {% if form_data and form_data.group_discount is false %}selected{% endif %}>False</option>
+  </select>
+
+  <input type="text" name="object_variant" placeholder="Object Variant" value="{{ form_data.object_variant if form_data and form_data.object_variant is not none else '' }}">
+
+  <label for="audit_target">Audit Target:</label>
+  <select name="audit_target" id="audit_target">
+    <option value="">Any</option>
+    <option value="true" {% if form_data and form_data.audit_target is true %}selected{% endif %}>True</option>
+    <option value="false" {% if form_data and form_data.audit_target is false %}selected{% endif %}>False</option>
+  </select>
+
   <input type="number" name="total_cost" placeholder="Total Cost" value="{{ form_data.total_cost if form_data else '' }}">
   <input type="number" name="return_jpy" placeholder="Return JPY" value="{{ form_data.return_jpy if form_data else '' }}">
   <input type="number" name="net_jpy" placeholder="Net JPY" value="{{ form_data.net_jpy if form_data else '' }}">
