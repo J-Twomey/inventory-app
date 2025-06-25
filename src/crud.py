@@ -48,7 +48,7 @@ def get_newest_items(
         db: Session,
         skip: int = 0,
         limit: int = 100,
-) -> list[Item]:
+) -> Sequence[Item]:
     items = db.query(Item).order_by(Item.id.desc()).offset(skip).limit(limit).all()
     return list(reversed(items))
 
