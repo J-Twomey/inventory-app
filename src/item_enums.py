@@ -99,12 +99,20 @@ class EnumList(TypeDecorator, Generic[E]):
 
     def process_bind_param(
             self,
-            value: list[E] | None,
+            value: list[E] | list[int] | None,
             dialect: Any,
     ) -> str | None:
         if value is None:
             return None
-        return json.dumps([v.value for v in value])
+        int_representations = []
+        for v in value:
+            if isinstance(v, self.enum_class):
+                int_representations.append(v.value)
+            elif isinstance(v, int):
+                int_representations.append(v)
+            else:
+                raise ValueError(f'Expected {self.enum_class.__name__} or int, got {type(v)}')
+        return json.dumps(int_representations)
 
     def process_result_value(
             self,

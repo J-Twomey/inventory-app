@@ -72,15 +72,14 @@ def search_for_items(
     search_values = search_params.model_dump(exclude_unset=True)
 
     filters = []
+    post_filters = []
     for field, value in search_values.items():
         if value is None or value == []:
             continue
 
+        # Filter qualifiers after the sql search
         if field == 'qualifiers':
-            enum_values = [q.value for q in value]
-
-            for val in enum_values:
-                filters.append(Item.qualifiers.contains([val]))
+            post_filters.append(('qualifiers', value))
         elif field == 'submission_number':
             raise NotImplementedError
         else:
@@ -88,8 +87,17 @@ def search_for_items(
             filters.append(column == value)
 
     statement = select(Item).where(and_(*filters))
-    result = db.execute(statement)
-    return result.scalars().all()
+    results = db.execute(statement).scalars().all()
+
+    # Post filtering (for qualifiers)
+    for field, value in post_filters:
+        if field == 'qualifiers':
+            qualifier_values = [q for q in value]
+            results = [
+                item for item in results
+                if all(q in item.qualifiers for q in qualifier_values)
+            ]
+    return results
 
 
 def edit_item(
