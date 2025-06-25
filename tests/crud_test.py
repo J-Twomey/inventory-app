@@ -1,6 +1,5 @@
 from datetime import date
 
-import pytest
 from sqlalchemy.orm import Session
 
 import src.crud as crud
@@ -253,7 +252,6 @@ def test_search_for_items_multiple_search_criteria(
     )
 
 
-@pytest.mark.xfail
 def test_search_for_items_multiple_qualifiers(
         db_session: Session,
         item_factory: ItemFactory,

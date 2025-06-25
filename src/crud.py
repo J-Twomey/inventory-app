@@ -86,7 +86,9 @@ def search_for_items(
             column = getattr(Item, field)
             filters.append(column == value)
 
-    statement = select(Item).where(and_(*filters))
+    statement = select(Item)
+    if len(filters) > 0:
+        statement = statement.where(and_(*filters))
     results = db.execute(statement).scalars().all()
 
     # Post filtering (for qualifiers)
