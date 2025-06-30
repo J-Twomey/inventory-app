@@ -18,7 +18,7 @@ def create_item(
         db: Session,
         item: ItemCreate,
 ) -> Item:
-    item_data = item.model_dump(
+    item_data = item.to_model_kwargs(
         exclude={
             'grading_fee_total',
             'total_cost',

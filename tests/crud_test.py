@@ -247,7 +247,7 @@ def test_search_for_items_multiple_search_criteria(
         getattr(r, field_name) == fv for r, field_name, fv in zip(
             result,
             ('language', 'grading_company'),
-            (item_enums.Language.KOREAN, item_enums.GradingCompany.PSA),
+            (item_enums.Language.KOREAN.value, item_enums.GradingCompany.PSA.value),
         )
     )
 

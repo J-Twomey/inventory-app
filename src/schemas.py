@@ -44,33 +44,36 @@ T = TypeVar('T', bound=Enum)
 
 
 class ItemBase(BaseModel):
-    model_config = ConfigDict(extra='forbid')
+    model_config = ConfigDict(
+        extra='forbid',
+        from_attributes=True,
+    )
 
-    name: Annotated[str, Form()]
-    set_name: Annotated[str, Form()]
-    category: Annotated[Category, Form()]
-    language: Annotated[Language, Form()]
-    qualifiers: Annotated[list[Qualifier], Form(default_factory=list)]
-    details: Annotated[str | None, Form()] = None
-    purchase_date: Annotated[date, Form()]
-    purchase_price: Annotated[int, Form()]
-    status: Annotated[Status, Form()]
-    intent: Annotated[Intent, Form()]
-    grading_fee: Annotated[dict[int, int], Form(default_factory=dict)]
-    grade: Annotated[float | None, Form()] = None
-    grading_company: Annotated[GradingCompany, Form()]
-    cert: Annotated[int | None, Form()] = None
-    list_price: Annotated[float | None, Form()] = None
-    list_type: Annotated[ListingType, Form()]
-    list_date: Annotated[date | None, Form()] = None
-    sale_total: Annotated[float | None, Form()] = None
-    sale_date: Annotated[date | None, Form()] = None
-    shipping: Annotated[float | None, Form()] = None
-    sale_fee: Annotated[float | None, Form()] = None
-    usd_to_jpy_rate: Annotated[float | None, Form()] = None
-    group_discount: Annotated[bool, Form()] = False
-    object_variant: Annotated[ObjectVariant, Form()]
-    audit_target: Annotated[bool, Form()] = False
+    name: str
+    set_name: str
+    category: Category
+    language: Language
+    qualifiers: list[Qualifier]
+    details: str | None = None
+    purchase_date: date
+    purchase_price: int
+    status: Status
+    intent: Intent
+    grading_fee: dict[int, int]
+    grade: float | None = None
+    grading_company: GradingCompany
+    cert: int | None = None
+    list_price: float | None = None
+    list_type: ListingType
+    list_date: date | None = None
+    sale_total: float | None = None
+    sale_date: date | None = None
+    shipping: float | None = None
+    sale_fee: float | None = None
+    usd_to_jpy_rate: float | None = None
+    group_discount: bool = False
+    object_variant: ObjectVariant
+    audit_target: bool = False
 
     @computed_field  # type: ignore[prop-decorator]
     @property
@@ -175,7 +178,18 @@ class ItemBase(BaseModel):
 
 
 class ItemCreate(ItemBase):
-    pass
+    def to_model_kwargs(
+            self,
+            exclude: set[str] = set()) -> dict[str, Any]:
+        data = self.model_dump(exclude=exclude)
+        data['category'] = self.category.value
+        data['language'] = self.language.value
+        data['status'] = self.status.value
+        data['intent'] = self.intent.value
+        data['grading_company'] = self.grading_company.value
+        data['list_type'] = self.list_type.value
+        data['object_variant'] = self.object_variant.value
+        return data
 
 
 @dataclass
@@ -305,31 +319,31 @@ class ItemCreateForm:
 class ItemUpdate(BaseModel):
     model_config = ConfigDict(extra='forbid')
 
-    name: Annotated[str | None, Form()] = None
-    set_name: Annotated[str | None, Form()] = None
-    category: Annotated[Category | None, Form()] = None
-    language: Annotated[Language | None, Form()] = None
-    qualifiers: Annotated[list[Qualifier] | None, Form()] = None
-    details: Annotated[str | None, Form()] = None
-    purchase_date: Annotated[date | None, Form()] = None
-    purchase_price: Annotated[int | None, Form()] = None
-    status: Annotated[Status | None, Form()] = None
-    intent: Annotated[Intent | None, Form()] = None
-    grading_fee: Annotated[dict[int, int] | None, Form()] = None
-    grade: Annotated[float | None, Form()] = None
-    grading_company: Annotated[GradingCompany | None, Form()] = None
-    cert: Annotated[int | None, Form()] = None
-    list_price: Annotated[float | None, Form()] = None
-    list_type: Annotated[ListingType | None, Form()] = None
-    list_date: Annotated[date | None, Form()] = None
-    sale_total: Annotated[float | None, Form()] = None
-    sale_date: Annotated[date | None, Form()] = None
-    shipping: Annotated[float | None, Form()] = None
-    sale_fee: Annotated[float | None, Form()] = None
-    usd_to_jpy: Annotated[float | None, Form()] = None
-    group_discount: Annotated[bool, Form()] = False
-    object_variant: Annotated[ObjectVariant | None, Form()] = None
-    audit_target: Annotated[bool, Form()] = False
+    name: str | None = None
+    set_name: str | None = None
+    category: Category | None = None
+    language: Language | None = None
+    qualifiers: list[Qualifier] | None = None
+    details: str | None = None
+    purchase_date: date | None = None
+    purchase_price: int | None = None
+    status: Status | None = None
+    intent: Intent | None = None
+    grading_fee: dict[int, int] | None = None
+    grade: float | None = None
+    grading_company: GradingCompany | None = None
+    cert: int | None = None
+    list_price: float | None = None
+    list_type: ListingType | None = None
+    list_date: date | None = None
+    sale_total: float | None = None
+    sale_date: date | None = None
+    shipping: float | None = None
+    sale_fee: float | None = None
+    usd_to_jpy: float | None = None
+    group_discount: bool = False
+    object_variant: ObjectVariant | None = None
+    audit_target: bool = False
 
 
 @dataclass
@@ -472,23 +486,23 @@ class ItemSearch(BaseModel):
 
     name: Annotated[str | None, Form()] = None
     set_name: Annotated[str | None, Form()] = None
-    category: Annotated[Category | None, Form()] = None
-    language: Annotated[Language | None, Form()] = None
+    category: Annotated[int | None, Form()] = None
+    language: Annotated[int | None, Form()] = None
     qualifiers: Annotated[list[Qualifier], Form()] = []
     details: Annotated[str | None, Form()] = None
     purchase_date: Annotated[date | None, Form()] = None
     purchase_price: Annotated[int | None, Form()] = None
-    status: Annotated[Status | None, Form()] = None
-    intent: Annotated[Intent | None, Form()] = None
+    status: Annotated[int | None, Form()] = None
+    intent: Annotated[int | None, Form()] = None
     grade: Annotated[float | None, Form()] = None
-    grading_company: Annotated[GradingCompany | None, Form()] = None
+    grading_company: Annotated[int | None, Form()] = None
     cert: Annotated[int | None, Form()] = None
-    list_type: Annotated[ListingType | None, Form()] = None
+    list_type: Annotated[int | None, Form()] = None
     list_date: Annotated[date | None, Form()] = None
     sale_total: Annotated[float | None, Form()] = None
     sale_date: Annotated[date | None, Form()] = None
     group_discount: Annotated[bool | None, Form()] = None
-    object_variant: Annotated[ObjectVariant | None, Form()] = None
+    object_variant: Annotated[int | None, Form()] = None
     audit_target: Annotated[bool | None, Form()] = None
     total_cost: Annotated[int | None, Form()] = None
     return_jpy: Annotated[int | None, Form()] = None
@@ -594,37 +608,71 @@ class ItemSearchForm:
         return ItemSearch(
             name=parse_nullable_string(self.name),
             set_name=parse_nullable_string(self.set_name),
-            category=parse_nullable_enum(self.category, Category, 'category'),
-            language=parse_nullable_enum(self.language, Language, 'language'),
+            category=parse_enum_as_int(self.category, Category, 'category'),
+            language=parse_enum_as_int(self.language, Language, 'language'),
             qualifiers=parse_to_qualifiers_list_new(self.qualifiers),
             details=parse_nullable_string(self.details),
             purchase_date=purchase_date_,
             purchase_price=parse_nullable_int(self.purchase_price),
-            status=parse_nullable_enum(self.status, Status, 'status'),
-            intent=parse_nullable_enum(self.intent, Intent, 'intent'),
+            status=parse_enum_as_int(self.status, Status, 'status'),
+            intent=parse_enum_as_int(self.intent, Intent, 'intent'),
             grade=parse_nullable_float(self.grade),
-            grading_company=parse_nullable_enum(
+            grading_company=parse_enum_as_int(
                 self.grading_company,
                 GradingCompany,
                 'grading_company',
             ),
             cert=parse_nullable_int(self.cert),
-            list_type=parse_nullable_enum(self.list_type, ListingType, 'list_type'),
+            list_type=parse_enum_as_int(self.list_type, ListingType, 'listing_type'),
             list_date=list_date_,
             sale_total=parse_nullable_float(self.sale_total),
             sale_date=sale_date_,
             group_discount=parse_nullable_bool(self.group_discount),
-            object_variant=parse_nullable_enum(
-                self.object_variant,
-                ObjectVariant,
-                'object_variant',
-            ),
+            object_variant=parse_enum_as_int(self.object_variant, ObjectVariant, 'object_variant'),
             audit_target=parse_nullable_bool(self.audit_target),
             total_cost=parse_nullable_int(self.total_cost),
             return_jpy=parse_nullable_int(self.return_jpy),
             net_jpy=parse_nullable_int(self.net_jpy),
             net_percent=parse_nullable_float(self.net_percent),
         )
+
+
+class DisplayItem(BaseModel):
+    id: int
+    name: str
+    set_name: str
+    category: Category
+    language: Language
+    qualifiers: list[Qualifier]
+    details: str | None
+    purchase_date: date
+    purchase_price: int
+    status: Status
+    intent: Intent
+    grading_fee: dict[int, int]
+    grading_fee_total: int
+    submission_numbers: list[int]
+    grade: float | None
+    grading_company: GradingCompany
+    cert: int | None
+    list_price: float | None
+    list_type: ListingType
+    list_date: date | None
+    sale_total: float | None
+    sale_date: date | None
+    shipping: float | None
+    sale_fee: float | None
+    usd_to_jpy_rate: float | None
+    group_discount: bool
+    object_variant: ObjectVariant
+    audit_target: bool
+    # Property values
+    total_cost: int
+    total_fees: float | None
+    return_usd: float | None
+    return_jpy: int | None
+    net_jpy: int | None
+    net_percent: float | None
 
 
 def parse_enum(
@@ -648,6 +696,20 @@ def parse_nullable_enum(
     else:
         try:
             return enum_cls[value.upper()]
+        except KeyError:
+            raise ValueError(f'Invalid {enum_name}: {value}')
+
+
+def parse_enum_as_int(
+        value: str | None,
+        enum_cls: Type[T],
+        enum_name: str,
+) -> int | None:
+    if value == '' or value is None:
+        return None
+    else:
+        try:
+            return int(enum_cls[value.upper()].value)
         except KeyError:
             raise ValueError(f'Invalid {enum_name}: {value}')
 

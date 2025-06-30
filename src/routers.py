@@ -55,11 +55,12 @@ def view_items(
     else:
         items = search_for_items(db, search_data)
         items = items[:show_limit]
+    display_items = [item.to_display() for item in items]
     return templates.TemplateResponse(
         'view.html',
         {
             'request': request,
-            'items': items,
+            'items': display_items,
             'qualifier_enum': Qualifier,
             'form_data': search_form,
         },
