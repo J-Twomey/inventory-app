@@ -325,7 +325,7 @@ class ItemUpdate(BaseModel):
     set_name: str | None = None
     category: Category | None = None
     language: Language | None = None
-    qualifiers: list[Qualifier] | None = None
+    qualifiers: list[Qualifier] = field(default_factory=list)
     details: str | None = None
     purchase_date: date | None = None
     purchase_price: int | None = None
@@ -354,7 +354,7 @@ class ItemUpdateForm:
     set_name: str | None = None
     category: str | None = None
     language: str | None = None
-    qualifiers: list[str] | None = None
+    qualifiers: list[str] = field(default_factory=list)
     details: str | None = None
     purchase_date: str | None = None
     purchase_price: str | None = None
@@ -379,11 +379,11 @@ class ItemUpdateForm:
     @classmethod
     def as_form(
         cls,
+        qualifiers: Annotated[list[str], Form(default_factory=list)],
         name: Annotated[str | None, Form()] = None,
         set_name: Annotated[str | None, Form()] = None,
         category: Annotated[str | None, Form()] = None,
         language: Annotated[str | None, Form()] = None,
-        qualifiers: Annotated[list[str] | None, Form()] = None,
         details: Annotated[str | None, Form()] = None,
         purchase_date: Annotated[str | None, Form()] = None,
         purchase_price: Annotated[str | None, Form()] = None,

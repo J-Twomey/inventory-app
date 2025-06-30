@@ -110,7 +110,11 @@ def edit_item(
     item = get_item(db, item_id)
     if item is None:
         return 404
+
     update_data = item_update.model_dump(exclude_unset=True)
+    # always add qualifiers even if it is an empty list
+    update_data['qualifiers'] = item_update.qualifiers
+
     for key, value in update_data.items():
         setattr(item, key, value)
 
