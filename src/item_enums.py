@@ -120,33 +120,3 @@ class EnumList(TypeDecorator[list[E]]):
             return None
         raw: list[int] = json.loads(value)
         return [self.enum_class(v) for v in raw]
-
-
-# class IntEnum(TypeDecorator[int]):
-#     impl = Integer
-#     cache_ok = True
-
-#     def __init__(
-#             self,
-#             enum_class: Type[E],
-#     ) -> None:
-#         self.enum_class = enum_class
-#         super().__init__()
-
-#     def process_bind_param(
-#             self,
-#             value: E | None,
-#             dialect: Dialect,
-#     ) -> int | None:
-#         if value is None:
-#             return None
-#         return cast(int, value.value)
-
-#     def process_result_value(
-#             self,
-#             value: int | None,
-#             dialect: Dialect,
-#     ) -> E | None:
-#         if value is None:
-#             return None
-#         return cast(E, self.enum_class(value))
