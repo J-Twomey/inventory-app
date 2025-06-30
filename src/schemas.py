@@ -12,6 +12,7 @@ from enum import Enum
 from typing import (
     Annotated,
     Any,
+    Callable,
     Type,
     TypeVar,
 )
@@ -40,7 +41,8 @@ from .item_enums import (
 )
 
 
-T = TypeVar('T', bound=Enum)
+E = TypeVar('E', bound=Enum)
+T = TypeVar('T')
 
 
 class ItemBase(BaseModel):
@@ -292,24 +294,24 @@ class ItemCreateForm:
             set_name=self.set_name,
             category=parse_enum(self.category, Category, 'category'),
             language=parse_enum(self.language, Language, 'language'),
-            qualifiers=parse_to_qualifiers_list_new(self.qualifiers),
-            details=parse_nullable_string(self.details),
+            qualifiers=parse_to_qualifiers_list(self.qualifiers),
+            details=parse_nullable(self.details, str),
             purchase_date=purchase_date_,
             purchase_price=int(self.purchase_price),
             status=parse_enum(self.status, Status, 'status'),
             intent=parse_enum(self.intent, Intent, 'intent'),
             grading_fee=parse_to_dict(self.grading_fee or '{}'),
-            grade=parse_nullable_float(self.grade),
+            grade=parse_nullable(self.grade, float),
             grading_company=parse_enum(self.grading_company, GradingCompany, 'grading_company'),
-            cert=parse_nullable_int(self.cert),
-            list_price=parse_nullable_float(self.list_price),
+            cert=parse_nullable(self.cert, int),
+            list_price=parse_nullable(self.list_price, float),
             list_type=parse_enum(self.list_type, ListingType, 'list_type'),
             list_date=list_date_,
-            sale_total=parse_nullable_float(self.sale_total),
+            sale_total=parse_nullable(self.sale_total, float),
             sale_date=sale_date_,
-            shipping=parse_nullable_float(self.shipping),
-            sale_fee=parse_nullable_float(self.sale_fee),
-            usd_to_jpy_rate=parse_nullable_float(self.usd_to_jpy_rate),
+            shipping=parse_nullable(self.shipping, float),
+            sale_fee=parse_nullable(self.sale_fee, float),
+            usd_to_jpy_rate=parse_nullable(self.usd_to_jpy_rate, float),
             group_discount=self.group_discount,
             object_variant=parse_enum(self.object_variant, ObjectVariant, 'object_variant'),
             audit_target=self.audit_target,
@@ -352,7 +354,7 @@ class ItemUpdateForm:
     set_name: str | None = None
     category: str | None = None
     language: str | None = None
-    qualifiers: str | None = None
+    qualifiers: list[str] | None = None
     details: str | None = None
     purchase_date: str | None = None
     purchase_price: str | None = None
@@ -381,7 +383,7 @@ class ItemUpdateForm:
         set_name: Annotated[str | None, Form()] = None,
         category: Annotated[str | None, Form()] = None,
         language: Annotated[str | None, Form()] = None,
-        qualifiers: Annotated[str | None, Form()] = None,
+        qualifiers: Annotated[list[str] | None, Form()] = None,
         details: Annotated[str | None, Form()] = None,
         purchase_date: Annotated[str | None, Form()] = None,
         purchase_price: Annotated[str | None, Form()] = None,
@@ -433,8 +435,8 @@ class ItemUpdateForm:
 
     def to_item_update(self) -> ItemUpdate:
         update_vals: dict[str, Any] = {}
-        set_if_value(update_vals, 'name', parse_nullable_string(self.name))
-        set_if_value(update_vals, 'set_name', parse_nullable_string(self.set_name))
+        set_if_value(update_vals, 'name', parse_nullable(self.name, str))
+        set_if_value(update_vals, 'set_name', parse_nullable(self.set_name, str))
         set_if_value(
             update_vals,
             'category',
@@ -446,31 +448,31 @@ class ItemUpdateForm:
             parse_nullable_enum(self.language, Language, 'language'),
         )
         set_if_value(update_vals, 'qualifiers', parse_to_qualifiers_list(self.qualifiers))
-        set_if_value(update_vals, 'details', parse_nullable_string(self.details))
+        set_if_value(update_vals, 'details', parse_nullable(self.details, str))
         set_if_value(update_vals, 'purchase_date', parse_nullable_date(self.purchase_date))
-        set_if_value(update_vals, 'purchase_price', parse_nullable_int(self.purchase_price))
+        set_if_value(update_vals, 'purchase_price', parse_nullable(self.purchase_price, int))
         set_if_value(update_vals, 'status', parse_nullable_enum(self.status, Status, 'status'))
         set_if_value(update_vals, 'intent', parse_nullable_enum(self.intent, Intent, 'intent'))
         set_if_value(update_vals, 'grading_fee', parse_to_nullable_dict(self.grading_fee))
-        set_if_value(update_vals, 'grade', parse_nullable_float(self.grade))
+        set_if_value(update_vals, 'grade', parse_nullable(self.grade, float))
         set_if_value(
             update_vals,
             'grading_company',
             parse_nullable_enum(self.grading_company, GradingCompany, 'grading_company'),
         )
-        set_if_value(update_vals, 'cert', parse_nullable_int(self.cert))
-        set_if_value(update_vals, 'list_price', parse_nullable_float(self.list_price))
+        set_if_value(update_vals, 'cert', parse_nullable(self.cert, int))
+        set_if_value(update_vals, 'list_price', parse_nullable(self.list_price, float))
         set_if_value(
             update_vals,
             'list_type',
             parse_nullable_enum(self.list_type, ListingType, 'list_type'),
         )
         set_if_value(update_vals, 'list_date', parse_nullable_date(self.list_date))
-        set_if_value(update_vals, 'sale_total', parse_nullable_float(self.sale_total))
+        set_if_value(update_vals, 'sale_total', parse_nullable(self.sale_total, float))
         set_if_value(update_vals, 'sale_date', parse_nullable_date(self.sale_date))
-        set_if_value(update_vals, 'shipping', parse_nullable_float(self.shipping))
-        set_if_value(update_vals, 'sale_fee', parse_nullable_float(self.sale_fee))
-        set_if_value(update_vals, 'usd_to_jpy', parse_nullable_float(self.usd_to_jpy))
+        set_if_value(update_vals, 'shipping', parse_nullable(self.shipping, float))
+        set_if_value(update_vals, 'sale_fee', parse_nullable(self.sale_fee, float))
+        set_if_value(update_vals, 'usd_to_jpy', parse_nullable(self.usd_to_jpy, float))
         set_if_value(update_vals, 'group_discount', self.group_discount)
         set_if_value(
             update_vals,
@@ -606,34 +608,34 @@ class ItemSearchForm:
         else:
             sale_date_ = datetime.strptime(self.sale_date, '%Y-%m-%d').date()
         return ItemSearch(
-            name=parse_nullable_string(self.name),
-            set_name=parse_nullable_string(self.set_name),
+            name=parse_nullable(self.name, str),
+            set_name=parse_nullable(self.set_name, str),
             category=parse_enum_as_int(self.category, Category, 'category'),
             language=parse_enum_as_int(self.language, Language, 'language'),
-            qualifiers=parse_to_qualifiers_list_new(self.qualifiers),
-            details=parse_nullable_string(self.details),
+            qualifiers=parse_to_qualifiers_list(self.qualifiers),
+            details=parse_nullable(self.details, str),
             purchase_date=purchase_date_,
-            purchase_price=parse_nullable_int(self.purchase_price),
+            purchase_price=parse_nullable(self.purchase_price, int),
             status=parse_enum_as_int(self.status, Status, 'status'),
             intent=parse_enum_as_int(self.intent, Intent, 'intent'),
-            grade=parse_nullable_float(self.grade),
+            grade=parse_nullable(self.grade, float),
             grading_company=parse_enum_as_int(
                 self.grading_company,
                 GradingCompany,
                 'grading_company',
             ),
-            cert=parse_nullable_int(self.cert),
+            cert=parse_nullable(self.cert, int),
             list_type=parse_enum_as_int(self.list_type, ListingType, 'listing_type'),
             list_date=list_date_,
-            sale_total=parse_nullable_float(self.sale_total),
+            sale_total=parse_nullable(self.sale_total, float),
             sale_date=sale_date_,
             group_discount=parse_nullable_bool(self.group_discount),
             object_variant=parse_enum_as_int(self.object_variant, ObjectVariant, 'object_variant'),
             audit_target=parse_nullable_bool(self.audit_target),
-            total_cost=parse_nullable_int(self.total_cost),
-            return_jpy=parse_nullable_int(self.return_jpy),
-            net_jpy=parse_nullable_int(self.net_jpy),
-            net_percent=parse_nullable_float(self.net_percent),
+            total_cost=parse_nullable(self.total_cost, int),
+            return_jpy=parse_nullable(self.return_jpy, int),
+            net_jpy=parse_nullable(self.net_jpy, int),
+            net_percent=parse_nullable(self.net_percent, float),
         )
 
 
@@ -677,9 +679,9 @@ class DisplayItem(BaseModel):
 
 def parse_enum(
         value: str,
-        enum_cls: Type[T],
+        enum_cls: Type[E],
         enum_name: str,
-) -> T:
+) -> E:
     try:
         return enum_cls[value.upper()]
     except KeyError:
@@ -688,9 +690,9 @@ def parse_enum(
 
 def parse_nullable_enum(
         value: str | None,
-        enum_cls: Type[T],
+        enum_cls: Type[E],
         enum_name: str,
-) -> T | None:
+) -> E | None:
     if value == '' or value is None:
         return None
     else:
@@ -702,7 +704,7 @@ def parse_nullable_enum(
 
 def parse_enum_as_int(
         value: str | None,
-        enum_cls: Type[T],
+        enum_cls: Type[E],
         enum_name: str,
 ) -> int | None:
     if value == '' or value is None:
@@ -714,14 +716,7 @@ def parse_enum_as_int(
             raise ValueError(f'Invalid {enum_name}: {value}')
 
 
-def parse_to_qualifiers_list(values: str | None) -> list[Qualifier]:
-    if values is None:
-        return []
-    else:
-        return [Qualifier[x.strip()] for x in values.split(',') if x.strip()]
-
-
-def parse_to_qualifiers_list_new(values: list[str] | None) -> list[Qualifier]:
+def parse_to_qualifiers_list(values: list[str] | None) -> list[Qualifier]:
     if values is None:
         return []
     else:
@@ -747,25 +742,14 @@ def parse_to_nullable_dict(v: str | None) -> dict[int, int] | None:
             raise ValueError('grading_fee must be valid JSON')
 
 
-def parse_nullable_string(v: str | None) -> str | None:
-    if v == '' or v is None:
+def parse_nullable(
+        value: str | None,
+        parser: Callable[[str], T],
+) -> T | None:
+    if value is None or value == '':
         return None
     else:
-        return v
-
-
-def parse_nullable_float(v: str | None) -> float | None:
-    if v == '' or v is None:
-        return None
-    else:
-        return float(v)
-
-
-def parse_nullable_int(v: str | None) -> int | None:
-    if v == '' or v is None:
-        return None
-    else:
-        return int(v)
+        return parser(value)
 
 
 def parse_nullable_bool(v: str | None) -> bool | None:
