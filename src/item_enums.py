@@ -3,11 +3,11 @@ from enum import Enum
 from typing import (
     Any,
     cast,
-    Generic,
     Type,
     TypeVar,
 )
 
+from sqlalchemy.engine.interfaces import Dialect
 from sqlalchemy.types import (
     Integer,
     TypeDecorator,
@@ -86,7 +86,7 @@ class ListingType(Enum):
 E = TypeVar('E', bound=Enum)
 
 
-class EnumList(TypeDecorator, Generic[E]):
+class EnumList(TypeDecorator[list[E]]):
     impl = TEXT
     cache_ok = True
 
@@ -100,7 +100,7 @@ class EnumList(TypeDecorator, Generic[E]):
     def process_bind_param(
             self,
             value: list[E] | list[int] | None,
-            dialect: Any,
+            dialect: Dialect,
     ) -> str | None:
         if value is None:
             return None
@@ -117,7 +117,7 @@ class EnumList(TypeDecorator, Generic[E]):
     def process_result_value(
             self,
             value: str | None,
-            dialect: Any,
+            dialect: Dialect,
     ) -> list[E] | None:
         if value is None:
             return None
@@ -125,7 +125,7 @@ class EnumList(TypeDecorator, Generic[E]):
         return [self.enum_class(v) for v in raw]
 
 
-class IntEnum(TypeDecorator):
+class IntEnum(TypeDecorator[int]):
     impl = Integer
     cache_ok = True
 
@@ -139,7 +139,7 @@ class IntEnum(TypeDecorator):
     def process_bind_param(
             self,
             value: E | None,
-            dialect: Any,
+            dialect: Dialect,
     ) -> int | None:
         if value is None:
             return None
@@ -148,7 +148,7 @@ class IntEnum(TypeDecorator):
     def process_result_value(
             self,
             value: int | None,
-            dialect: Any,
+            dialect: Dialect,
     ) -> E | None:
         if value is None:
             return None
