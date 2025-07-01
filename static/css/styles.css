@@ -56,6 +56,14 @@
   background-color: #4d004d;
 }
 
+.btn-orange {
+  background-color: #F4BB44;
+}
+
+.btn-orange:hover {
+  background-color: #CC5500;
+}
+
 /* Size variants */
 .btn-small {
   font-size: 0.8rem;

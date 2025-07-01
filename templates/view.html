@@ -10,6 +10,7 @@
 <h1>View Items</h1>
 
 <a href="/" class="btn btn-purple btn-small margin-bottom-20 inline">Back To Landing Page</a>
+<a href="/view" class="btn btn-orange btn-small margin-bottom-20 inline">Reset Search Conditions</a>
 
 <form method="get" action="/view">
   <input type="text" name="name" placeholder="Name" value="{{ form_data.name if form_data and form_data.name is not none else '' }}">
