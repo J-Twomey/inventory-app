@@ -205,7 +205,6 @@ class ItemCreateForm:
     purchase_price: str
     status: str
     intent: str
-    grading_fee: str
     grade: str
     grading_company: str
     cert: str
@@ -220,6 +219,8 @@ class ItemCreateForm:
     object_variant: str
     group_discount: bool
     audit_target: bool
+    submission_numbers: list[str] = field(default_factory=list)
+    grading_fees: list[str] = field(default_factory=list)
     qualifiers: list[str] = field(default_factory=list)
 
     @classmethod
@@ -234,7 +235,6 @@ class ItemCreateForm:
         purchase_price: Annotated[str, Form()],
         status: Annotated[str, Form()],
         intent: Annotated[str, Form()],
-        grading_fee: Annotated[str, Form()],
         grade: Annotated[str, Form()],
         grading_company: Annotated[str, Form()],
         cert: Annotated[str, Form()],
@@ -247,6 +247,8 @@ class ItemCreateForm:
         sale_fee: Annotated[str, Form()],
         usd_to_jpy_rate: Annotated[str, Form()],
         object_variant: Annotated[str, Form()],
+        submission_numbers: Annotated[list[str], Form(default_factory=list)],
+        grading_fees: Annotated[list[str], Form(default_factory=list)],
         qualifiers: Annotated[list[str], Form(default_factory=list)],
         group_discount: Annotated[bool, Form()] = False,
         audit_target: Annotated[bool, Form()] = False,
@@ -262,7 +264,6 @@ class ItemCreateForm:
             purchase_price=purchase_price,
             status=status,
             intent=intent,
-            grading_fee=grading_fee,
             grade=grade,
             grading_company=grading_company,
             cert=cert,
@@ -274,6 +275,8 @@ class ItemCreateForm:
             shipping=shipping,
             sale_fee=sale_fee,
             usd_to_jpy_rate=usd_to_jpy_rate,
+            submission_numbers=submission_numbers,
+            grading_fees=grading_fees,
             group_discount=group_discount,
             object_variant=object_variant,
             audit_target=audit_target,
@@ -289,6 +292,13 @@ class ItemCreateForm:
             sale_date_ = None
         else:
             sale_date_ = datetime.strptime(self.sale_date, '%Y-%m-%d').date()
+
+        # Remove empty string that gets sent if multiple submissions
+        self.submission_numbers = [sn for sn in self.submission_numbers if sn != '']
+        self.grading_fees = [gf for gf in self.grading_fees if gf != '']
+        grading_fee = {
+            int(k): int(v) for k, v in zip(self.submission_numbers, self.grading_fees)
+        }
         return ItemCreate(
             name=self.name,
             set_name=self.set_name,
@@ -300,7 +310,7 @@ class ItemCreateForm:
             purchase_price=int(self.purchase_price),
             status=parse_enum(self.status, Status, 'status'),
             intent=parse_enum(self.intent, Intent, 'intent'),
-            grading_fee=parse_to_dict(self.grading_fee or '{}'),
+            grading_fee=grading_fee,
             grade=parse_nullable(self.grade, float),
             grading_company=parse_enum(self.grading_company, GradingCompany, 'grading_company'),
             cert=parse_nullable(self.cert, int),
