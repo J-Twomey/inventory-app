@@ -91,7 +91,7 @@ class Item(Base):
         return self.purchase_price + self.grading_fee_total
 
     @total_cost.expression  # type: ignore[no-redef]
-    def total_cost(cls) -> BinaryExpression:
+    def total_cost(cls) -> BinaryExpression[int]:
         return cls.purchase_price + cls.grading_fee_total
 
     @hybrid_property
