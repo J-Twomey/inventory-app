@@ -22,30 +22,21 @@
   <input type="text" name="set_name" value="{{ item.set_name }}"><br><br>
 
   <label>Category:</label>
-  <select name="category" value="{{ item.category }}">
-    <option value="CARD">Card</option>
-    <option value="PACK">Pack</option>
-    <option value="BOX">Box</option>
+  <select name="category">
+    {% for category in category_enum %}
+      <option value="{{ category.name }}" {% if item.category.name == category.name %}selected{% endif %}>
+        {{ category.name.title() }}
+      </option>
+    {% endfor %}
   </select><br><br>
 
   <label>Language:</label>
-  <select name="language" value="{{ item.language }}">
-    <option value="JAPANESE">Japanese</option>
-    <option value="ENGLISH">English</option>
-    <option value="FRENCH">French</option>
-    <option value="GERMAN">German</option>
-    <option value="SPANISH">Spanish</option>
-    <option value="ITALIAN">Italian</option>
-    <option value="DUTCH">Dutch</option>
-    <option value="PORTUGUESE">Porguguese</option>
-    <option value="POLISH">Polish</option>
-    <option value="RUSSIAN">Russian</option>
-    <option value="LATIN_AMERICAN">Latin American</option>
-    <option value="CHINESE_SIMPLIFIED">Chinese Simplified</option>
-    <option value="CHINESE_TRADITIONAL">Chinese Traditional</option>
-    <option value="KOREAN">Korean</option>
-    <option value="THAI">Thai</option>
-    <option value="INDONESIAN">Indonesian</option>
+  <select name="language">
+    {% for language in language_enum %}
+      <option value="{{ language.name }}" {% if item.language.name == language.name %}selected{% endif %}>
+        {{ language.name.title() }}
+      </option>
+    {% endfor %}
   </select><br><br>
 
   <label>Qualifiers:</label><br>
@@ -73,21 +64,21 @@
   <input type="number" name="purchase_price" value="{{ item.purchase_price }}"><br><br>
 
   <label>Status:</label>
-  <select name="status" value="{{ item.status }}">
-    <option value="ORDER">Order</option>
-    <option value="CLOSED">Closed</option>
-    <option value="STORAGE">Storage</option>
-    <option value="LISTED">Listed</option>
-    <option value="VAULT">Vault</option>
-    <option value="SUBMITTED">Submitted</option>
+  <select name="status">
+    {% for status in status_enum %}
+      <option value="{{ status.name }}" {% if item.status.name == status.name %}selected{% endif %}>
+        {{ status.name.title() }}
+      </option>
+    {% endfor %}
   </select><br><br>
 
   <label>Intent:</label>
-  <select name="intent" value="{{ item.intent }}">
-    <option value="TBD">TBD</option>
-    <option value="KEEP">Keep</option>
-    <option value="GRADE">Grade</option>
-    <option value="SELL">Sell</option>
+  <select name="intent">
+    {% for intent in intent_enum %}
+      <option value="{{ intent.name }}" {% if item.intent.name == intent.name %}selected{% endif %}>
+        {{ intent.name.title() }}
+      </option>
+    {% endfor %}
   </select><br><br>
 
   <label>Grading Fee (JSON format):</label>
@@ -97,11 +88,12 @@
   <input type="number" name="grade" step="any" value="{{ item.grade }}"><br><br>
 
   <label>Grading Company:</label>
-  <select name="grading_company" value="{{ item.grading_company }}">
-    <option value="RAW">Raw</option>
-    <option value="PSA">PSA</option>
-    <option value="CGC">CGC</option>
-    <option value="BGS">BGS</option>
+  <select name="grading_company">
+    {% for grading_company in grading_company_enum %}
+      <option value="{{ grading_company.name }}" {% if item.grading_company.name == grading_company.name %}selected{% endif %}>
+        {{ grading_company.name.title() }}
+      </option>
+    {% endfor %}
   </select><br><br>
 
   <label>Cert #:</label>
@@ -111,10 +103,12 @@
   <input type="number" name="list_price" step="any" value="{{ item.list_price }}"><br><br>
 
   <label>List Type:</label>
-  <select name="list_type"  value="{{ item.list_type }}">
-    <option value="NO_LIST">No List</option>
-    <option value="FIXED">Fixed</option>
-    <option value="AUCTION">Auction</option>
+  <select name="list_type">
+    {% for list_type in list_type_enum %}
+      <option value="{{ list_type.name }}" {% if item.list_type.name == list_type.name %}selected{% endif %}>
+        {{ list_type.name.title() }}
+      </option>
+    {% endfor %}
   </select><br><br>
 
   <label>List Date:</label>
@@ -139,10 +133,12 @@
   <input type="checkbox" name="group_discount" {% if item.group_discount %}checked{% endif %}><br><br>
 
   <label>Object Variant:</label>
-  <select name="object_variant"  value="{{ item.object_variant }}">
-    <option value="STANDARD">Standard</option>
-    <option value="GROUP_PURCHASE">Group Purchase</option>
-    <option value="GROUP_SALE">Group Sale</option>
+  <select name="object_variant">
+    {% for object_variant in object_variant_enum %}
+      <option value="{{ object_variant.name }}" {% if item.object_variant.name == object_variant.name %}selected{% endif %}>
+        {{ object_variant.name.title() }}
+      </option>
+    {% endfor %}
   </select><br><br>
 
   <label>Audit Target:</label>

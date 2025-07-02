@@ -111,7 +111,7 @@ def edit_item(
     if item is None:
         return 404
 
-    update_data = item_update.model_dump(exclude_unset=True)
+    update_data = item_update.to_model_kwargs()
     # always add qualifiers even if it is an empty list
     update_data['qualifiers'] = item_update.qualifiers
 

@@ -20,7 +20,16 @@ from .crud import (
     search_for_items,
 )
 from .database import get_db
-from .item_enums import Qualifier
+from .item_enums import (
+    Category,
+    GradingCompany,
+    Intent,
+    Language,
+    ListingType,
+    ObjectVariant,
+    Qualifier,
+    Status,
+)
 from .models import Item
 from .schemas import (
     ItemCreateForm,
@@ -108,12 +117,21 @@ def open_edit_form(
     item = db.query(Item).filter(Item.id == item_id).first()
     if item is None:
         raise HTTPException(status_code=404, detail='Item not found')
+    else:
+        display_item = item.to_display()
     return templates.TemplateResponse(
         'edit_item.html',
         {
             'request': request,
-            'item': item,
+            'item': display_item,
             'qualifier_enum': Qualifier,
+            'category_enum': Category,
+            'language_enum': Language,
+            'status_enum': Status,
+            'intent_enum': Intent,
+            'grading_company_enum': GradingCompany,
+            'list_type_enum': ListingType,
+            'object_variant_enum': ObjectVariant,
         },
     )
 

@@ -357,6 +357,24 @@ class ItemUpdate(BaseModel):
     object_variant: ObjectVariant | None = None
     audit_target: bool = False
 
+    def to_model_kwargs(self) -> dict[str, Any]:
+        data = self.model_dump(exclude_unset=True)
+        if self.category is not None:
+            data['category'] = self.category.value
+        if self.language is not None:
+            data['language'] = self.language.value
+        if self.status is not None:
+            data['status'] = self.status.value
+        if self.intent is not None:
+            data['intent'] = self.intent.value
+        if self.grading_company is not None:
+            data['grading_company'] = self.grading_company.value
+        if self.list_type is not None:
+            data['list_type'] = self.list_type.value
+        if self.object_variant is not None:
+            data['object_variant'] = self.object_variant.value
+        return data
+
 
 @dataclass
 class ItemUpdateForm:
