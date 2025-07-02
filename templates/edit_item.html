@@ -81,8 +81,21 @@
     {% endfor %}
   </select><br><br>
 
-  <label>Grading Fee (JSON format):</label>
-  <input type="text" name="grading_fee" value="{{ item.grading_fee }}"><br><br>
+  <label>Grading Fees:</label>
+  <div id="grading-fees-container">
+    {% for sub_num, fee in item.grading_fee.items() %}
+      <div class="grading-fee-row">
+        <input type="number" name="submission_numbers" placeholder="Sub#" value="{{ sub_num }}" />
+        <input type="number" name="grading_fees" placeholder="Fee" value="{{ fee }}" />
+      </div>
+    {% endfor %}
+
+    <div class="grading-fee-row">
+      <input type="number" name="submission_numbers" placeholder="Sub#" />
+      <input type="number" name="grading_fees" placeholder="Fee" />
+    </div>
+  </div>
+  <br>
 
   <label>Grade:</label>
   <input type="number" name="grade" step="any" value="{{ item.grade }}"><br><br>
@@ -201,6 +214,7 @@
     });
   });
 </script>
+<script src="{{ url_for('static', path='js/add_item.js') }}"></script>
 
 </body>
 </html>

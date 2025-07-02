@@ -382,7 +382,6 @@ class ItemUpdateForm:
     set_name: str | None = None
     category: str | None = None
     language: str | None = None
-    qualifiers: list[str] = field(default_factory=list)
     details: str | None = None
     purchase_date: str | None = None
     purchase_price: str | None = None
@@ -403,11 +402,16 @@ class ItemUpdateForm:
     group_discount: bool = False
     object_variant: str | None = None
     audit_target: bool = False
+    submission_numbers: list[str] = field(default_factory=list)
+    grading_fees: list[str] = field(default_factory=list)
+    qualifiers: list[str] = field(default_factory=list)
 
     @classmethod
     def as_form(
         cls,
         qualifiers: Annotated[list[str], Form(default_factory=list)],
+        submission_numbers: Annotated[list[str], Form(default_factory=list)],
+        grading_fees: Annotated[list[str], Form(default_factory=list)],
         name: Annotated[str | None, Form()] = None,
         set_name: Annotated[str | None, Form()] = None,
         category: Annotated[str | None, Form()] = None,
@@ -456,6 +460,8 @@ class ItemUpdateForm:
             shipping=shipping,
             sale_fee=sale_fee,
             usd_to_jpy=usd_to_jpy,
+            submission_numbers=submission_numbers,
+            grading_fees=grading_fees,
             group_discount=group_discount,
             object_variant=object_variant,
             audit_target=audit_target,
@@ -481,7 +487,6 @@ class ItemUpdateForm:
         set_if_value(update_vals, 'purchase_price', parse_nullable(self.purchase_price, int))
         set_if_value(update_vals, 'status', parse_nullable_enum(self.status, Status, 'status'))
         set_if_value(update_vals, 'intent', parse_nullable_enum(self.intent, Intent, 'intent'))
-        set_if_value(update_vals, 'grading_fee', parse_to_nullable_dict(self.grading_fee))
         set_if_value(update_vals, 'grade', parse_nullable(self.grade, float))
         set_if_value(
             update_vals,
@@ -508,6 +513,14 @@ class ItemUpdateForm:
             parse_nullable_enum(self.object_variant, ObjectVariant, 'object_variant'),
         )
         set_if_value(update_vals, 'audit_target', self.audit_target)
+
+        # Remove empty string that gets sent if multiple submissions
+        self.submission_numbers = [sn for sn in self.submission_numbers if sn != '']
+        self.grading_fees = [gf for gf in self.grading_fees if gf != '']
+        if len(self.submission_numbers) > 0 and len(self.grading_fees) > 0:
+            update_vals['grading_fee'] = {
+                int(k): int(v) for k, v in zip(self.submission_numbers, self.grading_fees)
+            }
         return ItemUpdate(**update_vals)
 
 
@@ -757,17 +770,6 @@ def parse_to_dict(v: str) -> dict[int, int]:
         return {int(k): int(v) for k, v in parsed.items()}
     except Exception:
         raise ValueError('grading_fee must be valid JSON')
-
-
-def parse_to_nullable_dict(v: str | None) -> dict[int, int] | None:
-    if v == '' or v is None:
-        return None
-    else:
-        try:
-            parsed: dict[str, str] = json.loads(v)
-            return {int(k): int(v) for k, v in parsed.items()}
-        except Exception:
-            raise ValueError('grading_fee must be valid JSON')
 
 
 def parse_nullable(
