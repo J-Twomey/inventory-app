@@ -292,13 +292,6 @@ class ItemCreateForm:
             sale_date_ = None
         else:
             sale_date_ = datetime.strptime(self.sale_date, '%Y-%m-%d').date()
-
-        # Remove empty string that gets sent if multiple submissions
-        self.submission_numbers = [sn for sn in self.submission_numbers if sn != '']
-        self.grading_fees = [gf for gf in self.grading_fees if gf != '']
-        grading_fee = {
-            int(k): int(v) for k, v in zip(self.submission_numbers, self.grading_fees)
-        }
         return ItemCreate(
             name=self.name,
             set_name=self.set_name,
@@ -310,7 +303,7 @@ class ItemCreateForm:
             purchase_price=int(self.purchase_price),
             status=parse_enum(self.status, Status, 'status'),
             intent=parse_enum(self.intent, Intent, 'intent'),
-            grading_fee=grading_fee,
+            grading_fee=build_grading_fee_dict(self.submission_numbers, self.grading_fees),
             grade=parse_nullable(self.grade, float),
             grading_company=parse_enum(self.grading_company, GradingCompany, 'grading_company'),
             cert=parse_nullable(self.cert, int),
@@ -514,13 +507,11 @@ class ItemUpdateForm:
         )
         set_if_value(update_vals, 'audit_target', self.audit_target)
 
-        # Remove empty string that gets sent if multiple submissions
-        self.submission_numbers = [sn for sn in self.submission_numbers if sn != '']
-        self.grading_fees = [gf for gf in self.grading_fees if gf != '']
         if len(self.submission_numbers) > 0 and len(self.grading_fees) > 0:
-            update_vals['grading_fee'] = {
-                int(k): int(v) for k, v in zip(self.submission_numbers, self.grading_fees)
-            }
+            update_vals['grading_fee'] = build_grading_fee_dict(
+                self.submission_numbers,
+                self.grading_fees,
+            )
         return ItemUpdate(**update_vals)
 
 
@@ -804,3 +795,15 @@ def set_if_value(
 ) -> None:
     if v is not None and v != '' and v != [] and v != {}:
         d[k] = v
+
+
+def build_grading_fee_dict(
+        sub_nums: list[str],
+        fees: list[str],
+) -> dict[int, int]:
+    # Remove empty string that gets sent if multiple submissions
+    sub_nums = [sn for sn in sub_nums if sn != '']
+    fees = [f for f in fees if f != '']
+    return {
+        int(k): int(v) for k, v in zip(sub_nums, fees, strict=True)
+    }
