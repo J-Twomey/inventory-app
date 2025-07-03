@@ -70,8 +70,15 @@ def view_items(
         {
             'request': request,
             'items': display_items,
-            'qualifier_enum': Qualifier,
             'form_data': search_form,
+            'qualifier_enum': Qualifier,
+            'category_enum': Category,
+            'language_enum': Language,
+            'status_enum': Status,
+            'intent_enum': Intent,
+            'grading_company_enum': GradingCompany,
+            'list_type_enum': ListingType,
+            'object_variant_enum': ObjectVariant,
         },
     )
 
@@ -83,6 +90,13 @@ def show_add_form(request: Request) -> Response:
         {
             'request': request,
             'qualifier_enum': Qualifier,
+            'category_enum': Category,
+            'language_enum': Language,
+            'status_enum': Status,
+            'intent_enum': Intent,
+            'grading_company_enum': GradingCompany,
+            'list_type_enum': ListingType,
+            'object_variant_enum': ObjectVariant,
         },
     )
 
