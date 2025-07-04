@@ -93,6 +93,7 @@ def test_get_items_return_all_items(
     for item in items:
         db_item = crud.create_item(db_session, item)
         ids.append(db_item.id)
+
     result = crud.get_newest_items(db_session, skip=0, limit=100)
     result_ids = [r.id for r in result]
     result_names = [r.name for r in result]
@@ -111,6 +112,7 @@ def test_get_items_skip_newest_item(
     for item in items:
         db_item = crud.create_item(db_session, item)
         ids.append(db_item.id)
+
     result = crud.get_newest_items(db_session, skip=1, limit=100)
     result_ids = [r.id for r in result]
     result_names = [r.name for r in result]
@@ -129,6 +131,7 @@ def test_get_items_take_two_items(
     for item in items:
         db_item = crud.create_item(db_session, item)
         ids.append(db_item.id)
+
     result = crud.get_newest_items(db_session, skip=0, limit=2)
     result_ids = [r.id for r in result]
     result_names = [r.name for r in result]
@@ -145,6 +148,7 @@ def test_get_items_skip_all_items(
     items = [item_factory.get(name=n) for n in item_names]
     for item in items:
         crud.create_item(db_session, item)
+
     result = crud.get_newest_items(db_session, skip=3, limit=100)
     assert len(result) == 0
 
@@ -164,6 +168,7 @@ def test_delete_item_by_id_success(
     for item in items:
         db_item = crud.create_item(db_session, item)
         ids.append(db_item.id)
+
     result = crud.delete_item_by_id(db_session, ids[-1])
     assert result is True
     assert crud.get_item(db_session, ids[-1]) is None
@@ -180,6 +185,7 @@ def test_delete_item_by_id_failure(
     for item in items:
         db_item = crud.create_item(db_session, item)
         ids.append(db_item.id)
+
     result = crud.delete_item_by_id(db_session, ids[-1] + 1)
     assert result is False
     for id in ids:
@@ -194,6 +200,7 @@ def test_search_for_items_no_filters(
     items = [item_factory.get(name=n) for n in item_names]
     for item in items:
         crud.create_item(db_session, item)
+
     search_params = schemas.ItemSearchForm().to_item_search()
     result = crud.search_for_items(db_session, search_params)
     assert len(result) == 2
@@ -207,6 +214,7 @@ def test_search_for_items_simple_case(
     items = [item_factory.get(name=n) for n in item_names]
     for item in items:
         crud.create_item(db_session, item)
+
     search_params = schemas.ItemSearchForm(name='two').to_item_search()
     result = crud.search_for_items(db_session, search_params)
     assert len(result) == 1
@@ -237,10 +245,12 @@ def test_search_for_items_multiple_search_criteria(
     ]
     for item in items:
         crud.create_item(db_session, item)
+
     search_params = schemas.ItemSearchForm(
         language='KOREAN',
         grading_company='PSA',
     ).to_item_search()
+
     result = crud.search_for_items(db_session, search_params)
     assert len(result) == 2
     assert all(
@@ -266,7 +276,164 @@ def test_search_for_items_multiple_qualifiers(
     items = [item_factory.get(qualifiers=q) for q in item_qualifiers]
     for item in items:
         crud.create_item(db_session, item)
+
     search_params = schemas.ItemSearchForm(qualifiers=['NON_HOLO', 'CRYSTAL']).to_item_search()
     result = crud.search_for_items(db_session, search_params)
     assert len(result) == 1
     assert result[0].qualifiers == [item_enums.Qualifier.NON_HOLO, item_enums.Qualifier.CRYSTAL]
+
+
+def test_edit_item_no_item_found(
+        db_session: Session,
+        item_factory: ItemFactory,
+) -> None:
+    crud.create_item(db_session, item_factory.get())
+    result = crud.edit_item(db_session, 100, schemas.ItemUpdate())
+    assert result == 404
+
+
+def test_edit_item_no_changes(
+        db_session: Session,
+        item_factory: ItemFactory,
+) -> None:
+    original_item = crud.create_item(db_session, item_factory.get())
+
+    result = crud.edit_item(db_session, original_item.id, schemas.ItemUpdate())
+    assert result == 303
+
+    changed_item = crud.get_item(db_session, original_item.id)
+    assert changed_item == original_item
+
+
+def test_edit_item_single_field(
+        db_session: Session,
+        item_factory: ItemFactory,
+) -> None:
+    item = crud.create_item(db_session, item_factory.get())
+    item_changes = schemas.ItemUpdate(name='new_name')
+
+    result = crud.edit_item(db_session, item.id, item_changes)
+    assert result == 303
+
+    changed_item = crud.get_item(db_session, item.id)
+    assert changed_item is not None
+    assert changed_item.name == 'new_name'
+
+
+def test_edit_item_enum_field(
+        db_session: Session,
+        item_factory: ItemFactory,
+) -> None:
+    item = crud.create_item(db_session, item_factory.get())
+    item_changes = schemas.ItemUpdate(language=item_enums.Language.INDONESIAN)
+
+    result = crud.edit_item(db_session, item.id, item_changes)
+    assert result == 303
+
+    changed_item = crud.get_item(db_session, item.id)
+    assert changed_item is not None
+    assert changed_item.language == item_enums.Language.INDONESIAN.value
+
+
+def test_edit_item_multiple_changes(
+        db_session: Session,
+        item_factory: ItemFactory,
+) -> None:
+    item = crud.create_item(db_session, item_factory.get())
+    item_changes = schemas.ItemUpdate(
+        grade=10.,
+        grading_company=item_enums.GradingCompany.BGS,
+    )
+
+    result = crud.edit_item(db_session, item.id, item_changes)
+    assert result == 303
+
+    changed_item = crud.get_item(db_session, item.id)
+    assert changed_item is not None
+    assert changed_item.grading_company == item_enums.GradingCompany.BGS.value
+    assert changed_item.grade == 10.
+
+
+def test_edit_item_add_new_qualifier(
+        db_session: Session,
+        item_factory: ItemFactory,
+) -> None:
+    item = crud.create_item(db_session, item_factory.get())
+    item_changes = schemas.ItemUpdate(qualifiers=[item_enums.Qualifier.CRYSTAL])
+
+    result = crud.edit_item(db_session, item.id, item_changes)
+    assert result == 303
+
+    changed_item = crud.get_item(db_session, item.id)
+    assert changed_item is not None
+    assert changed_item.qualifiers == [item_enums.Qualifier.CRYSTAL]
+
+
+def test_edit_item_add_extra_qualifier_to_existing(
+        db_session: Session,
+        item_factory: ItemFactory,
+) -> None:
+    item = crud.create_item(
+        db_session,
+        item_factory.get(qualifiers=[item_enums.Qualifier.CRYSTAL]),
+    )
+    # Qualifiers are handled such that the newly added ones should be appended to the existing ones
+    new_qualifiers = item.qualifiers + [item_enums.Qualifier.UNLIMITED]
+    item_changes = schemas.ItemUpdate(qualifiers=new_qualifiers)
+
+    result = crud.edit_item(db_session, item.id, item_changes)
+    assert result == 303
+
+    changed_item = crud.get_item(db_session, item.id)
+    assert changed_item is not None
+    assert changed_item.qualifiers == [
+        item_enums.Qualifier.CRYSTAL,
+        item_enums.Qualifier.UNLIMITED,
+    ]
+
+
+def test_edit_item_change_existing_grading_fee(
+        db_session: Session,
+        item_factory: ItemFactory,
+) -> None:
+    item = crud.create_item(
+        db_session,
+        item_factory.get(grading_fee={1: 100}),
+    )
+    # New grading fees should be combined with the existing before being passed through
+    new_grading_fee = item.grading_fee | {2: 200}
+    item_changes = schemas.ItemUpdate(grading_fee=new_grading_fee)
+
+    result = crud.edit_item(db_session, item.id, item_changes)
+    assert result == 303
+
+    changed_item = crud.get_item(db_session, item.id)
+    assert changed_item is not None
+
+    # Use to_display() to convert the dict key values to expected int type
+    display_item = changed_item.to_display()
+    assert display_item.grading_fee == {1: 100, 2: 200}
+
+    # Check the total grading_fee_total has been correctly updated
+    assert display_item.grading_fee_total == 300
+
+
+def test_edit_item_add_new_grading_fee(
+        db_session: Session,
+        item_factory: ItemFactory,
+) -> None:
+    item = crud.create_item(db_session, item_factory.get())
+    item_changes = schemas.ItemUpdate(grading_fee={1: 100})
+
+    result = crud.edit_item(db_session, item.id, item_changes)
+    assert result == 303
+
+    changed_item = crud.get_item(db_session, item.id)
+    assert changed_item is not None
+
+    # Use to_display() to convert the dict key values to expected int type
+    display_item = changed_item.to_display()
+    assert display_item.grading_fee == {1: 100}
+
+    # Check the total grading_fee_total has been correctly updated
+    assert display_item.grading_fee_total == 100
