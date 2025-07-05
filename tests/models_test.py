@@ -1,8 +1,10 @@
-import pytest
+from datetime import date
 
+import pytest
 from sqlalchemy.orm import Session
 
 import src.crud as crud
+import src.item_enums as item_enums
 from .conftest import ItemFactory
 
 
@@ -364,3 +366,41 @@ def test_net_percent_sql(
     result = crud.get_item(db=db_session, item_id=item.id)
     assert result is not None
     assert result.net_percent == expected_percent
+
+
+def test_to_display(item_factory: ItemFactory) -> None:
+    display_item = item_factory.get(
+        qualifiers=[item_enums.Qualifier.CRYSTAL],
+        status=item_enums.Status.CLOSED.value,
+        grading_fee={1: 100, 2: 200},
+        grade=10.,
+        grading_company=item_enums.GradingCompany.BGS.value,
+        cert=999999999,
+        list_price=100.,
+        list_type=item_enums.ListingType.FIXED.value,
+        list_date=date(2025, 5, 6),
+        sale_total=200.,
+        sale_date=date(2025, 5, 7),
+        shipping=10.,
+        sale_fee=20.55,
+        usd_to_jpy_rate=150.99,
+        group_discount=True,
+    ).to_display()
+
+    # Check that enums are converted properly
+    assert display_item.category == item_enums.Category.CARD
+    assert display_item.language == item_enums.Language.KOREAN
+    assert display_item.qualifiers == [item_enums.Qualifier.CRYSTAL]
+    assert display_item.status == item_enums.Status.CLOSED
+    assert display_item.intent == item_enums.Intent.SELL
+    assert display_item.grading_company == item_enums.GradingCompany.BGS
+    assert display_item.list_type == item_enums.ListingType.FIXED
+    assert display_item.object_variant == item_enums.ObjectVariant.STANDARD
+
+    # Check that hybrid properties are correctly calculated
+    assert display_item.total_cost == 1300
+    assert display_item.total_fees == 30.55
+    assert display_item.return_usd == 169.45
+    assert display_item.return_jpy == 25585
+    assert display_item.net_jpy == 24285
+    assert display_item.net_percent == 1868.08
