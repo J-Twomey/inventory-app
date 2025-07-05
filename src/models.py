@@ -99,14 +99,14 @@ class Item(Base):
         if self.shipping is None or self.sale_fee is None:
             return None
         else:
-            return self.shipping + self.sale_fee
+            return round(self.shipping + self.sale_fee, 2)
 
     @total_fees.expression  # type: ignore[no-redef]
     def total_fees(cls) -> ColumnElement[float | None]:
         return case(
             (
                 (cls.shipping.is_not(None)) & (cls.sale_fee.is_not(None)),
-                cls.shipping + cls.sale_fee,
+                func.round(cls.shipping + cls.sale_fee, 2),
             ),
             else_=null(),
         )
@@ -116,14 +116,14 @@ class Item(Base):
         if self.sale_total is None or self.total_fees is None:
             return None
         else:
-            return self.sale_total - self.total_fees
+            return round(self.sale_total - self.total_fees, 2)
 
     @return_usd.expression  # type: ignore[no-redef]
     def return_usd(cls) -> ColumnElement[float | None]:
         return case(
             (
                 (cls.sale_total.is_not(None)) & (cls.total_fees.is_not(None)),
-                cls.sale_total - cls.total_fees,
+                func.round(cls.sale_total - cls.total_fees, 2),
             ),
             else_=null(),
         )
@@ -182,7 +182,7 @@ class Item(Base):
                 cls.total_cost != 0,
                 func.round(cls.net_jpy / cls.total_cost, 2),
             ),
-            else_=null(),  # avoid zero division
+            else_=0.,
         )
 
     def to_display(self) -> DisplayItem:
