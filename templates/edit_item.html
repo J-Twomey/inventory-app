@@ -174,47 +174,8 @@
     <p>No matching items found.</p>
 {% endif %}
 
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const form = document.querySelector('form');
-    if (!form) return;
-
-    const originalValues = {};
-    for (const input of form.elements) {
-      if (!input.name) continue;
-
-      if (
-        ['text', 'number', 'hidden'].includes(input.type) ||
-        input.tagName.toLowerCase() === 'select'
-      ) {
-        originalValues[input.name] = input.value;
-      } else if (input.type === 'checkbox') {
-        originalValues[input.name] = input.checked;
-      }
-    }
-
-    form.addEventListener('submit', () => {
-      for (const input of form.elements) {
-        const name = input.name;
-        if (!name) continue;
-
-        if (
-          ['text', 'number', 'hidden'].includes(input.type) ||
-          input.tagName.toLowerCase() === 'select'
-        ) {
-          if (input.value === originalValues[name]) {
-            input.disabled = true;
-          }
-        } else if (input.type === 'checkbox') {
-          if (input.checked === originalValues[name]) {
-            input.disabled = true;
-          }
-        }
-      }
-    });
-  });
-</script>
-<script src="{{ url_for('static', path='js/add_item.js') }}"></script>
+<script type="module" src="{{ url_for('static', path='js/add_item.js') }}"></script>
+<script type="module" src="{{ url_for('static', path='js/edit_item.js') }}"></script>
 
 </body>
 </html>
