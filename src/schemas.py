@@ -787,10 +787,12 @@ def parse_nullable(
 def parse_nullable_bool(value: str | None) -> bool | None:
     if value is None or value == '':
         return None
-    elif value.lower() == 'true':
+    elif value == 'true':
         return True
-    else:
+    elif value == 'false':
         return False
+    else:
+        raise ValueError(f'Invalid value passed to parse_nullable_bool: {value}')
 
 
 def parse_nullable_date(date_str: str | None) -> date | None:
