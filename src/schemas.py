@@ -784,10 +784,10 @@ def parse_nullable(
         return parser(value)
 
 
-def parse_nullable_bool(v: str | None) -> bool | None:
-    if v is None or v == '':
+def parse_nullable_bool(value: str | None) -> bool | None:
+    if value is None or value == '':
         return None
-    elif v.lower() == 'true':
+    elif value.lower() == 'true':
         return True
     else:
         return False
@@ -801,11 +801,11 @@ def parse_nullable_date(date_str: str | None) -> date | None:
 
 def set_if_value(
         d: dict[str, Any],
-        k: str,
-        v: Any,
+        key: str,
+        value: Any,
 ) -> None:
-    if v is not None and v != '' and v != [] and v != {}:
-        d[k] = v
+    if value is not None and value != '' and value != [] and value != {}:
+        d[key] = value
 
 
 def build_grading_fee_dict(
