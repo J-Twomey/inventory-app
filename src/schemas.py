@@ -182,7 +182,8 @@ class ItemBase(BaseModel):
 class ItemCreate(ItemBase):
     def to_model_kwargs(
             self,
-            exclude: set[str] = set()) -> dict[str, Any]:
+            exclude: set[str] = set(),
+    ) -> dict[str, Any]:
         data = self.model_dump(exclude=exclude)
         data['category'] = self.category.value
         data['language'] = self.language.value
@@ -350,6 +351,14 @@ class ItemUpdate(BaseModel):
     object_variant: ObjectVariant | None = None
     audit_target: bool = False
 
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def grading_fee_total(self) -> int | None:
+        if self.grading_fee is not None:
+            return sum(self.grading_fee.values())
+        else:
+            return None
+
     def to_model_kwargs(self) -> dict[str, Any]:
         data = self.model_dump(exclude_unset=True)
         if self.category is not None:
@@ -366,6 +375,8 @@ class ItemUpdate(BaseModel):
             data['list_type'] = self.list_type.value
         if self.object_variant is not None:
             data['object_variant'] = self.object_variant.value
+        if data.get('grading_fee_total') is None:
+            data.pop('grading_fee_total', None)
         return data
 
 

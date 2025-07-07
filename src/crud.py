@@ -20,7 +20,6 @@ def create_item(
 ) -> Item:
     item_data = item.to_model_kwargs(
         exclude={
-            'grading_fee_total',
             'total_cost',
             'total_fees',
             'return_usd',
@@ -29,8 +28,7 @@ def create_item(
             'net_percent',
         },
     )
-    grading_fee_total = sum(item.grading_fee.values())
-    db_item = Item(**item_data, grading_fee_total=grading_fee_total)
+    db_item = Item(**item_data)
     db.add(db_item)
     db.commit()
     db.refresh(db_item)
@@ -117,9 +115,6 @@ def edit_item(
 
     for key, value in update_data.items():
         setattr(item, key, value)
-
-    if 'grading_fee' in update_data:
-        item.grading_fee_total = sum(item.grading_fee.values())
 
     db.commit()
     db.refresh(item)
