@@ -100,8 +100,8 @@
   <label for="group_discount">Group Discount:</label>
   <select name="group_discount" id="group_discount">
     <option value="">Any</option>
-    <option value="true" {% if form_data and form_data.group_discount is true %}selected{% endif %}>True</option>
-    <option value="false" {% if form_data and form_data.group_discount is false %}selected{% endif %}>False</option>
+    <option value="true" {% if form_data and form_data.group_discount == 'true' %}selected{% endif %}>True</option>
+    <option value="false" {% if form_data and form_data.group_discount == 'false' %}selected{% endif %}>False</option>
   </select>
 
   <label for="object_variant">Object Variant:</label>
@@ -117,8 +117,8 @@
   <label for="audit_target">Audit Target:</label>
   <select name="audit_target" id="audit_target">
     <option value="">Any</option>
-    <option value="true" {% if form_data and form_data.audit_target is true %}selected{% endif %}>True</option>
-    <option value="false" {% if form_data and form_data.audit_target is false %}selected{% endif %}>False</option>
+    <option value="true" {% if form_data and form_data.audit_target == 'true' %}selected{% endif %}>True</option>
+    <option value="false" {% if form_data and form_data.audit_target == 'false' %}selected{% endif %}>False</option>
   </select>
 
   <input type="number" name="total_cost" placeholder="Total Cost" value="{{ form_data.total_cost if form_data else '' }}">
