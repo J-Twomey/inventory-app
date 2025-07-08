@@ -1,8 +1,52 @@
 import datetime
 import pytest
-from typing import Any
+from typing import (
+    Any,
+    Callable,
+)
 
+import src.item_enums as item_enums
 import src.schemas as schemas
+
+
+def test_parse_to_qualifiers_list_empty_input() -> None:
+    input_list: list[str] = []
+    result = schemas.parse_to_qualifiers_list(input_list)
+    assert result == []
+
+
+def test_parse_to_qualifiers_list_do_parse() -> None:
+    input_list = ['CRYSTAL', 'UNLIMITED']
+    result = schemas.parse_to_qualifiers_list(input_list)
+    assert result == [item_enums.Qualifier.CRYSTAL, item_enums.Qualifier.UNLIMITED]
+
+
+@pytest.mark.parametrize(
+    ('value'),
+    (
+        pytest.param(None, id='none_value'),
+        pytest.param('', id='empty_string'),
+    ),
+)
+def test_parse_nullable_no_parse(value: str | None) -> None:
+    result = schemas.parse_nullable(value, str)
+    assert result is None
+
+
+@pytest.mark.parametrize(
+    ('value', 'parser'),
+    (
+        pytest.param('a', str, id='parse_string'),
+        pytest.param('1', int, id='parse_int'),
+        pytest.param('1.', float, id='parse_float'),
+    ),
+)
+def test_parse_nullable_do_parse(
+        value: str,
+        parser: Callable[[str], schemas.T],
+) -> None:
+    result = schemas.parse_nullable(value, parser)
+    assert isinstance(result, parser)
 
 
 @pytest.mark.parametrize(
