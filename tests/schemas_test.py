@@ -1,12 +1,51 @@
 import datetime
 import pytest
-from typing import (
-    Any,
-    Callable,
-)
+from typing import Any
 
 import src.item_enums as item_enums
 import src.schemas as schemas
+
+
+def test_parse_enum() -> None:
+    input_str = 'pack'
+    result = schemas.parse_enum(input_str, item_enums.Category)
+    assert result == item_enums.Category.PACK
+
+
+def test_parse_enum_invalid_input() -> None:
+    input_str = 'null'
+    with pytest.raises(ValueError, match='Invalid Category: null'):
+        schemas.parse_enum(input_str, item_enums.Category)
+
+
+def test_parse_nullable_enum_do_parse_to_enum() -> None:
+    input_str = 'pack'
+    result = schemas.parse_nullable_enum(input_str, item_enums.Category, as_int=False)
+    assert result == item_enums.Category.PACK
+
+
+def test_parse_nullable_enum_do_parse_to_int() -> None:
+    input_str = 'pack'
+    result = schemas.parse_nullable_enum(input_str, item_enums.Category, as_int=True)
+    assert result == item_enums.Category.PACK.value
+
+
+@pytest.mark.parametrize(
+    ('value'),
+    (
+        pytest.param(None, id='none_value'),
+        pytest.param('', id='empty_string'),
+    ),
+)
+def test_parse_nullable_enum_no_parse(value: str | None) -> None:
+    result = schemas.parse_nullable_enum(value, item_enums.Category)
+    assert result is None
+
+
+def test_parse_nullable_enum_invalid_input() -> None:
+    input_str = 'null'
+    with pytest.raises(ValueError, match='Invalid Category: null'):
+        schemas.parse_nullable_enum(input_str, item_enums.Category)
 
 
 def test_parse_to_qualifiers_list_empty_input() -> None:
@@ -43,7 +82,7 @@ def test_parse_nullable_no_parse(value: str | None) -> None:
 )
 def test_parse_nullable_do_parse(
         value: str,
-        parser: Callable[[str], schemas.T],
+        parser: type[schemas.T],
 ) -> None:
     result = schemas.parse_nullable(value, parser)
     assert isinstance(result, parser)

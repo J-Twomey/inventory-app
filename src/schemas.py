@@ -13,6 +13,8 @@ from typing import (
     Annotated,
     Any,
     Callable,
+    Literal,
+    overload,
     Type,
     TypeVar,
 )
@@ -296,20 +298,20 @@ class ItemCreateForm:
         return ItemCreate(
             name=self.name,
             set_name=self.set_name,
-            category=parse_enum(self.category, Category, 'category'),
-            language=parse_enum(self.language, Language, 'language'),
+            category=parse_enum(self.category, Category),
+            language=parse_enum(self.language, Language),
             qualifiers=parse_to_qualifiers_list(self.qualifiers),
             details=parse_nullable(self.details, str),
             purchase_date=purchase_date_,
             purchase_price=int(self.purchase_price),
-            status=parse_enum(self.status, Status, 'status'),
-            intent=parse_enum(self.intent, Intent, 'intent'),
+            status=parse_enum(self.status, Status),
+            intent=parse_enum(self.intent, Intent),
             grading_fee=build_grading_fee_dict(self.submission_numbers, self.grading_fees),
             grade=parse_nullable(self.grade, float),
-            grading_company=parse_enum(self.grading_company, GradingCompany, 'grading_company'),
+            grading_company=parse_enum(self.grading_company, GradingCompany),
             cert=parse_nullable(self.cert, int),
             list_price=parse_nullable(self.list_price, float),
-            list_type=parse_enum(self.list_type, ListingType, 'list_type'),
+            list_type=parse_enum(self.list_type, ListingType),
             list_date=list_date_,
             sale_total=parse_nullable(self.sale_total, float),
             sale_date=sale_date_,
@@ -317,7 +319,7 @@ class ItemCreateForm:
             sale_fee=parse_nullable(self.sale_fee, float),
             usd_to_jpy_rate=parse_nullable(self.usd_to_jpy_rate, float),
             group_discount=self.group_discount,
-            object_variant=parse_enum(self.object_variant, ObjectVariant, 'object_variant'),
+            object_variant=parse_enum(self.object_variant, ObjectVariant),
             audit_target=self.audit_target,
         )
 
@@ -641,23 +643,23 @@ class ItemSearchForm:
         return ItemSearch(
             name=parse_nullable(self.name, str),
             set_name=parse_nullable(self.set_name, str),
-            category=parse_enum_as_int(self.category, Category),
-            language=parse_enum_as_int(self.language, Language),
+            category=parse_nullable_enum(self.category, Category, as_int=True),
+            language=parse_nullable_enum(self.language, Language, as_int=True),
             qualifiers=parse_to_qualifiers_list(self.qualifiers),
             details=parse_nullable(self.details, str),
             purchase_date=purchase_date_,
             purchase_price=parse_nullable(self.purchase_price, int),
-            status=parse_enum_as_int(self.status, Status),
-            intent=parse_enum_as_int(self.intent, Intent),
+            status=parse_nullable_enum(self.status, Status, as_int=True),
+            intent=parse_nullable_enum(self.intent, Intent, as_int=True),
             grade=parse_nullable(self.grade, float),
-            grading_company=parse_enum_as_int(self.grading_company, GradingCompany),
+            grading_company=parse_nullable_enum(self.grading_company, GradingCompany, as_int=True),
             cert=parse_nullable(self.cert, int),
-            list_type=parse_enum_as_int(self.list_type, ListingType),
+            list_type=parse_nullable_enum(self.list_type, ListingType, as_int=True),
             list_date=list_date_,
             sale_total=parse_nullable(self.sale_total, float),
             sale_date=sale_date_,
             group_discount=parse_nullable_bool(self.group_discount),
-            object_variant=parse_enum_as_int(self.object_variant, ObjectVariant),
+            object_variant=parse_nullable_enum(self.object_variant, ObjectVariant, as_int=True),
             audit_target=parse_nullable_bool(self.audit_target),
             total_cost=parse_nullable(self.total_cost, int),
             return_jpy=parse_nullable(self.return_jpy, int),
@@ -707,36 +709,42 @@ class DisplayItem(BaseModel):
 def parse_enum(
         value: str,
         enum_cls: Type[E],
-        enum_name: str,
 ) -> E:
     try:
         return enum_cls[value.upper()]
     except KeyError:
-        raise ValueError(f'Invalid {enum_name}: {value}')
+        raise ValueError(f'Invalid {enum_cls.__name__}: {value}')
+
+
+@overload
+def parse_nullable_enum(
+        value: str | None,
+        enum_cls: Type[E],
+        as_int: Literal[True],
+) -> int | None: ...
+
+
+@overload
+def parse_nullable_enum(
+        value: str | None,
+        enum_cls: Type[E],
+        as_int: Literal[False] = False,
+) -> E | None: ...
 
 
 def parse_nullable_enum(
         value: str | None,
         enum_cls: Type[E],
-) -> E | None:
+        as_int: bool = False,
+) -> E | int | None:
     if value == '' or value is None:
         return None
     else:
         try:
-            return enum_cls[value.upper()]
-        except KeyError:
-            raise ValueError(f'Invalid {enum_cls.__name__}: {value}')
-
-
-def parse_enum_as_int(
-        value: str | None,
-        enum_cls: Type[E],
-) -> int | None:
-    if value == '' or value is None:
-        return None
-    else:
-        try:
-            return int(enum_cls[value.upper()].value)
+            if as_int:
+                return int(enum_cls[value.upper()].value)
+            else:
+                return enum_cls[value.upper()]
         except KeyError:
             raise ValueError(f'Invalid {enum_cls.__name__}: {value}')
 
