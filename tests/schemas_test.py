@@ -4,6 +4,24 @@ from typing import Any
 
 import src.item_enums as item_enums
 import src.schemas as schemas
+from .conftest import ItemBaseFactory
+
+
+@pytest.mark.parametrize(
+    ('grading_fees', 'expected_total'),
+    (
+        pytest.param({}, 0, id='no_grading_fees'),
+        pytest.param({1: 10}, 10, id='single_fee'),
+        pytest.param({1: 10, 2: 20}, 30, id='multiple_fees'),
+    ),
+)
+def test_item_base_grading_fee_total(
+        item_base_factory: ItemBaseFactory,
+        grading_fees: dict[int, int],
+        expected_total: int,
+) -> None:
+    item = item_base_factory.get(grading_fee=grading_fees)
+    assert item.grading_fee_total == expected_total
 
 
 def test_parse_enum() -> None:
