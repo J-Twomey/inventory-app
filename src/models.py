@@ -71,6 +71,7 @@ class Item(Base):
     grading_fee: Mapped[dict[int, int]] = mapped_column(JSON)
     grading_fee_total: Mapped[int] = mapped_column(Integer)
     submission_numbers: Mapped[list[int]] = mapped_column(JSON)
+    cracked_from: Mapped[list[int]] = mapped_column(JSON)
     grade: NullableFloat = NullableFloatColumn()
     grading_company: Mapped[int] = mapped_column(Integer)
     cert: NullableInt = NullableIntColumn()
@@ -201,6 +202,7 @@ class Item(Base):
             grading_fee=self.grading_fee,
             grading_fee_total=self.grading_fee_total,
             submission_numbers=self.submission_numbers,
+            cracked_from=self.cracked_from,
             grade=self.grade,
             grading_company=GradingCompany(self.grading_company),
             cert=self.cert,

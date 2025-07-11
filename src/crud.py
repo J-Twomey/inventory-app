@@ -75,9 +75,9 @@ def search_for_items(
         if value is None or value == []:
             continue
 
-        # Filter qualifiers after the sql search
-        if field == 'qualifiers':
-            post_filters.append(('qualifiers', value))
+        # Filter qualifiers and cracked_from after the sql search
+        if field in ['qualifiers', 'cracked_from']:
+            post_filters.append((field, value))
         elif field == 'submission_number':
             raise NotImplementedError
         else:
@@ -89,7 +89,7 @@ def search_for_items(
         statement = statement.where(and_(*filters))
     results = db.execute(statement).scalars().all()
 
-    # Post filtering (for qualifiers)
+    # Post filtering (for qualifiers and cracked_from)
     for field, value in post_filters:
         if field == 'qualifiers':
             qualifier_values = [q for q in value]
@@ -97,6 +97,8 @@ def search_for_items(
                 item for item in results
                 if all(q in item.qualifiers for q in qualifier_values)
             ]
+        elif field == 'cracked_from':
+            results = [item for item in results if value in item.cracked_from]
     return results
 
 
@@ -119,3 +121,7 @@ def edit_item(
     db.commit()
     db.refresh(item)
     return 303
+
+
+def get_all_submission_values(db: Session) -> list[int]:
+    return [1, 2]

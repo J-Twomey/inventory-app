@@ -72,6 +72,7 @@ class ItemFactory:
         status: int = item_enums.Status.STORAGE.value,
         intent: int = item_enums.Intent.SELL.value,
         grading_fee: dict[int, int] | None = None,
+        cracked_from: list[int] | None = None,
         grade: float | None = None,
         grading_company: int = item_enums.GradingCompany.RAW.value,
         cert: float | None = None,
@@ -91,6 +92,8 @@ class ItemFactory:
             qualifiers = []
         if grading_fee is None:
             grading_fee = {}
+        if cracked_from is None:
+            cracked_from = []
         submission_numbers = list(grading_fee)
         grading_fee_total = sum(grading_fee.values())
         return Item(
@@ -108,6 +111,7 @@ class ItemFactory:
             grading_fee=grading_fee,
             grading_fee_total=grading_fee_total,
             submission_numbers=submission_numbers,
+            cracked_from=cracked_from,
             grade=grade,
             grading_company=grading_company,
             cert=cert,
@@ -144,6 +148,7 @@ class ItemBaseFactory:
         status: item_enums.Status = item_enums.Status.STORAGE,
         intent: item_enums.Intent = item_enums.Intent.SELL,
         grading_fee: dict[int, int] | None = None,
+        cracked_from: list[int] | None = None,
         grade: float | None = None,
         grading_company: item_enums.GradingCompany = item_enums.GradingCompany.RAW,
         cert: int | None = None,
@@ -163,6 +168,8 @@ class ItemBaseFactory:
             qualifiers = []
         if grading_fee is None:
             grading_fee = {}
+        if cracked_from is None:
+            cracked_from = []
         return ItemBase(
             name=name,
             set_name=set_name,
@@ -175,6 +182,7 @@ class ItemBaseFactory:
             status=status,
             intent=intent,
             grading_fee=grading_fee,
+            cracked_from=cracked_from,
             grade=grade,
             grading_company=grading_company,
             cert=cert,
@@ -211,6 +219,7 @@ class ItemCreateFactory:
         status: item_enums.Status = item_enums.Status.STORAGE,
         intent: item_enums.Intent = item_enums.Intent.SELL,
         grading_fee: dict[int, int] | None = None,
+        cracked_from: list[int] | None = None,
         grade: float | None = None,
         grading_company: item_enums.GradingCompany = item_enums.GradingCompany.RAW,
         cert: int | None = None,
@@ -230,6 +239,8 @@ class ItemCreateFactory:
             qualifiers = []
         if grading_fee is None:
             grading_fee = {}
+        if cracked_from is None:
+            cracked_from = []
         return ItemCreate(
             name=name,
             set_name=set_name,
@@ -242,6 +253,7 @@ class ItemCreateFactory:
             status=status,
             intent=intent,
             grading_fee=grading_fee,
+            cracked_from=cracked_from,
             grade=grade,
             grading_company=grading_company,
             cert=cert,

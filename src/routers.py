@@ -16,6 +16,7 @@ from .crud import (
     create_item,
     delete_item_by_id,
     edit_item,
+    get_all_submission_values,
     get_newest_items,
     search_for_items,
 )
@@ -65,6 +66,7 @@ def view_items(
         items = search_for_items(db, search_data)
         items = items[:show_limit]
     display_items = [item.to_display() for item in items]
+    submission_options = get_all_submission_values(db)
     return templates.TemplateResponse(
         'view.html',
         {
@@ -79,6 +81,7 @@ def view_items(
             'grading_company_enum': GradingCompany,
             'list_type_enum': ListingType,
             'object_variant_enum': ObjectVariant,
+            'submission_options': submission_options,
         },
     )
 

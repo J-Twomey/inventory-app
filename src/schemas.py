@@ -64,6 +64,7 @@ class ItemBase(BaseModel):
     status: Status
     intent: Intent
     grading_fee: dict[int, int]
+    cracked_from: list[int]
     grade: float | None = None
     grading_company: GradingCompany
     cert: int | None = None
@@ -143,9 +144,11 @@ class ItemBase(BaseModel):
             v: T,
             info: ValidationInfo,
     ) -> T | None:
+        # Empty string is handled differently for these fields
         if info.field_name in {
             'qualifiers',
             'grading_fee',
+            'cracked_from',
             'group_discount',
             'audit_target',
         }:
@@ -162,6 +165,15 @@ class ItemBase(BaseModel):
         elif isinstance(v, list) and all(isinstance(x, Qualifier) for x in v):
             return v
         raise ValueError('qualifiers must be provided as str or list[Qualifier]')
+
+    @field_validator('cracked_from', mode='before')
+    @classmethod
+    def parse_cracked_from(cls, v: Any) -> list[int]:
+        if isinstance(v, str):
+            return [int(x.strip()) for x in v.split(',') if x.strip()]
+        elif isinstance(v, list) and all(isinstance(x, int) for x in v):
+            return v
+        raise ValueError('cracked_from must be provided as str or list[int]')
 
     @field_validator('grading_fee', mode='before')
     @classmethod
@@ -224,6 +236,7 @@ class ItemCreateForm:
     audit_target: bool
     submission_numbers: list[str] = field(default_factory=list)
     grading_fees: list[str] = field(default_factory=list)
+    cracked_from: list[str] = field(default_factory=list)
     qualifiers: list[str] = field(default_factory=list)
 
     @classmethod
@@ -252,6 +265,7 @@ class ItemCreateForm:
         object_variant: Annotated[str, Form()],
         submission_numbers: Annotated[list[str], Form(default_factory=list)],
         grading_fees: Annotated[list[str], Form(default_factory=list)],
+        cracked_from: Annotated[list[str], Form(default_factory=list)],
         qualifiers: Annotated[list[str], Form(default_factory=list)],
         group_discount: Annotated[bool, Form()] = False,
         audit_target: Annotated[bool, Form()] = False,
@@ -280,6 +294,7 @@ class ItemCreateForm:
             usd_to_jpy_rate=usd_to_jpy_rate,
             submission_numbers=submission_numbers,
             grading_fees=grading_fees,
+            cracked_from=cracked_from,
             group_discount=group_discount,
             object_variant=object_variant,
             audit_target=audit_target,
@@ -307,6 +322,9 @@ class ItemCreateForm:
             status=parse_enum(self.status, Status),
             intent=parse_enum(self.intent, Intent),
             grading_fee=build_grading_fee_dict(self.submission_numbers, self.grading_fees),
+            cracked_from=parse_nullable_list_of_str_to_list_of_int(
+                self.cracked_from,
+            ),
             grade=parse_nullable(self.grade, float),
             grading_company=parse_enum(self.grading_company, GradingCompany),
             cert=parse_nullable(self.cert, int),
@@ -338,6 +356,7 @@ class ItemUpdate(BaseModel):
     status: Status | None = None
     intent: Intent | None = None
     grading_fee: dict[int, int] | None = None
+    cracked_from: list[int] | None = None
     grade: float | None = None
     grading_company: GradingCompany | None = None
     cert: int | None = None
@@ -410,6 +429,7 @@ class ItemUpdateForm:
     audit_target: bool = False
     submission_numbers: list[str] = field(default_factory=list)
     grading_fees: list[str] = field(default_factory=list)
+    cracked_from: list[str] = field(default_factory=list)
     qualifiers: list[str] = field(default_factory=list)
 
     @classmethod
@@ -418,6 +438,7 @@ class ItemUpdateForm:
         qualifiers: Annotated[list[str], Form(default_factory=list)],
         submission_numbers: Annotated[list[str], Form(default_factory=list)],
         grading_fees: Annotated[list[str], Form(default_factory=list)],
+        cracked_from: Annotated[list[str], Form(default_factory=list)],
         name: Annotated[str | None, Form()] = None,
         set_name: Annotated[str | None, Form()] = None,
         category: Annotated[str | None, Form()] = None,
@@ -427,7 +448,6 @@ class ItemUpdateForm:
         purchase_price: Annotated[str | None, Form()] = None,
         status: Annotated[str | None, Form()] = None,
         intent: Annotated[str | None, Form()] = None,
-        grading_fee: Annotated[str | None, Form()] = None,
         grade: Annotated[str | None, Form()] = None,
         grading_company: Annotated[str | None, Form()] = None,
         cert: Annotated[str | None, Form()] = None,
@@ -454,7 +474,6 @@ class ItemUpdateForm:
             purchase_price=purchase_price,
             status=status,
             intent=intent,
-            grading_fee=grading_fee,
             grade=grade,
             grading_company=grading_company,
             cert=cert,
@@ -468,6 +487,7 @@ class ItemUpdateForm:
             usd_to_jpy=usd_to_jpy,
             submission_numbers=submission_numbers,
             grading_fees=grading_fees,
+            cracked_from=cracked_from,
             group_discount=group_discount,
             object_variant=object_variant,
             audit_target=audit_target,
@@ -500,6 +520,11 @@ class ItemUpdateForm:
         set_if_value(update_vals, 'shipping', parse_nullable(self.shipping, float))
         set_if_value(update_vals, 'sale_fee', parse_nullable(self.sale_fee, float))
         set_if_value(update_vals, 'usd_to_jpy', parse_nullable(self.usd_to_jpy, float))
+        set_if_value(
+            update_vals,
+            'cracked_from',
+            parse_nullable_list_of_str_to_list_of_int(self.cracked_from),
+        )
         set_if_value(update_vals, 'group_discount', self.group_discount)
         set_if_value(
             update_vals,
@@ -529,6 +554,7 @@ class ItemSearch(BaseModel):
     purchase_price: Annotated[int | None, Form()] = None
     status: Annotated[int | None, Form()] = None
     intent: Annotated[int | None, Form()] = None
+    cracked_from: Annotated[int | None, Form()] = None
     grade: Annotated[float | None, Form()] = None
     grading_company: Annotated[int | None, Form()] = None
     cert: Annotated[int | None, Form()] = None
@@ -557,6 +583,7 @@ class ItemSearchForm:
     purchase_price: str | None = None
     status: str | None = None
     intent: str | None = None
+    cracked_from: str | None = None
     grade: str | None = None
     grading_company: str | None = None
     cert: str | None = None
@@ -585,6 +612,7 @@ class ItemSearchForm:
         purchase_price: Annotated[str | None, Query()] = None,
         status: Annotated[str | None, Query()] = None,
         intent: Annotated[str | None, Query()] = None,
+        cracked_from: Annotated[str | None, Query()] = None,
         grade: Annotated[str | None, Query()] = None,
         grading_company: Annotated[str | None, Query()] = None,
         cert: Annotated[str | None, Query()] = None,
@@ -611,6 +639,7 @@ class ItemSearchForm:
             purchase_price=purchase_price,
             status=status,
             intent=intent,
+            cracked_from=cracked_from,
             grade=grade,
             grading_company=grading_company,
             cert=cert,
@@ -651,6 +680,7 @@ class ItemSearchForm:
             purchase_price=parse_nullable(self.purchase_price, int),
             status=parse_nullable_enum(self.status, Status, as_int=True),
             intent=parse_nullable_enum(self.intent, Intent, as_int=True),
+            cracked_from=parse_nullable(self.cracked_from, int),
             grade=parse_nullable(self.grade, float),
             grading_company=parse_nullable_enum(self.grading_company, GradingCompany, as_int=True),
             cert=parse_nullable(self.cert, int),
@@ -683,6 +713,7 @@ class DisplayItem(BaseModel):
     grading_fee: dict[int, int]
     grading_fee_total: int
     submission_numbers: list[int]
+    cracked_from: list[int]
     grade: float | None
     grading_company: GradingCompany
     cert: int | None
@@ -802,3 +833,12 @@ def build_grading_fee_dict(
     return {
         int(k): int(v) for k, v in zip(sub_nums, fees, strict=True)
     }
+
+
+def parse_nullable_list_of_str_to_list_of_int(input_list: list[str] | None) -> list[int]:
+    if input_list is None:
+        return []
+    else:
+        # Remove empty string that gets sent if no value set
+        input_list = [v for v in input_list if v != '']
+        return [int(v) for v in input_list]

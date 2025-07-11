@@ -205,3 +205,21 @@ def test_build_grading_fee_dict_uneven_length() -> None:
     fees = ['10', '20']
     with pytest.raises(ValueError):
         schemas.build_grading_fee_dict(sub_nums=sub_nums, fees=fees)
+
+
+def test_parse_nullable_list_of_str_to_list_of_int() -> None:
+    input_list = ['1', '2']
+    result = schemas.parse_nullable_list_of_str_to_list_of_int(input_list)
+    assert result == [1, 2]
+
+
+def test_parse_nullable_list_of_str_to_list_of_int_none_case() -> None:
+    input_list = None
+    result = schemas.parse_nullable_list_of_str_to_list_of_int(input_list)
+    assert result == []
+
+
+def test_parse_nullable_list_of_str_to_list_of_int_with_empty_string() -> None:
+    input_list = ['1', '', '2']
+    result = schemas.parse_nullable_list_of_str_to_list_of_int(input_list)
+    assert result == [1, 2]
