@@ -2,6 +2,8 @@ import datetime
 import pytest
 from typing import Any
 
+from pydantic import ValidationError
+
 import src.item_enums as item_enums
 import src.schemas as schemas
 from .conftest import ItemBaseFactory
@@ -185,6 +187,47 @@ def test_item_base_net_percent(
         usd_to_jpy_rate=usd_to_jpy_rate,
     )
     assert item.net_percent == expected_percent
+
+
+@pytest.mark.parametrize(
+    ('field', 'input_value', 'expected_value'),
+    (
+        pytest.param('name', 'kari', 'kari', id='string_field_not_empty'),
+        pytest.param('purchase_price', 5, 5, id='int_field_not_empty'),
+        pytest.param('grade', 5., 5., id='float_field_not_empty'),
+        pytest.param('grade', None, None, id='none_field_not_empty'),
+        pytest.param(
+            'category',
+            item_enums.Category.BOX,
+            item_enums.Category.BOX,
+            id='enum_field_not_empty',
+        ),
+        pytest.param(
+            'purchase_date',
+            datetime.date(1999, 12, 31),
+            datetime.date(1999, 12, 31),
+            id='date_field_not_empty',
+        ),
+        pytest.param('cracked_from', [1, 2], [1, 2], id='excluded_field'),
+    ),
+)
+def test_item_base_empty_str_to_none_validator(
+        item_base_factory: ItemBaseFactory,
+        field: str,
+        input_value: Any,
+        expected_value: Any,
+) -> None:
+    field_settings = {field: input_value}
+    item = item_base_factory.get(**field_settings)
+    actual_value = getattr(item, field)
+    assert actual_value == expected_value
+
+
+def test_item_base_required_field_not_allowed_as_empty_string(
+        item_base_factory: ItemBaseFactory,
+) -> None:
+    with pytest.raises(ValidationError):
+        item_base_factory.get(name='')
 
 
 def test_parse_enum() -> None:
