@@ -109,7 +109,7 @@ class ItemBase(BaseModel):
         if self.sale_total is None or self.total_fees is None:
             return None
         else:
-            return self.sale_total - self.total_fees
+            return round(self.sale_total - self.total_fees, 2)
 
     @computed_field  # type: ignore[prop-decorator]
     @property

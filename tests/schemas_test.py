@@ -24,6 +24,169 @@ def test_item_base_grading_fee_total(
     assert item.grading_fee_total == expected_total
 
 
+def test_item_base_submission_numbers(item_base_factory: ItemBaseFactory) -> None:
+    grading_fees = {1: 10, 2: 20}
+    item = item_base_factory.get(grading_fee=grading_fees)
+    assert item.submission_numbers == [1, 2]
+
+
+def test_item_base_submission_numbers_empty(item_base_factory: ItemBaseFactory) -> None:
+    grading_fees: dict[int, int] = {}
+    item = item_base_factory.get(grading_fee=grading_fees)
+    assert item.submission_numbers == []
+
+
+def test_item_base_total_cost(item_base_factory: ItemBaseFactory) -> None:
+    purchase_price = 555
+    grading_fees = {1: 10, 2: 20}
+    item = item_base_factory.get(purchase_price=purchase_price, grading_fee=grading_fees)
+    assert item.total_cost == 585
+
+
+@pytest.mark.parametrize(
+    ('shipping', 'sale_fee', 'expected_total'),
+    (
+        pytest.param(None, None, None, id='no_fees'),
+        pytest.param(None, 8.7, None, id='no_shipping'),
+        pytest.param(5.5, None, None, id='no_sale_fee'),
+        pytest.param(5.5, 8.7, 14.2, id='with_fees'),
+    ),
+)
+def test_item_base_total_fees(
+        item_base_factory: ItemBaseFactory,
+        shipping: float | None,
+        sale_fee: float | None,
+        expected_total: float | None,
+) -> None:
+    item = item_base_factory.get(shipping=shipping, sale_fee=sale_fee)
+    assert item.total_fees == expected_total
+
+
+@pytest.mark.parametrize(
+    ('sale_total', 'shipping', 'sale_fee', 'expected_return'),
+    (
+        pytest.param(None, None, None, None, id='no_fees'),
+        pytest.param(None, 5.34, 8.66, None, id='no_sale_total'),
+        pytest.param(11.23, None, 8.66, None, id='no_total_fee'),
+        pytest.param(15.31, 5.54, 8.66, 1.11, id='net_positive'),
+        pytest.param(10.35, 5.54, 8.66, -3.85, id='net_negative'),
+    ),
+)
+def test_item_base_return_usd(
+        item_base_factory: ItemBaseFactory,
+        sale_total: float | None,
+        shipping: float | None,
+        sale_fee: float | None,
+        expected_return: float | None,
+) -> None:
+    item = item_base_factory.get(sale_total=sale_total, shipping=shipping, sale_fee=sale_fee)
+    assert item.return_usd == expected_return
+
+
+@pytest.mark.parametrize(
+    ('sale_total', 'shipping', 'sale_fee', 'usd_to_jpy_rate', 'expected_return'),
+    (
+        pytest.param(None, None, None, None, None, id='no_fees'),
+        pytest.param(9.64, 3.21, None, 140.55, None, id='no_return_usd'),
+        pytest.param(9.64, 3.21, 2.87, None, None, id='no_exchange_rate'),
+        pytest.param(9.64, 3.21, 2.87, 140.55, 500, id='net_positive'),
+        pytest.param(5.49, 3.27, 2.99, 140.55, -108, id='net_negative'),
+    ),
+)
+def test_item_base_return_jpy(
+        item_base_factory: ItemBaseFactory,
+        sale_total: float | None,
+        shipping: float | None,
+        sale_fee: float | None,
+        usd_to_jpy_rate: float | None,
+        expected_return: int | None,
+) -> None:
+    item = item_base_factory.get(
+        sale_total=sale_total,
+        shipping=shipping,
+        sale_fee=sale_fee,
+        usd_to_jpy_rate=usd_to_jpy_rate,
+    )
+    assert item.return_jpy == expected_return
+
+
+@pytest.mark.parametrize(
+    (
+        'purchase_price',
+        'grading_fees',
+        'sale_total',
+        'shipping',
+        'sale_fee',
+        'usd_to_jpy_rate',
+        'expected_net',
+    ),
+    (
+        pytest.param(10, {1: 100}, None, None, None, None, None, id='no_sale'),
+        pytest.param(10, {1: 100}, 9.64, 3.21, 2.87, 140.55, 390, id='net_positive'),
+        pytest.param(1000, {1: 100}, 9.64, 3.21, 2.87, 140.55, -600, id='positive_ret_net_neg'),
+        pytest.param(10, {1: 100}, 5.49, 3.27, 2.99, 140.55, -218, id='negative_ret_net_neg'),
+    ),
+)
+def test_item_base_net_jpy(
+        item_base_factory: ItemBaseFactory,
+        purchase_price: int,
+        grading_fees: dict[int, int],
+        sale_total: float | None,
+        shipping: float | None,
+        sale_fee: float | None,
+        usd_to_jpy_rate: float | None,
+        expected_net: int | None,
+) -> None:
+    item = item_base_factory.get(
+        purchase_price=purchase_price,
+        grading_fee=grading_fees,
+        sale_total=sale_total,
+        shipping=shipping,
+        sale_fee=sale_fee,
+        usd_to_jpy_rate=usd_to_jpy_rate,
+    )
+    assert item.net_jpy == expected_net
+
+
+@pytest.mark.parametrize(
+    (
+        'purchase_price',
+        'grading_fees',
+        'sale_total',
+        'shipping',
+        'sale_fee',
+        'usd_to_jpy_rate',
+        'expected_percent',
+    ),
+    (
+        pytest.param(10, {1: 100}, None, None, None, None, None, id='no_sale'),
+        pytest.param(0, {}, 9.55, 3.33, 2.11, 140.55, 0., id='no_costs'),
+        pytest.param(10, {1: 100}, 9.64, 3.21, 2.87, 140.55, 354.55, id='net_positive'),
+        pytest.param(1000, {1: 100}, 9.64, 3.21, 2.87, 140.55, -54.55, id='positive_ret_net_neg'),
+        pytest.param(10, {1: 100}, 5.49, 3.27, 2.99, 140.55, -198.18, id='negative_ret_net_neg'),
+    ),
+)
+def test_item_base_net_percent(
+        item_base_factory: ItemBaseFactory,
+        purchase_price: int,
+        grading_fees: dict[int, int],
+        sale_total: float | None,
+        shipping: float | None,
+        sale_fee: float | None,
+        usd_to_jpy_rate: float | None,
+        expected_percent: float | None,
+) -> None:
+    item = item_base_factory.get(
+        purchase_price=purchase_price,
+        grading_fee=grading_fees,
+        sale_total=sale_total,
+        shipping=shipping,
+        sale_fee=sale_fee,
+        usd_to_jpy_rate=usd_to_jpy_rate,
+    )
+    assert item.net_percent == expected_percent
+
+
 def test_parse_enum() -> None:
     input_str = 'pack'
     result = schemas.parse_enum(input_str, item_enums.Category)
