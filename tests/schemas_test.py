@@ -189,6 +189,13 @@ def test_item_base_net_percent(
     assert item.net_percent == expected_percent
 
 
+def test_item_base_required_field_not_allowed_as_empty_string(
+        item_base_factory: ItemBaseFactory,
+) -> None:
+    with pytest.raises(ValidationError):
+        item_base_factory.get(name='')
+
+
 @pytest.mark.parametrize(
     ('field', 'input_value', 'expected_value'),
     (
@@ -223,11 +230,52 @@ def test_item_base_empty_str_to_none_validator(
     assert actual_value == expected_value
 
 
-def test_item_base_required_field_not_allowed_as_empty_string(
+@pytest.mark.parametrize(
+    ('input_value', 'expected_value'),
+    (
+        pytest.param('', [], id='empty_string'),
+        pytest.param([], [], id='empty_list'),
+        pytest.param(
+            'UNLIMITED,CRYSTAL',
+            [item_enums.Qualifier.UNLIMITED, item_enums.Qualifier.CRYSTAL],
+            id='str_input',
+        ),
+        pytest.param(
+            [item_enums.Qualifier.UNLIMITED, item_enums.Qualifier.CRYSTAL],
+            [item_enums.Qualifier.UNLIMITED, item_enums.Qualifier.CRYSTAL],
+            id='list_input',
+        ),
+    ),
+)
+def test_item_base_parse_qualifiers_validator(
         item_base_factory: ItemBaseFactory,
+        input_value: str | list[item_enums.Qualifier],
+        expected_value: list[item_enums.Qualifier],
 ) -> None:
+    item = item_base_factory.get(qualifiers=input_value)  # type: ignore[arg-type]
+    actual_value = item.qualifiers
+    assert actual_value == expected_value
+
+
+def test_item_base_parse_qualifiers_error_input(item_base_factory: ItemBaseFactory) -> None:
     with pytest.raises(ValidationError):
-        item_base_factory.get(name='')
+        item_base_factory.get(qualifiers=5)  # type: ignore[arg-type]
+
+
+def test_item_base_parse_cracked_from_validator() -> None:
+    assert False
+
+
+def test_item_base_parse_cracked_from_error_input() -> None:
+    assert False
+
+
+def test_item_base_parse_grading_fee_validator() -> None:
+    assert False
+
+
+def test_item_base_parse_grading_fee_error_input() -> None:
+    assert False
 
 
 def test_parse_enum() -> None:
