@@ -7,16 +7,17 @@
 </head>
 <body>
 
-<h1>View Items</h1>
-
 <a href="/" class="btn btn-purple btn-small margin-bottom-20 inline">Back To Landing Page</a>
 <a href="/view" class="btn btn-orange btn-small margin-bottom-20 inline">Reset Search Conditions</a>
 
 <form method="get" action="/view">
   <input type="text" name="name" placeholder="Name" value="{{ form_data.name if form_data and form_data.name is not none else '' }}">
   <input type="text" name="set_name" placeholder="Set Name" value="{{ form_data.set_name if form_data and form_data.set_name is not none else '' }}">
+  <input type="number" step="any" name="grade" placeholder="Grade" value="{{ form_data.grade if form_data else '' }}">
+  <input type="number" name="cert" placeholder="Cert #" value="{{ form_data.cert if form_data else '' }}">
+  <input type="text" name="details" placeholder="Details" value="{{ form_data.details if form_data and form_data.details is not none else '' }}"><br><br>
 
-  <label for="category">Category:</label>
+  <label for="category">Type:</label>
   <select name="category" id="category_search_select">
     <option value="">Any</option>
     {% for category in category_enum %}
@@ -34,27 +35,14 @@
         {{ language.name.title().replace('_', ' ')}}
       </option>
     {% endfor %}
-  </select><br><br>
+  </select>
 
-  <label>Qualifiers:</label><br>
-  {% for qualifier in qualifier_enum %}
-    <label>
-      <input type="checkbox" name="qualifiers" value="{{ qualifier.name }}" {% if form_data and qualifier.name in form_data.qualifiers %}checked{% endif %}>
-      {{ qualifier.name.replace('_', ' ').title() }}
-    </label><br>
-  {% endfor %}
-  <br>
-
-  <input type="text" name="details" placeholder="Details" value="{{ form_data.details if form_data and form_data.details is not none else '' }}">
-  <input type="date" name="purchase_date" placeholder="Purchase Date" value="{{ form_data.purchase_date if form_data else '' }}">
-  <input type="number" name="purchase_price" placeholder="Purchase Price" value="{{ form_data.purchase_price if form_data else '' }}">
-
-  <label for="status">Status:</label>
-  <select name="status" id="status_search_select">
+  <label for="grading_company">Grading Company:</label>
+  <select name="grading_company" id="grading_company_search_select">
     <option value="">Any</option>
-    {% for status in status_enum %}
-      <option value="{{ status.name }}" {% if form_data and form_data.status == status.name %}selected{% endif %}>
-        {{ status.name.title()}}
+    {% for grading_company in grading_company_enum %}
+      <option value="{{ grading_company.name }}" {% if form_data and form_data.grading_company == grading_company.name %}selected{% endif %}>
+        {{ grading_company.name.title()}}
       </option>
     {% endfor %}
   </select>
@@ -69,29 +57,15 @@
     {% endfor %}
   </select>
 
-  <label for="cracked_from">Cracked From:</label>
-  <select name="cracked_from" id="cracked_from_search_select">
+  <label for="status">Status:</label>
+  <select name="status" id="status_search_select">
     <option value="">Any</option>
-    {% for value in submission_options %}
-      <option value="{{ value }}" {% if form_data and form_data.cracked_from|int == value %}selected{% endif %}>
-        {{ value }}
+    {% for status in status_enum %}
+      <option value="{{ status.name }}" {% if form_data and form_data.status == status.name %}selected{% endif %}>
+        {{ status.name.title()}}
       </option>
     {% endfor %}
   </select>
-
-  <input type="number" step="any" name="grade" placeholder="Grade" value="{{ form_data.grade if form_data else '' }}">
-
-  <label for="grading_company">Grading Company:</label>
-  <select name="grading_company" id="grading_company_search_select">
-    <option value="">Any</option>
-    {% for grading_company in grading_company_enum %}
-      <option value="{{ grading_company.name }}" {% if form_data and form_data.grading_company == grading_company.name %}selected{% endif %}>
-        {{ grading_company.name.title()}}
-      </option>
-    {% endfor %}
-  </select>
-
-  <input type="number" name="cert" placeholder="Cert #" value="{{ form_data.cert if form_data else '' }}">
 
   <label for="list_type">Listing Type:</label>
   <select name="list_type" id="list_type_search_select">
@@ -99,6 +73,38 @@
     {% for list_type in list_type_enum %}
       <option value="{{ list_type.name }}" {% if form_data and form_data.list_type == list_type.name %}selected{% endif %}>
         {{ list_type.name.title().replace('_', ' ')}}
+      </option>
+    {% endfor %}
+  </select>
+
+  <label for="object_variant">Object Variant:</label>
+  <select name="object_variant" id="object_variant_search_select">
+    <option value="">Any</option>
+    {% for object_variant in object_variant_enum %}
+      <option value="{{ object_variant.name }}" {% if form_data and form_data.object_variant == object_variant.name %}selected{% endif %}>
+        {{ object_variant.name.title().replace('_', ' ')}}
+      </option>
+    {% endfor %}
+  </select><br><br>
+
+  <label>Qualifiers:</label><br>
+  {% for qualifier in qualifier_enum %}
+    <label>
+      <input type="checkbox" name="qualifiers" value="{{ qualifier.name }}" {% if form_data and qualifier.name in form_data.qualifiers %}checked{% endif %}>
+      {{ qualifier.name.replace('_', ' ').title() }}
+    </label><br>
+  {% endfor %}
+  <br>
+
+  <input type="date" name="purchase_date" placeholder="Purchase Date" value="{{ form_data.purchase_date if form_data else '' }}">
+  <input type="number" name="purchase_price" placeholder="Purchase Price" value="{{ form_data.purchase_price if form_data else '' }}">
+
+  <label for="cracked_from">Cracked From:</label>
+  <select name="cracked_from" id="cracked_from_search_select">
+    <option value="">Any</option>
+    {% for value in submission_options %}
+      <option value="{{ value }}" {% if form_data and form_data.cracked_from|int == value %}selected{% endif %}>
+        {{ value }}
       </option>
     {% endfor %}
   </select>
@@ -112,16 +118,6 @@
     <option value="">Any</option>
     <option value="true" {% if form_data and form_data.group_discount == 'true' %}selected{% endif %}>True</option>
     <option value="false" {% if form_data and form_data.group_discount == 'false' %}selected{% endif %}>False</option>
-  </select>
-
-  <label for="object_variant">Object Variant:</label>
-  <select name="object_variant" id="object_variant_search_select">
-    <option value="">Any</option>
-    {% for object_variant in object_variant_enum %}
-      <option value="{{ object_variant.name }}" {% if form_data and form_data.object_variant == object_variant.name %}selected{% endif %}>
-        {{ object_variant.name.title().replace('_', ' ')}}
-      </option>
-    {% endfor %}
   </select>
 
   <label for="audit_target">Audit Target:</label>
