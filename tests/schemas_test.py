@@ -257,25 +257,65 @@ def test_item_base_parse_qualifiers_validator(
     assert actual_value == expected_value
 
 
-def test_item_base_parse_qualifiers_error_input(item_base_factory: ItemBaseFactory) -> None:
+def test_item_base_parse_qualifiers_wrong_type_input(item_base_factory: ItemBaseFactory) -> None:
     with pytest.raises(ValidationError):
         item_base_factory.get(qualifiers=5)  # type: ignore[arg-type]
 
 
-def test_item_base_parse_cracked_from_validator() -> None:
-    assert False
+@pytest.mark.parametrize(
+    ('input_value', 'expected_value'),
+    (
+        pytest.param('', [], id='empty_string'),
+        pytest.param([], [], id='empty_list'),
+        pytest.param('4,5,6', [4, 5, 6], id='str_input'),
+        pytest.param([3, 4, 5], [3, 4, 5], id='list_input'),
+    ),
+)
+def test_item_base_parse_cracked_from_validator(
+        item_base_factory: ItemBaseFactory,
+        input_value: str | list[int],
+        expected_value: list[int],
+) -> None:
+    item = item_base_factory.get(cracked_from=input_value)  # type: ignore[arg-type]
+    actual_value = item.cracked_from
+    assert actual_value == expected_value
 
 
-def test_item_base_parse_cracked_from_error_input() -> None:
-    assert False
+def test_item_base_parse_cracked_from_wrong_type_input(item_base_factory: ItemBaseFactory) -> None:
+    with pytest.raises(ValidationError):
+        item_base_factory.get(cracked_from=5)  # type: ignore[arg-type]
 
 
-def test_item_base_parse_grading_fee_validator() -> None:
-    assert False
+@pytest.mark.parametrize(
+    ('input_value', 'expected_value'),
+    (
+        pytest.param({}, {}, id='empty_dict'),
+        pytest.param('{"1":"10","2":"20"}', {1: 10, 2: 20}, id='str_input'),
+        pytest.param({1: 10, 2: 20}, {1: 10, 2: 20}, id='dict_input'),
+    ),
+)
+def test_item_base_parse_grading_fee_validator(
+        item_base_factory: ItemBaseFactory,
+        input_value: str | dict[int, int],
+        expected_value: dict[int, int],
+) -> None:
+    item = item_base_factory.get(grading_fee=input_value)  # type: ignore[arg-type]
+    actual_value = item.grading_fee
+    assert actual_value == expected_value
 
 
-def test_item_base_parse_grading_fee_error_input() -> None:
-    assert False
+def test_item_base_parse_grading_fee_invalid_json_input(
+        item_base_factory: ItemBaseFactory,
+) -> None:
+    with pytest.raises(ValidationError):
+        item_base_factory.get(grading_fee='')  # type: ignore[arg-type]
+
+
+def test_item_base_parse_grading_fee_wrong_type_input(
+        item_base_factory: ItemBaseFactory,
+) -> None:
+    with pytest.raises(ValidationError):
+        item_base_factory.get(grading_fee=8)  # type: ignore[arg-type]
 
 
 def test_parse_enum() -> None:
