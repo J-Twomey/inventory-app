@@ -96,6 +96,7 @@
   {% endfor %}
   <br>
 
+  <label for="purchase_date">Purchase Date:</label>
   <input type="date" name="purchase_date" placeholder="Purchase Date" value="{{ form_data.purchase_date if form_data else '' }}">
   <input type="number" name="purchase_price" placeholder="Purchase Price" value="{{ form_data.purchase_price if form_data else '' }}">
 
@@ -127,7 +128,22 @@
     <option value="false" {% if form_data and form_data.audit_target == 'false' %}selected{% endif %}>False</option>
   </select>
 
-  <input type="number" name="total_cost" placeholder="Total Cost" value="{{ form_data.total_cost if form_data else '' }}">
+  <label for="total_cost_min">Total Cost (Min):</label>
+  <input
+    type="number"
+    name="total_cost_min"
+    placeholder="Min"
+    value="{{ form_data.total_cost_min if form_data else '' }}"
+  >
+
+  <label for="total_cost_max">Total Cost (Max):</label>
+  <input
+    type="number"
+    name="total_cost_max"
+    placeholder="Max"
+    value="{{ form_data.total_cost_max if form_data else '' }}"
+  >
+
   <input type="number" name="return_jpy" placeholder="Return JPY" value="{{ form_data.return_jpy if form_data else '' }}">
   <input type="number" name="net_jpy" placeholder="Net JPY" value="{{ form_data.net_jpy if form_data else '' }}">
   <input type="number" name="net_percent" placeholder="Net %" value="{{ form_data.net_percent if form_data else '' }}">

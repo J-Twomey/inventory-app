@@ -565,6 +565,8 @@ class ItemSearch(BaseModel):
     group_discount: Annotated[bool | None, Form()] = None
     object_variant: Annotated[int | None, Form()] = None
     audit_target: Annotated[bool | None, Form()] = None
+    total_cost_min: Annotated[int | None, Form()] = None
+    total_cost_max: Annotated[int | None, Form()] = None
     total_cost: Annotated[int | None, Form()] = None
     return_jpy: Annotated[int | None, Form()] = None
     net_jpy: Annotated[int | None, Form()] = None
@@ -594,6 +596,8 @@ class ItemSearchForm:
     group_discount: str | None = None
     object_variant: str | None = None
     audit_target: str | None = None
+    total_cost_min: str | None = None
+    total_cost_max: str | None = None
     total_cost: str | None = None
     return_jpy: str | None = None
     net_jpy: str | None = None
@@ -621,6 +625,8 @@ class ItemSearchForm:
         sale_total: Annotated[str | None, Query()] = None,
         sale_date: Annotated[str | None, Query()] = None,
         object_variant: Annotated[str | None, Query()] = None,
+        total_cost_min: Annotated[str | None, Query()] = None,
+        total_cost_max: Annotated[str | None, Query()] = None,
         total_cost: Annotated[str | None, Query()] = None,
         return_jpy: Annotated[str | None, Query()] = None,
         net_jpy: Annotated[str | None, Query()] = None,
@@ -650,6 +656,8 @@ class ItemSearchForm:
             group_discount=group_discount,
             object_variant=object_variant,
             audit_target=audit_target,
+            total_cost_min=total_cost_min,
+            total_cost_max=total_cost_max,
             total_cost=total_cost,
             return_jpy=return_jpy,
             net_jpy=net_jpy,
@@ -691,6 +699,8 @@ class ItemSearchForm:
             group_discount=parse_nullable_bool(self.group_discount),
             object_variant=parse_nullable_enum(self.object_variant, ObjectVariant, as_int=True),
             audit_target=parse_nullable_bool(self.audit_target),
+            total_cost_min=parse_nullable(self.total_cost_min, int),
+            total_cost_max=parse_nullable(self.total_cost_max, int),
             total_cost=parse_nullable(self.total_cost, int),
             return_jpy=parse_nullable(self.return_jpy, int),
             net_jpy=parse_nullable(self.net_jpy, int),

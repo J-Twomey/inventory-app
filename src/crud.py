@@ -80,6 +80,14 @@ def search_for_items(
             post_filters.append((field, value))
         elif field == 'submission_number':
             raise NotImplementedError
+        elif field.endswith('_min'):
+            base_field = field.removesuffix('_min')
+            column = getattr(Item, base_field)
+            filters.append(column >= value)
+        elif field.endswith('_max'):
+            base_field = field.removesuffix('_max')
+            column = getattr(Item, base_field)
+            filters.append(column <= value)
         else:
             column = getattr(Item, field)
             filters.append(column == value)
