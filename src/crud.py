@@ -1,10 +1,12 @@
 from collections.abc import Sequence
+from typing import Any
 
 from sqlalchemy import (
     and_,
     select,
 )
 from sqlalchemy.orm import Session
+from sqlalchemy.sql.elements import BinaryExpression
 
 from .models import Item
 from .schemas import (
@@ -68,30 +70,8 @@ def search_for_items(
         search_params: ItemSearch,
 ) -> Sequence[Item]:
     search_values = search_params.model_dump(exclude_unset=True)
-
-    filters = []
-    post_filters = []
-    for field, value in search_values.items():
-        if value is None or value == []:
-            continue
-
-        # Filter qualifiers and cracked_from after the sql search
-        if field in ['qualifiers', 'cracked_from']:
-            post_filters.append((field, value))
-        elif field == 'submission_number':
-            raise NotImplementedError
-        elif field.endswith('_min'):
-            base_field = field.removesuffix('_min')
-            column = getattr(Item, base_field)
-            filters.append(column >= value)
-        elif field.endswith('_max'):
-            base_field = field.removesuffix('_max')
-            column = getattr(Item, base_field)
-            filters.append(column <= value)
-        else:
-            column = getattr(Item, field)
-            filters.append(column == value)
-
+    filters, post_filters = build_search_filters(search_values)
+    check_filters_are_valid(filters)
     statement = select(Item)
     if len(filters) > 0:
         statement = statement.where(and_(*filters))
@@ -129,6 +109,38 @@ def edit_item(
     db.commit()
     db.refresh(item)
     return 303
+
+
+def build_search_filters(
+        search_params: dict[str, Any]
+) -> tuple[list[BinaryExpression[Any]], list[tuple[str, Any]]]:
+    filters: list[BinaryExpression[Any]] = []
+    post_filters: list[tuple[str, Any]] = []
+    for field, value in search_params.items():
+        if value is None or value == []:
+            continue
+
+        # Filter qualifiers and cracked_from after the sql search
+        if field in ['qualifiers', 'cracked_from']:
+            post_filters.append((field, value))
+        elif field == 'submission_number':
+            raise NotImplementedError
+        elif field.endswith('_min'):
+            base_field = field.removesuffix('_min')
+            column = getattr(Item, base_field)
+            filters.append(column >= value)
+        elif field.endswith('_max'):
+            base_field = field.removesuffix('_max')
+            column = getattr(Item, base_field)
+            filters.append(column <= value)
+        else:
+            column = getattr(Item, field)
+            filters.append(column == value)
+    return filters, post_filters
+
+
+def check_filters_are_valid(filters: list[BinaryExpression[Any]]) -> None:
+    pass
 
 
 def get_all_submission_values(db: Session) -> list[int]:

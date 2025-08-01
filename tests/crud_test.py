@@ -1,6 +1,12 @@
 from datetime import date
 
+from sqlalchemy.inspection import inspect
 from sqlalchemy.orm import Session
+from sqlalchemy.sql.operators import (
+    eq,
+    ge,
+    le,
+)
 
 import src.crud as crud
 import src.item_enums as item_enums
@@ -281,6 +287,74 @@ def test_search_for_items_multiple_qualifiers(
     result = crud.search_for_items(db_session, search_params)
     assert len(result) == 1
     assert result[0].qualifiers == [item_enums.Qualifier.NON_HOLO, item_enums.Qualifier.CRYSTAL]
+
+
+def test_unexpected_search_key_not_allowed() -> None:
+    mapper = inspect(models.Item)
+    valid_columns = {prop.key for prop in mapper.column_attrs}
+    assert False
+
+
+def test_build_search_filters_no_special_case() -> None:
+    params = {'name': 'Unown', 'set_name': 'Base Set'}
+    filters, post_filters = crud.build_search_filters(params)
+
+    assert filters[0].left.key == 'name'
+    assert filters[0].right.value == 'Unown'
+    assert filters[0].operator is eq
+    assert filters[1].left.key == 'set_name'
+    assert filters[1].right.value == 'Base Set'
+    assert filters[1].operator is eq
+    assert post_filters == []
+
+
+def test_build_search_filters_with_min_value() -> None:
+    params = {'name': 'Unown', 'total_cost_min': 100}
+    filters, post_filters = crud.build_search_filters(params)
+
+    assert filters[0].left.key == 'name'
+    assert filters[0].right.value == 'Unown'
+    assert filters[0].operator is eq
+    # total_cost is a hybrid property consisting of purchase_price and grading_fee_total
+    assert filters[1].left.left.key == 'purchase_price'
+    assert filters[1].left.right.key == 'grading_fee_total'
+    assert filters[1].right.value == 100
+    assert filters[1].operator is ge
+    assert post_filters == []
+
+
+def test_build_search_filters_with_max_value() -> None:
+    params = {'name': 'Unown', 'total_cost_max': 100}
+    filters, post_filters = crud.build_search_filters(params)
+
+    assert filters[0].left.key == 'name'
+    assert filters[0].right.value == 'Unown'
+    assert filters[0].operator is eq
+    # total_cost is a hybrid property consisting of purchase_price and grading_fee_total
+    assert filters[1].left.left.key == 'purchase_price'
+    assert filters[1].left.right.key == 'grading_fee_total'
+    assert filters[1].right.value == 100
+    assert filters[1].operator is le
+    assert post_filters == []
+
+
+def test_build_search_features_with_post_filter() -> None:
+    params = {'name': 'Unown', 'cracked_from': 1}
+    expected_post_filters = [('cracked_from', 1)]
+    filters, post_filters = crud.build_search_filters(params)
+
+    assert filters[0].left.key == 'name'
+    assert filters[0].right.value == 'Unown'
+    assert filters[0].operator is eq
+    assert post_filters == expected_post_filters
+
+
+def test_check_filters_are_valid_success() -> None:
+    assert False
+
+
+def test_check_filters_are_valid_failure() -> None:
+    assert False
 
 
 def test_edit_item_no_item_found(
