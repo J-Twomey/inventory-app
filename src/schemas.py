@@ -568,9 +568,12 @@ class ItemSearch(BaseModel):
     audit_target: Annotated[bool | None, Form()] = None
     total_cost_min: Annotated[int | None, Form()] = None
     total_cost_max: Annotated[int | None, Form()] = None
-    return_jpy: Annotated[int | None, Form()] = None
-    net_jpy: Annotated[int | None, Form()] = None
-    net_percent: Annotated[float | None, Form()] = None
+    return_jpy_min: Annotated[int | None, Form()] = None
+    return_jpy_max: Annotated[int | None, Form()] = None
+    net_jpy_min: Annotated[int | None, Form()] = None
+    net_jpy_max: Annotated[int | None, Form()] = None
+    net_percent_min: Annotated[float | None, Form()] = None
+    net_percent_max: Annotated[float | None, Form()] = None
 
 
 @dataclass
@@ -599,9 +602,12 @@ class ItemSearchForm:
     audit_target: str | None = None
     total_cost_min: str | None = None
     total_cost_max: str | None = None
-    return_jpy: str | None = None
-    net_jpy: str | None = None
-    net_percent: str | None = None
+    return_jpy_min: str | None = None
+    return_jpy_max: str | None = None
+    net_jpy_min: str | None = None
+    net_jpy_max: str | None = None
+    net_percent_min: str | None = None
+    net_percent_max: str | None = None
 
     @classmethod
     def as_query(
@@ -628,9 +634,12 @@ class ItemSearchForm:
         object_variant: Annotated[str | None, Query()] = None,
         total_cost_min: Annotated[str | None, Query()] = None,
         total_cost_max: Annotated[str | None, Query()] = None,
-        return_jpy: Annotated[str | None, Query()] = None,
-        net_jpy: Annotated[str | None, Query()] = None,
-        net_percent: Annotated[str | None, Query()] = None,
+        return_jpy_min: Annotated[str | None, Query()] = None,
+        return_jpy_max: Annotated[str | None, Query()] = None,
+        net_jpy_min: Annotated[str | None, Query()] = None,
+        net_jpy_max: Annotated[str | None, Query()] = None,
+        net_percent_min: Annotated[str | None, Query()] = None,
+        net_percent_max: Annotated[str | None, Query()] = None,
         group_discount: Annotated[str | None, Query()] = None,
         audit_target: Annotated[str | None, Query()] = None,
     ) -> 'ItemSearchForm':
@@ -659,9 +668,12 @@ class ItemSearchForm:
             audit_target=audit_target,
             total_cost_min=total_cost_min,
             total_cost_max=total_cost_max,
-            return_jpy=return_jpy,
-            net_jpy=net_jpy,
-            net_percent=net_percent,
+            return_jpy_min=return_jpy_min,
+            return_jpy_max=return_jpy_max,
+            net_jpy_min=net_jpy_min,
+            net_jpy_max=net_jpy_max,
+            net_percent_min=net_percent_min,
+            net_percent_max=net_percent_max,
         )
 
     def to_item_search(self) -> ItemSearch:
@@ -702,9 +714,12 @@ class ItemSearchForm:
             audit_target=parse_nullable_bool(self.audit_target),
             total_cost_min=parse_nullable(self.total_cost_min, int),
             total_cost_max=parse_nullable(self.total_cost_max, int),
-            return_jpy=parse_nullable(self.return_jpy, int),
-            net_jpy=parse_nullable(self.net_jpy, int),
-            net_percent=parse_nullable(self.net_percent, float),
+            return_jpy_min=parse_nullable(self.return_jpy_min, int),
+            return_jpy_max=parse_nullable(self.return_jpy_max, int),
+            net_jpy_min=parse_nullable(self.net_jpy_min, int),
+            net_jpy_max=parse_nullable(self.net_jpy_max, int),
+            net_percent_min=parse_nullable(self.net_percent_min, float),
+            net_percent_max=parse_nullable(self.net_percent_max, float),
         )
 
 

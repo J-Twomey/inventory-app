@@ -159,9 +159,55 @@
     value="{{ form_data.total_cost_max if form_data else '' }}"
   >
 
-  <input type="number" name="return_jpy" placeholder="Return JPY" value="{{ form_data.return_jpy if form_data else '' }}">
-  <input type="number" name="net_jpy" placeholder="Net JPY" value="{{ form_data.net_jpy if form_data else '' }}">
-  <input type="number" name="net_percent" placeholder="Net %" value="{{ form_data.net_percent if form_data else '' }}">
+  <label for="return_jpy_min">Return JPY (Min):</label>
+  <input
+    type="number"
+    name="return_jpy_min"
+    placeholder="Min"
+    value="{{ form_data.return_jpy_min if form_data else '' }}"
+  >
+
+  <label for="return_jpy_max">Return JPY (Max):</label>
+  <input
+    type="number"
+    name="return_jpy_max"
+    placeholder="Max"
+    value="{{ form_data.return_jpy_max if form_data else '' }}"
+  >
+
+  <label for="net_jpy_min">Net JPY (Min):</label>
+  <input
+    type="number"
+    name="net_jpy_min"
+    placeholder="Min"
+    value="{{ form_data.net_jpy_min if form_data else '' }}"
+  >
+
+  <label for="net_jpy_max">Net JPY (Max):</label>
+  <input
+    type="number"
+    name="net_jpy_max"
+    placeholder="Max"
+    value="{{ form_data.net_jpy_max if form_data else '' }}"
+  >
+
+  <label for="net_percent_min">Net % (Min):</label>
+  <input
+    type="number"
+    step="any"
+    name="net_percent_min"
+    placeholder="Min"
+    value="{{ form_data.net_percent_min if form_data else '' }}"
+  >
+
+  <label for="net_percent_max">Net % (Max):</label>
+  <input
+    type="number"
+    step="any"
+    name="net_percent_max"
+    placeholder="Max"
+    value="{{ form_data.net_percent_max if form_data else '' }}"
+  >
 
   <button type="submit">Search</button>
 </form>
