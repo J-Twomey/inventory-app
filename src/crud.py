@@ -71,7 +71,6 @@ def search_for_items(
 ) -> Sequence[Item]:
     search_values = search_params.model_dump(exclude_unset=True)
     filters, post_filters = build_search_filters(search_values)
-    check_filters_are_valid(filters)
     statement = select(Item)
     if len(filters) > 0:
         statement = statement.where(and_(*filters))
@@ -137,10 +136,6 @@ def build_search_filters(
             column = getattr(Item, field)
             filters.append(column == value)
     return filters, post_filters
-
-
-def check_filters_are_valid(filters: list[BinaryExpression[Any]]) -> None:
-    pass
 
 
 def get_all_submission_values(db: Session) -> list[int]:

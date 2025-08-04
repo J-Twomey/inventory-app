@@ -1,6 +1,5 @@
 from datetime import date
 
-from sqlalchemy.inspection import inspect
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.operators import (
     eq,
@@ -289,12 +288,6 @@ def test_search_for_items_multiple_qualifiers(
     assert result[0].qualifiers == [item_enums.Qualifier.NON_HOLO, item_enums.Qualifier.CRYSTAL]
 
 
-def test_unexpected_search_key_not_allowed() -> None:
-    mapper = inspect(models.Item)
-    valid_columns = {prop.key for prop in mapper.column_attrs}
-    assert False
-
-
 def test_build_search_filters_no_special_case() -> None:
     params = {'name': 'Unown', 'set_name': 'Base Set'}
     filters, post_filters = crud.build_search_filters(params)
@@ -347,14 +340,6 @@ def test_build_search_features_with_post_filter() -> None:
     assert filters[0].right.value == 'Unown'
     assert filters[0].operator is eq
     assert post_filters == expected_post_filters
-
-
-def test_check_filters_are_valid_success() -> None:
-    assert False
-
-
-def test_check_filters_are_valid_failure() -> None:
-    assert False
 
 
 def test_edit_item_no_item_found(
