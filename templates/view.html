@@ -98,7 +98,22 @@
 
   <label for="purchase_date">Purchase Date:</label>
   <input type="date" name="purchase_date" placeholder="Purchase Date" value="{{ form_data.purchase_date if form_data else '' }}">
-  <input type="number" name="purchase_price" placeholder="Purchase Price" value="{{ form_data.purchase_price if form_data else '' }}">
+
+  <label for="purchase_price_min">Purchase Price (Min):</label>
+  <input
+    type="number"
+    name="purchase_price_min"
+    placeholder="Min"
+    value="{{ form_data.purchase_price_min if form_data else '' }}"
+  >
+
+  <label for="purchase_price_max">Purchase Price (Max):</label>
+  <input
+    type="number"
+    name="purchase_price_max"
+    placeholder="Max"
+    value="{{ form_data.purchase_price_max if form_data else '' }}"
+  >
 
   <label for="cracked_from">Cracked From:</label>
   <select name="cracked_from" id="cracked_from_search_select">

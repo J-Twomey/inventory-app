@@ -551,7 +551,8 @@ class ItemSearch(BaseModel):
     qualifiers: Annotated[list[Qualifier], Form()] = []
     details: Annotated[str | None, Form()] = None
     purchase_date: Annotated[date | None, Form()] = None
-    purchase_price: Annotated[int | None, Form()] = None
+    purchase_price_min: Annotated[int | None, Form()] = None
+    purchase_price_max: Annotated[int | None, Form()] = None
     status: Annotated[int | None, Form()] = None
     intent: Annotated[int | None, Form()] = None
     cracked_from: Annotated[int | None, Form()] = None
@@ -567,7 +568,6 @@ class ItemSearch(BaseModel):
     audit_target: Annotated[bool | None, Form()] = None
     total_cost_min: Annotated[int | None, Form()] = None
     total_cost_max: Annotated[int | None, Form()] = None
-    total_cost: Annotated[int | None, Form()] = None
     return_jpy: Annotated[int | None, Form()] = None
     net_jpy: Annotated[int | None, Form()] = None
     net_percent: Annotated[float | None, Form()] = None
@@ -582,7 +582,8 @@ class ItemSearchForm:
     qualifiers: list[str] | None = None
     details: str | None = None
     purchase_date: str | None = None
-    purchase_price: str | None = None
+    purchase_price_min: str | None = None
+    purchase_price_max: str | None = None
     status: str | None = None
     intent: str | None = None
     cracked_from: str | None = None
@@ -598,7 +599,6 @@ class ItemSearchForm:
     audit_target: str | None = None
     total_cost_min: str | None = None
     total_cost_max: str | None = None
-    total_cost: str | None = None
     return_jpy: str | None = None
     net_jpy: str | None = None
     net_percent: str | None = None
@@ -613,7 +613,8 @@ class ItemSearchForm:
         qualifiers: Annotated[list[str], Query()] = [],
         details: Annotated[str | None, Query()] = None,
         purchase_date: Annotated[str | None, Query()] = None,
-        purchase_price: Annotated[str | None, Query()] = None,
+        purchase_price_min: Annotated[str | None, Query()] = None,
+        purchase_price_max: Annotated[str | None, Query()] = None,
         status: Annotated[str | None, Query()] = None,
         intent: Annotated[str | None, Query()] = None,
         cracked_from: Annotated[str | None, Query()] = None,
@@ -627,7 +628,6 @@ class ItemSearchForm:
         object_variant: Annotated[str | None, Query()] = None,
         total_cost_min: Annotated[str | None, Query()] = None,
         total_cost_max: Annotated[str | None, Query()] = None,
-        total_cost: Annotated[str | None, Query()] = None,
         return_jpy: Annotated[str | None, Query()] = None,
         net_jpy: Annotated[str | None, Query()] = None,
         net_percent: Annotated[str | None, Query()] = None,
@@ -642,7 +642,8 @@ class ItemSearchForm:
             qualifiers=qualifiers,
             details=details,
             purchase_date=purchase_date,
-            purchase_price=purchase_price,
+            purchase_price_min=purchase_price_min,
+            purchase_price_max=purchase_price_max,
             status=status,
             intent=intent,
             cracked_from=cracked_from,
@@ -658,7 +659,6 @@ class ItemSearchForm:
             audit_target=audit_target,
             total_cost_min=total_cost_min,
             total_cost_max=total_cost_max,
-            total_cost=total_cost,
             return_jpy=return_jpy,
             net_jpy=net_jpy,
             net_percent=net_percent,
@@ -685,7 +685,8 @@ class ItemSearchForm:
             qualifiers=parse_to_qualifiers_list(self.qualifiers),
             details=parse_nullable(self.details, str),
             purchase_date=purchase_date_,
-            purchase_price=parse_nullable(self.purchase_price, int),
+            purchase_price_min=parse_nullable(self.purchase_price_min, int),
+            purchase_price_max=parse_nullable(self.purchase_price_max, int),
             status=parse_nullable_enum(self.status, Status, as_int=True),
             intent=parse_nullable_enum(self.intent, Intent, as_int=True),
             cracked_from=parse_nullable(self.cracked_from, int),
@@ -701,7 +702,6 @@ class ItemSearchForm:
             audit_target=parse_nullable_bool(self.audit_target),
             total_cost_min=parse_nullable(self.total_cost_min, int),
             total_cost_max=parse_nullable(self.total_cost_max, int),
-            total_cost=parse_nullable(self.total_cost, int),
             return_jpy=parse_nullable(self.return_jpy, int),
             net_jpy=parse_nullable(self.net_jpy, int),
             net_percent=parse_nullable(self.net_percent, float),
