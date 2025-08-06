@@ -689,6 +689,8 @@ class ItemSearchForm:
             sale_date_ = None
         else:
             sale_date_ = datetime.strptime(self.sale_date, '%Y-%m-%d').date()
+        net_percent_min_parsed = parse_nullable_percent(self.net_percent_min)
+        net_percent_max_parsed = parse_nullable_percent(self.net_percent_max)
         return ItemSearch(
             name=parse_nullable(self.name, str),
             set_name=parse_nullable(self.set_name, str),
@@ -718,8 +720,8 @@ class ItemSearchForm:
             return_jpy_max=parse_nullable(self.return_jpy_max, int),
             net_jpy_min=parse_nullable(self.net_jpy_min, int),
             net_jpy_max=parse_nullable(self.net_jpy_max, int),
-            net_percent_min=parse_nullable(self.net_percent_min, float),
-            net_percent_max=parse_nullable(self.net_percent_max, float),
+            net_percent_min=net_percent_min_parsed,
+            net_percent_max=net_percent_max_parsed,
         )
 
 
@@ -867,3 +869,10 @@ def parse_nullable_list_of_str_to_list_of_int(input_list: list[str] | None) -> l
         # Remove empty string that gets sent if no value set
         input_list = [v for v in input_list if v != '']
         return [int(v) for v in input_list]
+
+
+def parse_nullable_percent(value: str | None) -> float | None:
+    value_parsed = parse_nullable(value, float)
+    if value_parsed is not None:
+        value_parsed /= 100.
+    return value_parsed

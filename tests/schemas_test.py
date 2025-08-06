@@ -517,3 +517,20 @@ def test_parse_nullable_list_of_str_to_list_of_int_with_empty_string() -> None:
     input_list = ['1', '', '2']
     result = schemas.parse_nullable_list_of_str_to_list_of_int(input_list)
     assert result == [1, 2]
+
+
+@pytest.mark.parametrize(
+    ('value', 'expected'),
+    (
+        pytest.param(None, None, id='none_value'),
+        pytest.param('100', 1., id='positive_percent'),
+        pytest.param('0', 0., id='zero_percent'),
+        pytest.param('-50', -0.5, id='negative_percent'),
+    ),
+)
+def test_parse_nullable_percent(
+        value: str | None,
+        expected: float | None,
+) -> None:
+    result = schemas.parse_nullable_percent(value)
+    assert result == expected
