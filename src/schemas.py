@@ -600,7 +600,8 @@ class ItemSearchForm:
     list_type: str | None = None
     list_date_min: str | None = None
     list_date_max: str | None = None
-    sale_total: str | None = None
+    sale_total_min: str | None = None
+    sale_total_max: str | None = None
     sale_date_min: str | None = None
     sale_date_max: str | None = None
     group_discount: str | None = None
@@ -637,7 +638,8 @@ class ItemSearchForm:
         list_type: Annotated[str | None, Query()] = None,
         list_date_min: Annotated[str | None, Query()] = None,
         list_date_max: Annotated[str | None, Query()] = None,
-        sale_total: Annotated[str | None, Query()] = None,
+        sale_total_min: Annotated[str | None, Query()] = None,
+        sale_total_max: Annotated[str | None, Query()] = None,
         sale_date_min: Annotated[str | None, Query()] = None,
         sale_date_max: Annotated[str | None, Query()] = None,
         object_variant: Annotated[str | None, Query()] = None,
@@ -672,7 +674,8 @@ class ItemSearchForm:
             list_type=list_type,
             list_date_min=list_date_min,
             list_date_max=list_date_max,
-            sale_total=sale_total,
+            sale_total_min=sale_total_min,
+            sale_total_max=sale_total_max,
             sale_date_min=sale_date_min,
             sale_date_max=sale_date_max,
             group_discount=group_discount,
@@ -709,7 +712,8 @@ class ItemSearchForm:
             list_type=parse_nullable_enum(self.list_type, ListingType, as_int=True),
             list_date_min=parse_nullable_date(self.list_date_min),
             list_date_max=parse_nullable_date(self.list_date_max),
-            sale_total=parse_nullable(self.sale_total, float),
+            sale_total_min=parse_nullable(self.sale_total_min, float),
+            sale_total_max=parse_nullable(self.sale_total_max, float),
             sale_date_min=parse_nullable_date(self.sale_date_min),
             sale_date_max=parse_nullable_date(self.sale_date_max),
             group_discount=parse_nullable_bool(self.group_discount),

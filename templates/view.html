@@ -154,7 +154,21 @@
     value="{{ form_data.list_date_max if form_data else '' }}"
   >
 
-  <input type="number" step="any" name="sale_total" placeholder="Sale Total" value="{{ form_data.sale_total if form_data else '' }}">
+  <label for="sale_total_min">Sale Total (Min):</label>
+  <input
+    type="number"
+    name="sale_total_min"
+    placeholder="Min"
+    value="{{ form_data.sale_total_min if form_data else '' }}"
+  >
+
+  <label for="sale_total_max">Sale Total (Max):</label>
+  <input
+    type="number"
+    name="sale_total_max"
+    placeholder="Max"
+    value="{{ form_data.sale_total_max if form_data else '' }}"
+  >
 
   <label for="sale_date_min">Sale Date (Min):</label>
   <input
