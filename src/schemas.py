@@ -550,7 +550,8 @@ class ItemSearch(BaseModel):
     language: Annotated[int | None, Form()] = None
     qualifiers: Annotated[list[Qualifier], Form()] = []
     details: Annotated[str | None, Form()] = None
-    purchase_date: Annotated[date | None, Form()] = None
+    purchase_date_min: Annotated[date | None, Form()] = None
+    purchase_date_max: Annotated[date | None, Form()] = None
     purchase_price_min: Annotated[int | None, Form()] = None
     purchase_price_max: Annotated[int | None, Form()] = None
     status: Annotated[int | None, Form()] = None
@@ -560,9 +561,11 @@ class ItemSearch(BaseModel):
     grading_company: Annotated[int | None, Form()] = None
     cert: Annotated[int | None, Form()] = None
     list_type: Annotated[int | None, Form()] = None
-    list_date: Annotated[date | None, Form()] = None
+    list_date_min: Annotated[date | None, Form()] = None
+    list_date_max: Annotated[date | None, Form()] = None
     sale_total: Annotated[float | None, Form()] = None
-    sale_date: Annotated[date | None, Form()] = None
+    sale_date_min: Annotated[date | None, Form()] = None
+    sale_date_max: Annotated[date | None, Form()] = None
     group_discount: Annotated[bool | None, Form()] = None
     object_variant: Annotated[int | None, Form()] = None
     audit_target: Annotated[bool | None, Form()] = None
@@ -584,7 +587,8 @@ class ItemSearchForm:
     language: str | None = None
     qualifiers: list[str] | None = None
     details: str | None = None
-    purchase_date: str | None = None
+    purchase_date_min: str | None = None
+    purchase_date_max: str | None = None
     purchase_price_min: str | None = None
     purchase_price_max: str | None = None
     status: str | None = None
@@ -594,9 +598,11 @@ class ItemSearchForm:
     grading_company: str | None = None
     cert: str | None = None
     list_type: str | None = None
-    list_date: str | None = None
+    list_date_min: str | None = None
+    list_date_max: str | None = None
     sale_total: str | None = None
-    sale_date: str | None = None
+    sale_date_min: str | None = None
+    sale_date_max: str | None = None
     group_discount: str | None = None
     object_variant: str | None = None
     audit_target: str | None = None
@@ -618,7 +624,8 @@ class ItemSearchForm:
         language: Annotated[str | None, Query()] = None,
         qualifiers: Annotated[list[str], Query()] = [],
         details: Annotated[str | None, Query()] = None,
-        purchase_date: Annotated[str | None, Query()] = None,
+        purchase_date_min: Annotated[str | None, Query()] = None,
+        purchase_date_max: Annotated[str | None, Query()] = None,
         purchase_price_min: Annotated[str | None, Query()] = None,
         purchase_price_max: Annotated[str | None, Query()] = None,
         status: Annotated[str | None, Query()] = None,
@@ -628,9 +635,11 @@ class ItemSearchForm:
         grading_company: Annotated[str | None, Query()] = None,
         cert: Annotated[str | None, Query()] = None,
         list_type: Annotated[str | None, Query()] = None,
-        list_date: Annotated[str | None, Query()] = None,
+        list_date_min: Annotated[str | None, Query()] = None,
+        list_date_max: Annotated[str | None, Query()] = None,
         sale_total: Annotated[str | None, Query()] = None,
-        sale_date: Annotated[str | None, Query()] = None,
+        sale_date_min: Annotated[str | None, Query()] = None,
+        sale_date_max: Annotated[str | None, Query()] = None,
         object_variant: Annotated[str | None, Query()] = None,
         total_cost_min: Annotated[str | None, Query()] = None,
         total_cost_max: Annotated[str | None, Query()] = None,
@@ -650,7 +659,8 @@ class ItemSearchForm:
             language=language,
             qualifiers=qualifiers,
             details=details,
-            purchase_date=purchase_date,
+            purchase_date_min=purchase_date_min,
+            purchase_date_max=purchase_date_max,
             purchase_price_min=purchase_price_min,
             purchase_price_max=purchase_price_max,
             status=status,
@@ -660,9 +670,11 @@ class ItemSearchForm:
             grading_company=grading_company,
             cert=cert,
             list_type=list_type,
-            list_date=list_date,
+            list_date_min=list_date_min,
+            list_date_max=list_date_max,
             sale_total=sale_total,
-            sale_date=sale_date,
+            sale_date_min=sale_date_min,
+            sale_date_max=sale_date_max,
             group_discount=group_discount,
             object_variant=object_variant,
             audit_target=audit_target,
@@ -684,7 +696,8 @@ class ItemSearchForm:
             language=parse_nullable_enum(self.language, Language, as_int=True),
             qualifiers=parse_to_qualifiers_list(self.qualifiers),
             details=parse_nullable(self.details, str),
-            purchase_date=parse_nullable_date(self.purchase_date),
+            purchase_date_min=parse_nullable_date(self.purchase_date_min),
+            purchase_date_max=parse_nullable_date(self.purchase_date_max),
             purchase_price_min=parse_nullable(self.purchase_price_min, int),
             purchase_price_max=parse_nullable(self.purchase_price_max, int),
             status=parse_nullable_enum(self.status, Status, as_int=True),
@@ -694,9 +707,11 @@ class ItemSearchForm:
             grading_company=parse_nullable_enum(self.grading_company, GradingCompany, as_int=True),
             cert=parse_nullable(self.cert, int),
             list_type=parse_nullable_enum(self.list_type, ListingType, as_int=True),
-            list_date=parse_nullable_date(self.list_date),
+            list_date_min=parse_nullable_date(self.list_date_min),
+            list_date_max=parse_nullable_date(self.list_date_max),
             sale_total=parse_nullable(self.sale_total, float),
-            sale_date=parse_nullable_date(self.sale_date),
+            sale_date_min=parse_nullable_date(self.sale_date_min),
+            sale_date_max=parse_nullable_date(self.sale_date_max),
             group_discount=parse_nullable_bool(self.group_discount),
             object_variant=parse_nullable_enum(self.object_variant, ObjectVariant, as_int=True),
             audit_target=parse_nullable_bool(self.audit_target),

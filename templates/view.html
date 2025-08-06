@@ -96,8 +96,21 @@
   {% endfor %}
   <br>
 
-  <label for="purchase_date">Purchase Date:</label>
-  <input type="date" name="purchase_date" placeholder="Purchase Date" value="{{ form_data.purchase_date if form_data else '' }}">
+  <label for="purchase_date_min">Purchase Date (Min):</label>
+  <input
+    type="date"
+    name="purchase_date_min"
+    placeholder="Min"
+    value="{{ form_data.purchase_date_min if form_data else '' }}"
+  >
+
+  <label for="purchase_date_max">Purchase Date (Max):</label>
+  <input
+    type="date"
+    name="purchase_date_max"
+    placeholder="Max"
+    value="{{ form_data.purchase_date_max if form_data else '' }}"
+  >
 
   <label for="purchase_price_min">Purchase Price (Min):</label>
   <input
@@ -125,9 +138,39 @@
     {% endfor %}
   </select>
 
-  <input type="date" name="list_date" placeholder="List Date" value="{{ form_data.list_date if form_data else '' }}">
+  <label for="list_date_min">List Date (Min):</label>
+  <input
+    type="date"
+    name="list_date_min"
+    placeholder="Min"
+    value="{{ form_data.list_date_min if form_data else '' }}"
+  >
+
+  <label for="list_date_max">List Date (Max):</label>
+  <input
+    type="date"
+    name="list_date_max"
+    placeholder="Max"
+    value="{{ form_data.list_date_max if form_data else '' }}"
+  >
+
   <input type="number" step="any" name="sale_total" placeholder="Sale Total" value="{{ form_data.sale_total if form_data else '' }}">
-  <input type="date" name="sale_date" placeholder="Sale Date" value="{{ form_data.sale_date if form_data else '' }}">
+
+  <label for="sale_date_min">Sale Date (Min):</label>
+  <input
+    type="date"
+    name="sale_date_min"
+    placeholder="Min"
+    value="{{ form_data.sale_date_min if form_data else '' }}"
+  >
+
+  <label for="sale_date_max">Sale Date (Max):</label>
+  <input
+    type="date"
+    name="sale_date_max"
+    placeholder="Max"
+    value="{{ form_data.sale_date_max if form_data else '' }}"
+  >
 
   <label for="group_discount">Group Discount:</label>
   <select name="group_discount" id="group_discount">
