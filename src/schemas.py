@@ -677,20 +677,6 @@ class ItemSearchForm:
         )
 
     def to_item_search(self) -> ItemSearch:
-        if self.purchase_date == '' or self.purchase_date is None:
-            purchase_date_ = None
-        else:
-            purchase_date_ = datetime.strptime(self.purchase_date, '%Y-%m-%d').date()
-        if self.list_date == '' or self.list_date is None:
-            list_date_ = None
-        else:
-            list_date_ = datetime.strptime(self.list_date, '%Y-%m-%d').date()
-        if self.sale_date == '' or self.sale_date is None:
-            sale_date_ = None
-        else:
-            sale_date_ = datetime.strptime(self.sale_date, '%Y-%m-%d').date()
-        net_percent_min_parsed = parse_nullable_percent(self.net_percent_min)
-        net_percent_max_parsed = parse_nullable_percent(self.net_percent_max)
         return ItemSearch(
             name=parse_nullable(self.name, str),
             set_name=parse_nullable(self.set_name, str),
@@ -698,7 +684,7 @@ class ItemSearchForm:
             language=parse_nullable_enum(self.language, Language, as_int=True),
             qualifiers=parse_to_qualifiers_list(self.qualifiers),
             details=parse_nullable(self.details, str),
-            purchase_date=purchase_date_,
+            purchase_date=parse_nullable_date(self.purchase_date),
             purchase_price_min=parse_nullable(self.purchase_price_min, int),
             purchase_price_max=parse_nullable(self.purchase_price_max, int),
             status=parse_nullable_enum(self.status, Status, as_int=True),
@@ -708,9 +694,9 @@ class ItemSearchForm:
             grading_company=parse_nullable_enum(self.grading_company, GradingCompany, as_int=True),
             cert=parse_nullable(self.cert, int),
             list_type=parse_nullable_enum(self.list_type, ListingType, as_int=True),
-            list_date=list_date_,
+            list_date=parse_nullable_date(self.list_date),
             sale_total=parse_nullable(self.sale_total, float),
-            sale_date=sale_date_,
+            sale_date=parse_nullable_date(self.sale_date),
             group_discount=parse_nullable_bool(self.group_discount),
             object_variant=parse_nullable_enum(self.object_variant, ObjectVariant, as_int=True),
             audit_target=parse_nullable_bool(self.audit_target),
@@ -720,8 +706,8 @@ class ItemSearchForm:
             return_jpy_max=parse_nullable(self.return_jpy_max, int),
             net_jpy_min=parse_nullable(self.net_jpy_min, int),
             net_jpy_max=parse_nullable(self.net_jpy_max, int),
-            net_percent_min=net_percent_min_parsed,
-            net_percent_max=net_percent_max_parsed,
+            net_percent_min=parse_nullable_percent(self.net_percent_min),
+            net_percent_max=parse_nullable_percent(self.net_percent_max),
         )
 
 
