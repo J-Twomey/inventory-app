@@ -563,7 +563,8 @@ class ItemSearch(BaseModel):
     list_type: Annotated[int | None, Form()] = None
     list_date_min: Annotated[date | None, Form()] = None
     list_date_max: Annotated[date | None, Form()] = None
-    sale_total: Annotated[float | None, Form()] = None
+    sale_total_min: Annotated[float | None, Form()] = None
+    sale_total_max: Annotated[float | None, Form()] = None
     sale_date_min: Annotated[date | None, Form()] = None
     sale_date_max: Annotated[date | None, Form()] = None
     group_discount: Annotated[bool | None, Form()] = None
