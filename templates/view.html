@@ -10,264 +10,270 @@
 <a href="/" class="btn btn-purple btn-small margin-bottom-20 inline">Back To Landing Page</a>
 <a href="/view" class="btn btn-orange btn-small margin-bottom-20 inline">Reset Search Conditions</a>
 
-<form method="get" action="/view">
-  <input type="text" name="name" placeholder="Name" value="{{ form_data.name if form_data and form_data.name is not none else '' }}">
-  <input type="text" name="set_name" placeholder="Set Name" value="{{ form_data.set_name if form_data and form_data.set_name is not none else '' }}">
-  <input type="number" step="any" name="grade" placeholder="Grade" value="{{ form_data.grade if form_data else '' }}">
-  <input type="number" name="cert" placeholder="Cert #" value="{{ form_data.cert if form_data else '' }}">
-  <input type="text" name="details" placeholder="Details" value="{{ form_data.details if form_data and form_data.details is not none else '' }}"><br><br>
+<button type="button" id="toggle-search" class="btn btn-purple btn-small margin-bottom-20 inline">
+  Show Search Options
+</button>
 
-  <label for="category">Type:</label>
-  <select name="category" id="category_search_select">
-    <option value="">Any</option>
-    {% for category in category_enum %}
-      <option value="{{ category.name }}" {% if form_data and form_data.category == category.name %}selected{% endif %}>
-        {{ category.name.title()}}
-      </option>
+<div id="search-section">
+  <form method="get" action="/view">
+    <input type="text" name="name" placeholder="Name" value="{{ form_data.name if form_data and form_data.name is not none else '' }}">
+    <input type="text" name="set_name" placeholder="Set Name" value="{{ form_data.set_name if form_data and form_data.set_name is not none else '' }}">
+    <input type="number" step="any" name="grade" placeholder="Grade" value="{{ form_data.grade if form_data else '' }}">
+    <input type="number" name="cert" placeholder="Cert #" value="{{ form_data.cert if form_data else '' }}">
+    <input type="text" name="details" placeholder="Details" value="{{ form_data.details if form_data and form_data.details is not none else '' }}"><br><br>
+
+    <label for="category">Type:</label>
+    <select name="category" id="category_search_select">
+      <option value="">Any</option>
+      {% for category in category_enum %}
+        <option value="{{ category.name }}" {% if form_data and form_data.category == category.name %}selected{% endif %}>
+          {{ category.name.title()}}
+        </option>
+      {% endfor %}
+    </select>
+
+    <label for="language">Language:</label>
+    <select name="language" id="language_search_select">
+      <option value="">Any</option>
+      {% for language in language_enum %}
+        <option value="{{ language.name }}" {% if form_data and form_data.language == language.name %}selected{% endif %}>
+          {{ language.name.title().replace('_', ' ')}}
+        </option>
+      {% endfor %}
+    </select>
+
+    <label for="grading_company">Grading Company:</label>
+    <select name="grading_company" id="grading_company_search_select">
+      <option value="">Any</option>
+      {% for grading_company in grading_company_enum %}
+        <option value="{{ grading_company.name }}" {% if form_data and form_data.grading_company == grading_company.name %}selected{% endif %}>
+          {{ grading_company.name.title()}}
+        </option>
+      {% endfor %}
+    </select>
+
+    <label for="intent">Intent:</label>
+    <select name="intent" id="intent_search_select">
+      <option value="">Any</option>
+      {% for intent in intent_enum %}
+        <option value="{{ intent.name }}" {% if form_data and form_data.intent == intent.name %}selected{% endif %}>
+          {{ intent.name.title()}}
+        </option>
+      {% endfor %}
+    </select>
+
+    <label for="status">Status:</label>
+    <select name="status" id="status_search_select">
+      <option value="">Any</option>
+      {% for status in status_enum %}
+        <option value="{{ status.name }}" {% if form_data and form_data.status == status.name %}selected{% endif %}>
+          {{ status.name.title()}}
+        </option>
+      {% endfor %}
+    </select>
+
+    <label for="list_type">Listing Type:</label>
+    <select name="list_type" id="list_type_search_select">
+      <option value="">Any</option>
+      {% for list_type in list_type_enum %}
+        <option value="{{ list_type.name }}" {% if form_data and form_data.list_type == list_type.name %}selected{% endif %}>
+          {{ list_type.name.title().replace('_', ' ')}}
+        </option>
+      {% endfor %}
+    </select>
+
+    <label for="object_variant">Object Variant:</label>
+    <select name="object_variant" id="object_variant_search_select">
+      <option value="">Any</option>
+      {% for object_variant in object_variant_enum %}
+        <option value="{{ object_variant.name }}" {% if form_data and form_data.object_variant == object_variant.name %}selected{% endif %}>
+          {{ object_variant.name.title().replace('_', ' ')}}
+        </option>
+      {% endfor %}
+    </select><br><br>
+
+    <label>Qualifiers:</label><br>
+    {% for qualifier in qualifier_enum %}
+      <label>
+        <input type="checkbox" name="qualifiers" value="{{ qualifier.name }}" {% if form_data and qualifier.name in form_data.qualifiers %}checked{% endif %}>
+        {{ qualifier.name.replace('_', ' ').title() }}
+      </label><br>
     {% endfor %}
-  </select>
+    <br>
 
-  <label for="language">Language:</label>
-  <select name="language" id="language_search_select">
-    <option value="">Any</option>
-    {% for language in language_enum %}
-      <option value="{{ language.name }}" {% if form_data and form_data.language == language.name %}selected{% endif %}>
-        {{ language.name.title().replace('_', ' ')}}
-      </option>
-    {% endfor %}
-  </select>
+    <label for="purchase_date_min">Purchase Date (Min):</label>
+    <input
+      type="date"
+      name="purchase_date_min"
+      placeholder="Min"
+      value="{{ form_data.purchase_date_min if form_data else '' }}"
+    >
 
-  <label for="grading_company">Grading Company:</label>
-  <select name="grading_company" id="grading_company_search_select">
-    <option value="">Any</option>
-    {% for grading_company in grading_company_enum %}
-      <option value="{{ grading_company.name }}" {% if form_data and form_data.grading_company == grading_company.name %}selected{% endif %}>
-        {{ grading_company.name.title()}}
-      </option>
-    {% endfor %}
-  </select>
+    <label for="purchase_date_max">Purchase Date (Max):</label>
+    <input
+      type="date"
+      name="purchase_date_max"
+      placeholder="Max"
+      value="{{ form_data.purchase_date_max if form_data else '' }}"
+    >
 
-  <label for="intent">Intent:</label>
-  <select name="intent" id="intent_search_select">
-    <option value="">Any</option>
-    {% for intent in intent_enum %}
-      <option value="{{ intent.name }}" {% if form_data and form_data.intent == intent.name %}selected{% endif %}>
-        {{ intent.name.title()}}
-      </option>
-    {% endfor %}
-  </select>
+    <label for="purchase_price_min">Purchase Price (Min):</label>
+    <input
+      type="number"
+      name="purchase_price_min"
+      placeholder="Min"
+      value="{{ form_data.purchase_price_min if form_data else '' }}"
+    >
 
-  <label for="status">Status:</label>
-  <select name="status" id="status_search_select">
-    <option value="">Any</option>
-    {% for status in status_enum %}
-      <option value="{{ status.name }}" {% if form_data and form_data.status == status.name %}selected{% endif %}>
-        {{ status.name.title()}}
-      </option>
-    {% endfor %}
-  </select>
+    <label for="purchase_price_max">Purchase Price (Max):</label>
+    <input
+      type="number"
+      name="purchase_price_max"
+      placeholder="Max"
+      value="{{ form_data.purchase_price_max if form_data else '' }}"
+    >
 
-  <label for="list_type">Listing Type:</label>
-  <select name="list_type" id="list_type_search_select">
-    <option value="">Any</option>
-    {% for list_type in list_type_enum %}
-      <option value="{{ list_type.name }}" {% if form_data and form_data.list_type == list_type.name %}selected{% endif %}>
-        {{ list_type.name.title().replace('_', ' ')}}
-      </option>
-    {% endfor %}
-  </select>
+    <label for="cracked_from">Cracked From:</label>
+    <select name="cracked_from" id="cracked_from_search_select">
+      <option value="">Any</option>
+      {% for value in submission_options %}
+        <option value="{{ value }}" {% if form_data and form_data.cracked_from|int == value %}selected{% endif %}>
+          {{ value }}
+        </option>
+      {% endfor %}
+    </select>
 
-  <label for="object_variant">Object Variant:</label>
-  <select name="object_variant" id="object_variant_search_select">
-    <option value="">Any</option>
-    {% for object_variant in object_variant_enum %}
-      <option value="{{ object_variant.name }}" {% if form_data and form_data.object_variant == object_variant.name %}selected{% endif %}>
-        {{ object_variant.name.title().replace('_', ' ')}}
-      </option>
-    {% endfor %}
-  </select><br><br>
+    <label for="list_date_min">List Date (Min):</label>
+    <input
+      type="date"
+      name="list_date_min"
+      placeholder="Min"
+      value="{{ form_data.list_date_min if form_data else '' }}"
+    >
 
-  <label>Qualifiers:</label><br>
-  {% for qualifier in qualifier_enum %}
-    <label>
-      <input type="checkbox" name="qualifiers" value="{{ qualifier.name }}" {% if form_data and qualifier.name in form_data.qualifiers %}checked{% endif %}>
-      {{ qualifier.name.replace('_', ' ').title() }}
-    </label><br>
-  {% endfor %}
-  <br>
+    <label for="list_date_max">List Date (Max):</label>
+    <input
+      type="date"
+      name="list_date_max"
+      placeholder="Max"
+      value="{{ form_data.list_date_max if form_data else '' }}"
+    >
 
-  <label for="purchase_date_min">Purchase Date (Min):</label>
-  <input
-    type="date"
-    name="purchase_date_min"
-    placeholder="Min"
-    value="{{ form_data.purchase_date_min if form_data else '' }}"
-  >
+    <label for="sale_total_min">Sale Total (Min):</label>
+    <input
+      type="number"
+      name="sale_total_min"
+      placeholder="Min"
+      value="{{ form_data.sale_total_min if form_data else '' }}"
+    >
 
-  <label for="purchase_date_max">Purchase Date (Max):</label>
-  <input
-    type="date"
-    name="purchase_date_max"
-    placeholder="Max"
-    value="{{ form_data.purchase_date_max if form_data else '' }}"
-  >
+    <label for="sale_total_max">Sale Total (Max):</label>
+    <input
+      type="number"
+      name="sale_total_max"
+      placeholder="Max"
+      value="{{ form_data.sale_total_max if form_data else '' }}"
+    >
 
-  <label for="purchase_price_min">Purchase Price (Min):</label>
-  <input
-    type="number"
-    name="purchase_price_min"
-    placeholder="Min"
-    value="{{ form_data.purchase_price_min if form_data else '' }}"
-  >
+    <label for="sale_date_min">Sale Date (Min):</label>
+    <input
+      type="date"
+      name="sale_date_min"
+      placeholder="Min"
+      value="{{ form_data.sale_date_min if form_data else '' }}"
+    >
 
-  <label for="purchase_price_max">Purchase Price (Max):</label>
-  <input
-    type="number"
-    name="purchase_price_max"
-    placeholder="Max"
-    value="{{ form_data.purchase_price_max if form_data else '' }}"
-  >
+    <label for="sale_date_max">Sale Date (Max):</label>
+    <input
+      type="date"
+      name="sale_date_max"
+      placeholder="Max"
+      value="{{ form_data.sale_date_max if form_data else '' }}"
+    >
 
-  <label for="cracked_from">Cracked From:</label>
-  <select name="cracked_from" id="cracked_from_search_select">
-    <option value="">Any</option>
-    {% for value in submission_options %}
-      <option value="{{ value }}" {% if form_data and form_data.cracked_from|int == value %}selected{% endif %}>
-        {{ value }}
-      </option>
-    {% endfor %}
-  </select>
+    <label for="group_discount">Group Discount:</label>
+    <select name="group_discount" id="group_discount">
+      <option value="">Any</option>
+      <option value="true" {% if form_data and form_data.group_discount == 'true' %}selected{% endif %}>True</option>
+      <option value="false" {% if form_data and form_data.group_discount == 'false' %}selected{% endif %}>False</option>
+    </select>
 
-  <label for="list_date_min">List Date (Min):</label>
-  <input
-    type="date"
-    name="list_date_min"
-    placeholder="Min"
-    value="{{ form_data.list_date_min if form_data else '' }}"
-  >
+    <label for="audit_target">Audit Target:</label>
+    <select name="audit_target" id="audit_target">
+      <option value="">Any</option>
+      <option value="true" {% if form_data and form_data.audit_target == 'true' %}selected{% endif %}>True</option>
+      <option value="false" {% if form_data and form_data.audit_target == 'false' %}selected{% endif %}>False</option>
+    </select>
 
-  <label for="list_date_max">List Date (Max):</label>
-  <input
-    type="date"
-    name="list_date_max"
-    placeholder="Max"
-    value="{{ form_data.list_date_max if form_data else '' }}"
-  >
+    <label for="total_cost_min">Total Cost (Min):</label>
+    <input
+      type="number"
+      name="total_cost_min"
+      placeholder="Min"
+      value="{{ form_data.total_cost_min if form_data else '' }}"
+    >
 
-  <label for="sale_total_min">Sale Total (Min):</label>
-  <input
-    type="number"
-    name="sale_total_min"
-    placeholder="Min"
-    value="{{ form_data.sale_total_min if form_data else '' }}"
-  >
+    <label for="total_cost_max">Total Cost (Max):</label>
+    <input
+      type="number"
+      name="total_cost_max"
+      placeholder="Max"
+      value="{{ form_data.total_cost_max if form_data else '' }}"
+    >
 
-  <label for="sale_total_max">Sale Total (Max):</label>
-  <input
-    type="number"
-    name="sale_total_max"
-    placeholder="Max"
-    value="{{ form_data.sale_total_max if form_data else '' }}"
-  >
+    <label for="return_jpy_min">Return JPY (Min):</label>
+    <input
+      type="number"
+      name="return_jpy_min"
+      placeholder="Min"
+      value="{{ form_data.return_jpy_min if form_data else '' }}"
+    >
 
-  <label for="sale_date_min">Sale Date (Min):</label>
-  <input
-    type="date"
-    name="sale_date_min"
-    placeholder="Min"
-    value="{{ form_data.sale_date_min if form_data else '' }}"
-  >
+    <label for="return_jpy_max">Return JPY (Max):</label>
+    <input
+      type="number"
+      name="return_jpy_max"
+      placeholder="Max"
+      value="{{ form_data.return_jpy_max if form_data else '' }}"
+    >
 
-  <label for="sale_date_max">Sale Date (Max):</label>
-  <input
-    type="date"
-    name="sale_date_max"
-    placeholder="Max"
-    value="{{ form_data.sale_date_max if form_data else '' }}"
-  >
+    <label for="net_jpy_min">Net JPY (Min):</label>
+    <input
+      type="number"
+      name="net_jpy_min"
+      placeholder="Min"
+      value="{{ form_data.net_jpy_min if form_data else '' }}"
+    >
 
-  <label for="group_discount">Group Discount:</label>
-  <select name="group_discount" id="group_discount">
-    <option value="">Any</option>
-    <option value="true" {% if form_data and form_data.group_discount == 'true' %}selected{% endif %}>True</option>
-    <option value="false" {% if form_data and form_data.group_discount == 'false' %}selected{% endif %}>False</option>
-  </select>
+    <label for="net_jpy_max">Net JPY (Max):</label>
+    <input
+      type="number"
+      name="net_jpy_max"
+      placeholder="Max"
+      value="{{ form_data.net_jpy_max if form_data else '' }}"
+    >
 
-  <label for="audit_target">Audit Target:</label>
-  <select name="audit_target" id="audit_target">
-    <option value="">Any</option>
-    <option value="true" {% if form_data and form_data.audit_target == 'true' %}selected{% endif %}>True</option>
-    <option value="false" {% if form_data and form_data.audit_target == 'false' %}selected{% endif %}>False</option>
-  </select>
+    <label for="net_percent_min">Net % (Min):</label>
+    <input
+      type="number"
+      step="any"
+      name="net_percent_min"
+      placeholder="Min"
+      value="{{ form_data.net_percent_min if form_data else '' }}"
+    >
 
-  <label for="total_cost_min">Total Cost (Min):</label>
-  <input
-    type="number"
-    name="total_cost_min"
-    placeholder="Min"
-    value="{{ form_data.total_cost_min if form_data else '' }}"
-  >
+    <label for="net_percent_max">Net % (Max):</label>
+    <input
+      type="number"
+      step="any"
+      name="net_percent_max"
+      placeholder="Max"
+      value="{{ form_data.net_percent_max if form_data else '' }}"
+    >
 
-  <label for="total_cost_max">Total Cost (Max):</label>
-  <input
-    type="number"
-    name="total_cost_max"
-    placeholder="Max"
-    value="{{ form_data.total_cost_max if form_data else '' }}"
-  >
-
-  <label for="return_jpy_min">Return JPY (Min):</label>
-  <input
-    type="number"
-    name="return_jpy_min"
-    placeholder="Min"
-    value="{{ form_data.return_jpy_min if form_data else '' }}"
-  >
-
-  <label for="return_jpy_max">Return JPY (Max):</label>
-  <input
-    type="number"
-    name="return_jpy_max"
-    placeholder="Max"
-    value="{{ form_data.return_jpy_max if form_data else '' }}"
-  >
-
-  <label for="net_jpy_min">Net JPY (Min):</label>
-  <input
-    type="number"
-    name="net_jpy_min"
-    placeholder="Min"
-    value="{{ form_data.net_jpy_min if form_data else '' }}"
-  >
-
-  <label for="net_jpy_max">Net JPY (Max):</label>
-  <input
-    type="number"
-    name="net_jpy_max"
-    placeholder="Max"
-    value="{{ form_data.net_jpy_max if form_data else '' }}"
-  >
-
-  <label for="net_percent_min">Net % (Min):</label>
-  <input
-    type="number"
-    step="any"
-    name="net_percent_min"
-    placeholder="Min"
-    value="{{ form_data.net_percent_min if form_data else '' }}"
-  >
-
-  <label for="net_percent_max">Net % (Max):</label>
-  <input
-    type="number"
-    step="any"
-    name="net_percent_max"
-    placeholder="Max"
-    value="{{ form_data.net_percent_max if form_data else '' }}"
-  >
-
-  <button type="submit">Search</button>
-</form>
+    <button type="submit">Search</button>
+  </form>
+</div>
 
 <div style="margin-top: 25px; font-size: 14px;">
   <table border="1" cellpadding="6" cellspacing="0">
@@ -380,12 +386,7 @@
   <p>No items found.</p>
 {% endif %}
 
-<script>
-  function toggleDetails(id) {
-    const row = document.getElementById(`details-${id}`);
-    row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
-  }
-</script>
+<script src="{{ url_for('static', path='js/view.js') }}"></script>
 
 </body>
 </html>

@@ -93,9 +93,24 @@
 }
 
 .right-aligned {
-    text-align: right;
+  text-align: right;
 }
 
 .centre-aligned {
-    text-align: center;
+  text-align: center;
+}
+
+#search-section {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+  padding: 0 1rem;
+  border: 1px solid #ccc;
+  background-color: #f9f9f9;
+  margin-bottom: 1rem;
+}
+
+#search-section.visible {
+  max-height: 500px; /* Has to be larger than the expected size */
+  padding: 1rem;
 }
