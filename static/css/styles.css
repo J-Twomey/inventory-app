@@ -100,6 +100,26 @@
   text-align: center;
 }
 
+.label-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.label-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 0.1rem;
+}
+
+.divider {
+  width: 100%;
+  display: flex;
+  align-items: left;
+  text-align: left;
+  margin: 0rem 0;
+}
+
 #search-section {
   max-height: 0;
   overflow: hidden;
@@ -111,6 +131,6 @@
 }
 
 #search-section.visible {
-  max-height: 500px; /* Has to be larger than the expected size */
+  max-height: 800px; /* Has to be larger than the expected size */
   padding: 1rem;
 }
