@@ -68,6 +68,7 @@ class Item(Base):
     purchase_price: Mapped[int] = mapped_column(Integer)
     status: Mapped[int] = mapped_column(Integer)
     intent: Mapped[int] = mapped_column(Integer)
+    import_fee: Mapped[int] = mapped_column(Integer)
     grading_fee: Mapped[dict[int, int]] = mapped_column(JSON)
     grading_fee_total: Mapped[int] = mapped_column(Integer)
     submission_numbers: Mapped[list[int]] = mapped_column(JSON)
@@ -89,11 +90,11 @@ class Item(Base):
 
     @hybrid_property
     def total_cost(self) -> int:
-        return self.purchase_price + self.grading_fee_total
+        return self.purchase_price + self.grading_fee_total + self.import_fee
 
     @total_cost.expression  # type: ignore[no-redef]
     def total_cost(cls) -> BinaryExpression[int]:
-        return cls.purchase_price + cls.grading_fee_total
+        return cls.purchase_price + cls.grading_fee_total + cls.import_fee
 
     @hybrid_property
     def total_fees(self) -> float | None:
@@ -199,6 +200,7 @@ class Item(Base):
             purchase_price=self.purchase_price,
             status=Status(self.status),
             intent=Intent(self.intent),
+            import_fee=self.import_fee,
             grading_fee=self.grading_fee,
             grading_fee_total=self.grading_fee_total,
             submission_numbers=self.submission_numbers,

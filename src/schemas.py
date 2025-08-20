@@ -63,6 +63,7 @@ class ItemBase(BaseModel):
     purchase_price: int
     status: Status
     intent: Intent
+    import_fee: int
     grading_fee: dict[int, int]
     cracked_from: list[int]
     grade: float | None = None
@@ -93,7 +94,7 @@ class ItemBase(BaseModel):
     @computed_field  # type: ignore[prop-decorator]
     @property
     def total_cost(self) -> int:
-        return self.purchase_price + self.grading_fee_total
+        return self.purchase_price + self.grading_fee_total + self.import_fee
 
     @computed_field  # type: ignore[prop-decorator]
     @property
@@ -220,6 +221,7 @@ class ItemCreateForm:
     purchase_price: str
     status: str
     intent: str
+    import_fee: str
     grade: str
     grading_company: str
     cert: str
@@ -251,6 +253,7 @@ class ItemCreateForm:
         purchase_price: Annotated[str, Form()],
         status: Annotated[str, Form()],
         intent: Annotated[str, Form()],
+        import_fee: Annotated[str, Form()],
         grade: Annotated[str, Form()],
         grading_company: Annotated[str, Form()],
         cert: Annotated[str, Form()],
@@ -281,6 +284,7 @@ class ItemCreateForm:
             purchase_price=purchase_price,
             status=status,
             intent=intent,
+            import_fee=import_fee,
             grade=grade,
             grading_company=grading_company,
             cert=cert,
@@ -321,6 +325,7 @@ class ItemCreateForm:
             purchase_price=int(self.purchase_price),
             status=parse_enum(self.status, Status),
             intent=parse_enum(self.intent, Intent),
+            import_fee=int(self.import_fee),
             grading_fee=build_grading_fee_dict(self.submission_numbers, self.grading_fees),
             cracked_from=parse_nullable_list_of_str_to_list_of_int(
                 self.cracked_from,
@@ -355,6 +360,7 @@ class ItemUpdate(BaseModel):
     purchase_price: int | None = None
     status: Status | None = None
     intent: Intent | None = None
+    import_fee: int | None = None
     grading_fee: dict[int, int] | None = None
     cracked_from: list[int] | None = None
     grade: float | None = None
@@ -412,6 +418,7 @@ class ItemUpdateForm:
     purchase_price: str | None = None
     status: str | None = None
     intent: str | None = None
+    import_fee: str | None = None
     grading_fee: str | None = None
     grade: str | None = None
     grading_company: str | None = None
@@ -448,6 +455,7 @@ class ItemUpdateForm:
         purchase_price: Annotated[str | None, Form()] = None,
         status: Annotated[str | None, Form()] = None,
         intent: Annotated[str | None, Form()] = None,
+        import_fee: Annotated[str | None, Form()] = None,
         grade: Annotated[str | None, Form()] = None,
         grading_company: Annotated[str | None, Form()] = None,
         cert: Annotated[str | None, Form()] = None,
@@ -474,6 +482,7 @@ class ItemUpdateForm:
             purchase_price=purchase_price,
             status=status,
             intent=intent,
+            import_fee=import_fee,
             grade=grade,
             grading_company=grading_company,
             cert=cert,
@@ -505,6 +514,7 @@ class ItemUpdateForm:
         set_if_value(update_vals, 'purchase_price', parse_nullable(self.purchase_price, int))
         set_if_value(update_vals, 'status', parse_nullable_enum(self.status, Status))
         set_if_value(update_vals, 'intent', parse_nullable_enum(self.intent, Intent))
+        set_if_value(update_vals, 'import_fee', parse_nullable(self.import_fee, int))
         set_if_value(update_vals, 'grade', parse_nullable(self.grade, float))
         set_if_value(
             update_vals,
@@ -743,6 +753,7 @@ class DisplayItem(BaseModel):
     purchase_price: int
     status: Status
     intent: Intent
+    import_fee: int
     grading_fee: dict[int, int]
     grading_fee_total: int
     submission_numbers: list[int]

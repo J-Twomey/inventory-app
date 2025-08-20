@@ -308,9 +308,11 @@ def test_build_search_filters_with_min_value() -> None:
     assert filters[0].left.key == 'name'
     assert filters[0].right.value == 'Unown'
     assert filters[0].operator is eq
-    # total_cost is a hybrid property consisting of purchase_price and grading_fee_total
-    assert filters[1].left.left.key == 'purchase_price'
-    assert filters[1].left.right.key == 'grading_fee_total'
+    # total_cost is a hybrid property: purchase_price + grading_fee_total + import_fee
+    lhs_filters: list[str] = [col.key for col in list(filters[1].left)]
+    assert lhs_filters[0] == 'purchase_price'
+    assert lhs_filters[1] == 'grading_fee_total'
+    assert lhs_filters[2] == 'import_fee'
     assert filters[1].right.value == 100
     assert filters[1].operator is ge
     assert post_filters == []
@@ -323,9 +325,11 @@ def test_build_search_filters_with_max_value() -> None:
     assert filters[0].left.key == 'name'
     assert filters[0].right.value == 'Unown'
     assert filters[0].operator is eq
-    # total_cost is a hybrid property consisting of purchase_price and grading_fee_total
-    assert filters[1].left.left.key == 'purchase_price'
-    assert filters[1].left.right.key == 'grading_fee_total'
+    # total_cost is a hybrid property: purchase_price + grading_fee_total + import_fee
+    lhs_filters: list[str] = [col.key for col in list(filters[1].left)]
+    assert lhs_filters[0] == 'purchase_price'
+    assert lhs_filters[1] == 'grading_fee_total'
+    assert lhs_filters[2] == 'import_fee'
     assert filters[1].right.value == 100
     assert filters[1].operator is le
     assert post_filters == []

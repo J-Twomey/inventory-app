@@ -41,8 +41,14 @@ def test_item_base_submission_numbers_empty(item_base_factory: ItemBaseFactory) 
 def test_item_base_total_cost(item_base_factory: ItemBaseFactory) -> None:
     purchase_price = 555
     grading_fees = {1: 10, 2: 20}
-    item = item_base_factory.get(purchase_price=purchase_price, grading_fee=grading_fees)
-    assert item.total_cost == 585
+    import_fee = 100
+    expected_total_cost = 685
+    item = item_base_factory.get(
+        purchase_price=purchase_price,
+        import_fee=import_fee,
+        grading_fee=grading_fees,
+    )
+    assert item.total_cost == expected_total_cost
 
 
 @pytest.mark.parametrize(

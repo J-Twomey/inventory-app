@@ -9,29 +9,36 @@ from .conftest import ItemFactory
 
 
 @pytest.mark.parametrize(
-    ('purchase_price', 'grading_fees', 'expected_total'),
+    ('purchase_price', 'grading_fees', 'import_fee', 'expected_total'),
     (
-        pytest.param(10, {}, 10, id='no_grading_fees'),
-        pytest.param(10, {1: 100}, 110, id='single_grading_fee'),
-        pytest.param(10, {1: 100, 2: 200}, 310, id='multiple_grading_fees'),
+        pytest.param(10, {}, 0, 10, id='no_grading_fees'),
+        pytest.param(10, {1: 100}, 0, 110, id='single_grading_fee'),
+        pytest.param(10, {1: 100, 2: 200}, 0, 310, id='multiple_grading_fees'),
+        pytest.param(10, {}, 11, 21, id='with_import_fee'),
     ),
 )
 def test_total_cost_python(
         item_factory: ItemFactory,
         purchase_price: int,
         grading_fees: dict[int, int],
+        import_fee: int,
         expected_total: int,
 ) -> None:
-    item = item_factory.get(purchase_price=purchase_price, grading_fee=grading_fees)
+    item = item_factory.get(
+        purchase_price=purchase_price,
+        import_fee=import_fee,
+        grading_fee=grading_fees,
+    )
     assert item.total_cost == expected_total
 
 
 @pytest.mark.parametrize(
-    ('purchase_price', 'grading_fees', 'expected_total'),
+    ('purchase_price', 'grading_fees', 'import_fee', 'expected_total'),
     (
-        pytest.param(10, {}, 10, id='no_grading_fees'),
-        pytest.param(10, {1: 100}, 110, id='single_grading_fee'),
-        pytest.param(10, {1: 100, 2: 200}, 310, id='multiple_grading_fees'),
+        pytest.param(10, {}, 0, 10, id='no_grading_fees'),
+        pytest.param(10, {1: 100}, 0, 110, id='single_grading_fee'),
+        pytest.param(10, {1: 100, 2: 200}, 0, 310, id='multiple_grading_fees'),
+        pytest.param(10, {}, 11, 21, id='with_import_fee'),
     ),
 )
 def test_total_cost_sql(
@@ -39,9 +46,14 @@ def test_total_cost_sql(
         item_factory: ItemFactory,
         purchase_price: int,
         grading_fees: dict[int, int],
+        import_fee: int,
         expected_total: int,
 ) -> None:
-    item = item_factory.get(purchase_price=purchase_price, grading_fee=grading_fees)
+    item = item_factory.get(
+        purchase_price=purchase_price,
+        import_fee=import_fee,
+        grading_fee=grading_fees,
+    )
     db_session.add(item)
     db_session.commit()
 
@@ -370,8 +382,10 @@ def test_net_percent_sql(
 
 def test_to_display(item_factory: ItemFactory) -> None:
     display_item = item_factory.get(
+        purchase_price=800,
         qualifiers=[item_enums.Qualifier.CRYSTAL],
         status=item_enums.Status.CLOSED.value,
+        import_fee=200,
         grading_fee={1: 100, 2: 200},
         grade=10.,
         grading_company=item_enums.GradingCompany.BGS.value,
