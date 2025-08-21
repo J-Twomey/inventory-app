@@ -31,6 +31,7 @@ def test_create_item_all_nullables_provided(
 ) -> None:
     item = item_create_factory.get(
         qualifiers=[item_enums.Qualifier.UNLIMITED],
+        status=item_enums.Status.CLOSED,
         details='Mint',
         grading_fee={1: 600, 2: 399},
         grade=10.,

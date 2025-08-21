@@ -51,6 +51,33 @@ class Status(Enum):
     SUBMITTED = 4
     ORDER = 5
 
+    @property
+    def required_fields(self) -> list[str]:
+        mapping = {
+            Status.CLOSED: ['sale_total', 'sale_date', 'shipping', 'sale_fee', 'usd_to_jpy_rate'],
+            Status.STORAGE: [],
+            Status.LISTED: ['list_price', 'list_type', 'list_date'],
+            Status.VAULT: [],
+            Status.SUBMITTED: [],
+            Status.ORDER: [],
+        }
+        return mapping[self]
+
+    @property
+    def required_to_be_null(self) -> list[str]:
+        listing_fields = ['list_price', 'list_date']
+        sale_fields = ['sale_total', 'sale_date', 'shipping', 'sale_fee', 'usd_to_jpy_rate']
+        graded_fields = ['grade', 'cert']
+        mapping = {
+            Status.CLOSED: [],
+            Status.STORAGE: listing_fields + sale_fields,
+            Status.LISTED: sale_fields,
+            Status.VAULT: listing_fields + sale_fields,
+            Status.SUBMITTED: listing_fields + sale_fields + graded_fields,
+            Status.ORDER: listing_fields + sale_fields,
+        }
+        return mapping[self]
+
 
 class Intent(Enum):
     KEEP = 0

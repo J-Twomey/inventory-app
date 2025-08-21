@@ -15,6 +15,7 @@ from typing import (
     Callable,
     Literal,
     overload,
+    Self,
     Type,
     TypeVar,
 )
@@ -28,6 +29,7 @@ from pydantic import (
     computed_field,
     ConfigDict,
     field_validator,
+    model_validator,
     ValidationInfo,
 )
 
@@ -192,6 +194,52 @@ class ItemBase(BaseModel):
         ):
             return v
         raise ValueError('grading_fee must be provided as str or dict[int, int]')
+
+    @model_validator(mode='after')
+    def list_date_not_before_purchase_date(self) -> Self:
+        if self.list_date is not None and self.list_date < self.purchase_date:
+            raise ValueError(
+                f'listing date cannot be before purchase date '
+                f'(got listing date: {self.list_date}, purchase date: {self.purchase_date})',
+            )
+        return self
+
+    @model_validator(mode='after')
+    def sale_date_not_before_list_date(self) -> Self:
+        if (
+            self.list_date is not None and
+            self.sale_date is not None and
+            self.sale_date < self.list_date
+        ):
+            raise ValueError(
+                f'sale date cannot be before listing date '
+                f'(got sale date: {self.sale_date}, listing date: {self.list_date})',
+            )
+        return self
+
+    @model_validator(mode='after')
+    def check_required_fields_based_on_status(self) -> Self:
+        missing = [
+            f for f in self.status.required_fields
+            if getattr(self, f) is None
+        ]
+        if len(missing) > 0:
+            raise ValueError(
+                f'status {self.status.name} requires the following missing fields: {missing}',
+            )
+        return self
+
+    @model_validator(mode='after')
+    def check_required_null_fields_based_on_status(self) -> Self:
+        not_null = [
+            f for f in self.status.required_to_be_null
+            if getattr(self, f) is not None
+        ]
+        if len(not_null) > 0:
+            raise ValueError(
+                f'status {self.status.name} requires the following fields to be null: {not_null}',
+            )
+        return self
 
 
 class ItemCreate(ItemBase):

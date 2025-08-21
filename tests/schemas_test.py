@@ -1,5 +1,5 @@
-import datetime
 import pytest
+from datetime import date
 from typing import Any
 
 from pydantic import ValidationError
@@ -51,71 +51,88 @@ def test_item_base_total_cost(item_base_factory: ItemBaseFactory) -> None:
     assert item.total_cost == expected_total_cost
 
 
-@pytest.mark.parametrize(
-    ('shipping', 'sale_fee', 'expected_total'),
-    (
-        pytest.param(None, None, None, id='no_fees'),
-        pytest.param(None, 8.7, None, id='no_shipping'),
-        pytest.param(5.5, None, None, id='no_sale_fee'),
-        pytest.param(5.5, 8.7, 14.2, id='with_fees'),
-    ),
-)
-def test_item_base_total_fees(
-        item_base_factory: ItemBaseFactory,
-        shipping: float | None,
-        sale_fee: float | None,
-        expected_total: float | None,
-) -> None:
-    item = item_base_factory.get(shipping=shipping, sale_fee=sale_fee)
+def test_item_base_total_fees_no_sale(item_base_factory: ItemBaseFactory) -> None:
+    item = item_base_factory.get(status=item_enums.Status.STORAGE)
+    assert item.total_fees is None
+
+
+def test_item_base_total_fees_with_sale(item_base_factory: ItemBaseFactory) -> None:
+    item = item_base_factory.get(
+        status=item_enums.Status.CLOSED,
+        sale_date=date(2025, 5, 6),
+        sale_total=100.,
+        shipping=5.5,
+        sale_fee=8.7,
+        usd_to_jpy_rate=150.,
+    )
+    expected_total = 14.2
     assert item.total_fees == expected_total
+
+
+def test_item_base_return_usd_no_sale(item_base_factory: ItemBaseFactory) -> None:
+    item = item_base_factory.get(status=item_enums.Status.STORAGE)
+    assert item.return_usd is None
 
 
 @pytest.mark.parametrize(
     ('sale_total', 'shipping', 'sale_fee', 'expected_return'),
     (
-        pytest.param(None, None, None, None, id='no_fees'),
-        pytest.param(None, 5.34, 8.66, None, id='no_sale_total'),
-        pytest.param(11.23, None, 8.66, None, id='no_total_fee'),
         pytest.param(15.31, 5.54, 8.66, 1.11, id='net_positive'),
         pytest.param(10.35, 5.54, 8.66, -3.85, id='net_negative'),
     ),
 )
-def test_item_base_return_usd(
+def test_item_base_return_usd_with_sale(
         item_base_factory: ItemBaseFactory,
-        sale_total: float | None,
-        shipping: float | None,
-        sale_fee: float | None,
-        expected_return: float | None,
+        sale_total: float,
+        shipping: float,
+        sale_fee: float,
+        expected_return: float,
 ) -> None:
-    item = item_base_factory.get(sale_total=sale_total, shipping=shipping, sale_fee=sale_fee)
+    item = item_base_factory.get(
+        status=item_enums.Status.CLOSED,
+        sale_date=date(2025, 5, 5),
+        sale_total=sale_total,
+        shipping=shipping,
+        sale_fee=sale_fee,
+        usd_to_jpy_rate=150.,
+    )
     assert item.return_usd == expected_return
+
+
+def test_item_base_return_jpy_no_sale(item_base_factory: ItemBaseFactory) -> None:
+    item = item_base_factory.get(status=item_enums.Status.STORAGE)
+    assert item.return_jpy is None
 
 
 @pytest.mark.parametrize(
     ('sale_total', 'shipping', 'sale_fee', 'usd_to_jpy_rate', 'expected_return'),
     (
-        pytest.param(None, None, None, None, None, id='no_fees'),
-        pytest.param(9.64, 3.21, None, 140.55, None, id='no_return_usd'),
-        pytest.param(9.64, 3.21, 2.87, None, None, id='no_exchange_rate'),
         pytest.param(9.64, 3.21, 2.87, 140.55, 500, id='net_positive'),
         pytest.param(5.49, 3.27, 2.99, 140.55, -108, id='net_negative'),
     ),
 )
 def test_item_base_return_jpy(
         item_base_factory: ItemBaseFactory,
-        sale_total: float | None,
-        shipping: float | None,
-        sale_fee: float | None,
-        usd_to_jpy_rate: float | None,
-        expected_return: int | None,
+        sale_total: float,
+        shipping: float,
+        sale_fee: float,
+        usd_to_jpy_rate: float,
+        expected_return: int,
 ) -> None:
     item = item_base_factory.get(
+        status=item_enums.Status.CLOSED,
+        sale_date=date(2025, 5, 5),
         sale_total=sale_total,
         shipping=shipping,
         sale_fee=sale_fee,
         usd_to_jpy_rate=usd_to_jpy_rate,
     )
     assert item.return_jpy == expected_return
+
+
+def test_item_base_net_jpy_no_sale(item_base_factory: ItemBaseFactory) -> None:
+    item = item_base_factory.get(status=item_enums.Status.STORAGE)
+    assert item.net_jpy is None
 
 
 @pytest.mark.parametrize(
@@ -129,7 +146,6 @@ def test_item_base_return_jpy(
         'expected_net',
     ),
     (
-        pytest.param(10, {1: 100}, None, None, None, None, None, id='no_sale'),
         pytest.param(10, {1: 100}, 9.64, 3.21, 2.87, 140.55, 390, id='net_positive'),
         pytest.param(1000, {1: 100}, 9.64, 3.21, 2.87, 140.55, -600, id='positive_ret_net_neg'),
         pytest.param(10, {1: 100}, 5.49, 3.27, 2.99, 140.55, -218, id='negative_ret_net_neg'),
@@ -139,21 +155,28 @@ def test_item_base_net_jpy(
         item_base_factory: ItemBaseFactory,
         purchase_price: int,
         grading_fees: dict[int, int],
-        sale_total: float | None,
-        shipping: float | None,
-        sale_fee: float | None,
-        usd_to_jpy_rate: float | None,
-        expected_net: int | None,
+        sale_total: float,
+        shipping: float,
+        sale_fee: float,
+        usd_to_jpy_rate: float,
+        expected_net: int,
 ) -> None:
     item = item_base_factory.get(
+        status=item_enums.Status.CLOSED,
         purchase_price=purchase_price,
         grading_fee=grading_fees,
+        sale_date=date(2025, 5, 5),
         sale_total=sale_total,
         shipping=shipping,
         sale_fee=sale_fee,
         usd_to_jpy_rate=usd_to_jpy_rate,
     )
     assert item.net_jpy == expected_net
+
+
+def test_item_base_net_percent_no_sale(item_base_factory: ItemBaseFactory) -> None:
+    item = item_base_factory.get(status=item_enums.Status.STORAGE)
+    assert item.net_percent is None
 
 
 @pytest.mark.parametrize(
@@ -167,8 +190,6 @@ def test_item_base_net_jpy(
         'expected_percent',
     ),
     (
-        pytest.param(10, {1: 100}, None, None, None, None, None, id='no_sale'),
-        pytest.param(0, {}, 9.55, 3.33, 2.11, 140.55, 0., id='no_costs'),
         pytest.param(10, {1: 100}, 9.64, 3.21, 2.87, 140.55, 354.55, id='net_positive'),
         pytest.param(1000, {1: 100}, 9.64, 3.21, 2.87, 140.55, -54.55, id='positive_ret_net_neg'),
         pytest.param(10, {1: 100}, 5.49, 3.27, 2.99, 140.55, -198.18, id='negative_ret_net_neg'),
@@ -178,15 +199,17 @@ def test_item_base_net_percent(
         item_base_factory: ItemBaseFactory,
         purchase_price: int,
         grading_fees: dict[int, int],
-        sale_total: float | None,
-        shipping: float | None,
-        sale_fee: float | None,
-        usd_to_jpy_rate: float | None,
-        expected_percent: float | None,
+        sale_total: float,
+        shipping: float,
+        sale_fee: float,
+        usd_to_jpy_rate: float,
+        expected_percent: float,
 ) -> None:
     item = item_base_factory.get(
+        status=item_enums.Status.CLOSED,
         purchase_price=purchase_price,
         grading_fee=grading_fees,
+        sale_date=date(2025, 5, 5),
         sale_total=sale_total,
         shipping=shipping,
         sale_fee=sale_fee,
@@ -198,8 +221,10 @@ def test_item_base_net_percent(
 def test_item_base_required_field_not_allowed_as_empty_string(
         item_base_factory: ItemBaseFactory,
 ) -> None:
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError) as e:
         item_base_factory.get(name='')
+    error_msg = e.value.errors()[0]['msg']
+    assert 'Input should be a valid string' in error_msg
 
 
 @pytest.mark.parametrize(
@@ -217,8 +242,8 @@ def test_item_base_required_field_not_allowed_as_empty_string(
         ),
         pytest.param(
             'purchase_date',
-            datetime.date(1999, 12, 31),
-            datetime.date(1999, 12, 31),
+            date(1999, 12, 31),
+            date(1999, 12, 31),
             id='date_field_not_empty',
         ),
         pytest.param('cracked_from', [1, 2], [1, 2], id='excluded_field'),
@@ -264,8 +289,10 @@ def test_item_base_parse_qualifiers_validator(
 
 
 def test_item_base_parse_qualifiers_wrong_type_input(item_base_factory: ItemBaseFactory) -> None:
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError) as e:
         item_base_factory.get(qualifiers=5)  # type: ignore[arg-type]
+    error_msg = e.value.errors()[0]['msg']
+    assert 'qualifiers must be provided as str or list[Qualifier]' in error_msg
 
 
 @pytest.mark.parametrize(
@@ -288,8 +315,10 @@ def test_item_base_parse_cracked_from_validator(
 
 
 def test_item_base_parse_cracked_from_wrong_type_input(item_base_factory: ItemBaseFactory) -> None:
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError) as e:
         item_base_factory.get(cracked_from=5)  # type: ignore[arg-type]
+    error_msg = e.value.errors()[0]['msg']
+    assert 'cracked_from must be provided as str or list[int]' in error_msg
 
 
 @pytest.mark.parametrize(
@@ -313,15 +342,140 @@ def test_item_base_parse_grading_fee_validator(
 def test_item_base_parse_grading_fee_invalid_json_input(
         item_base_factory: ItemBaseFactory,
 ) -> None:
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError) as e:
         item_base_factory.get(grading_fee='')  # type: ignore[arg-type]
+    error_msg = e.value.errors()[0]['msg']
+    assert 'grading_fee must be valid JSON' in error_msg
 
 
 def test_item_base_parse_grading_fee_wrong_type_input(
         item_base_factory: ItemBaseFactory,
 ) -> None:
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError) as e:
         item_base_factory.get(grading_fee=8)  # type: ignore[arg-type]
+    error_msg = e.value.errors()[0]['msg']
+    assert 'grading_fee must be provided as str or dict[int, int]' in error_msg
+
+
+def test_item_base_list_date_not_before_purchase_date(item_base_factory: ItemBaseFactory) -> None:
+    item_base_factory.get(
+        purchase_date=date(2025, 5, 5),
+        status=item_enums.Status.LISTED,
+        list_date=date(2025, 5, 6),
+        list_price=1.,
+        list_type=item_enums.ListingType.FIXED,
+    )
+
+
+def test_item_base_list_date_before_purchase_date(item_base_factory: ItemBaseFactory) -> None:
+    with pytest.raises(ValidationError) as e:
+        item_base_factory.get(
+            purchase_date=date(2025, 5, 5),
+            status=item_enums.Status.LISTED,
+            list_date=date(2025, 5, 4),
+            list_price=1.,
+            list_type=item_enums.ListingType.FIXED,
+        )
+    error_msg = e.value.errors()[0]['msg']
+    assert (
+        'listing date cannot be before purchase date (got listing date: 2025-05-04, '
+        'purchase date: 2025-05-05)'
+     ) in error_msg
+
+
+def test_item_base_sale_date_not_before_list_date(item_base_factory: ItemBaseFactory) -> None:
+    item_base_factory.get(
+        purchase_date=date(2025, 5, 5),
+        status=item_enums.Status.CLOSED,
+        list_date=date(2025, 5, 6),
+        list_price=1.,
+        list_type=item_enums.ListingType.FIXED,
+        sale_date=date(2025, 5, 6),
+        sale_total=1.,
+        shipping=0.,
+        sale_fee=0.,
+        usd_to_jpy_rate=100,
+    )
+
+
+def test_item_base_sale_date_before_list_date(item_base_factory: ItemBaseFactory) -> None:
+    with pytest.raises(ValidationError) as e:
+        item_base_factory.get(
+            purchase_date=date(2025, 5, 5),
+            status=item_enums.Status.CLOSED,
+            list_date=date(2025, 5, 6),
+            list_price=1.,
+            list_type=item_enums.ListingType.FIXED,
+            sale_date=date(2025, 5, 5),
+            sale_total=1.,
+            shipping=0.,
+            sale_fee=0.,
+            usd_to_jpy_rate=100,
+        )
+    error_msg = e.value.errors()[0]['msg']
+    assert (
+        'sale date cannot be before listing date (got sale date: 2025-05-05, '
+        'listing date: 2025-05-06)'
+    ) in error_msg
+
+
+def test_check_required_fields_based_on_status_no_error(
+        item_base_factory: ItemBaseFactory,
+) -> None:
+    item_base_factory.get(
+        purchase_date=date(2025, 5, 5),
+        status=item_enums.Status.CLOSED,
+        list_date=date(2025, 5, 6),
+        list_price=1.,
+        list_type=item_enums.ListingType.FIXED,
+        sale_date=date(2025, 5, 6),
+        sale_total=1.,
+        shipping=0.,
+        sale_fee=0.,
+        usd_to_jpy_rate=100,
+    )
+
+
+def test_check_required_fields_based_on_status_error_case(
+        item_base_factory: ItemBaseFactory,
+) -> None:
+    with pytest.raises(ValidationError) as e:
+        item_base_factory.get(
+            purchase_date=date(2025, 5, 5),
+            status=item_enums.Status.CLOSED,
+            list_date=date(2025, 5, 6),
+            list_price=1.,
+            list_type=item_enums.ListingType.FIXED,
+            sale_date=date(2025, 5, 6),
+            sale_total=None,
+            shipping=0.,
+            sale_fee=0.,
+            usd_to_jpy_rate=100,
+        )
+    error_msg = e.value.errors()[0]['msg']
+    assert "status CLOSED requires the following missing fields: ['sale_total']" in error_msg
+
+
+def test_check_required_null_fields_based_on_status_no_error(
+        item_base_factory: ItemBaseFactory,
+) -> None:
+    item_base_factory.get(
+        purchase_date=date(2025, 5, 5),
+        status=item_enums.Status.SUBMITTED,
+    )
+
+
+def test_check_required_null_fields_based_on_status_error_case(
+        item_base_factory: ItemBaseFactory,
+) -> None:
+    with pytest.raises(ValidationError) as e:
+        item_base_factory.get(
+            purchase_date=date(2025, 5, 5),
+            status=item_enums.Status.SUBMITTED,
+            list_date=date(2025, 5, 6),
+        )
+    error_msg = e.value.errors()[0]['msg']
+    assert "status SUBMITTED requires the following fields to be null: ['list_date']" in error_msg
 
 
 def test_parse_enum() -> None:
@@ -457,7 +611,7 @@ def test_parse_nullable_date_invalid_date_format() -> None:
 def test_parse_nullable_date_do_parse() -> None:
     input_str = '2025-05-05'
     result = schemas.parse_nullable_date(input_str)
-    assert result == datetime.date(2025, 5, 5)
+    assert result == date(2025, 5, 5)
 
 
 def test_set_if_value_do_set() -> None:
