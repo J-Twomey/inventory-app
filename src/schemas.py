@@ -373,7 +373,7 @@ class ItemUpdate(BaseModel):
     sale_date: date | None = None
     shipping: float | None = None
     sale_fee: float | None = None
-    usd_to_jpy: float | None = None
+    usd_to_jpy_rate: float | None = None
     group_discount: bool = False
     object_variant: ObjectVariant | None = None
     audit_target: bool = False
@@ -430,7 +430,7 @@ class ItemUpdateForm:
     sale_date: str | None = None
     shipping: str | None = None
     sale_fee: str | None = None
-    usd_to_jpy: str | None = None
+    usd_to_jpy_rate: str | None = None
     group_discount: bool = False
     object_variant: str | None = None
     audit_target: bool = False
@@ -466,7 +466,7 @@ class ItemUpdateForm:
         sale_date: Annotated[str | None, Form()] = None,
         shipping: Annotated[str | None, Form()] = None,
         sale_fee: Annotated[str | None, Form()] = None,
-        usd_to_jpy: Annotated[str | None, Form()] = None,
+        usd_to_jpy_rate: Annotated[str | None, Form()] = None,
         object_variant: Annotated[str | None, Form()] = None,
         group_discount: Annotated[bool, Form()] = False,
         audit_target: Annotated[bool, Form()] = False,
@@ -493,7 +493,7 @@ class ItemUpdateForm:
             sale_date=sale_date,
             shipping=shipping,
             sale_fee=sale_fee,
-            usd_to_jpy=usd_to_jpy,
+            usd_to_jpy_rate=usd_to_jpy_rate,
             submission_numbers=submission_numbers,
             grading_fees=grading_fees,
             cracked_from=cracked_from,
@@ -529,7 +529,7 @@ class ItemUpdateForm:
         set_if_value(update_vals, 'sale_date', parse_nullable_date(self.sale_date))
         set_if_value(update_vals, 'shipping', parse_nullable(self.shipping, float))
         set_if_value(update_vals, 'sale_fee', parse_nullable(self.sale_fee, float))
-        set_if_value(update_vals, 'usd_to_jpy', parse_nullable(self.usd_to_jpy, float))
+        set_if_value(update_vals, 'usd_to_jpy_rate', parse_nullable(self.usd_to_jpy_rate, float))
         set_if_value(
             update_vals,
             'cracked_from',
