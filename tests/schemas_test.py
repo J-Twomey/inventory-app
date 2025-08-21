@@ -380,7 +380,7 @@ def test_item_base_list_date_before_purchase_date(item_base_factory: ItemBaseFac
     assert (
         'listing date cannot be before purchase date (got listing date: 2025-05-04, '
         'purchase date: 2025-05-05)'
-     ) in error_msg
+    ) in error_msg
 
 
 def test_item_base_sale_date_not_before_list_date(item_base_factory: ItemBaseFactory) -> None:
