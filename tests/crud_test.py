@@ -243,10 +243,19 @@ def test_search_for_items_multiple_search_criteria(
         item_enums.Language.KOREAN,
         item_enums.Language.GERMAN,
     ]
+    grades = [None, 9., 9., 9.]
+    certs = [None, 1, 1, 1]
     items = [
-        item_create_factory.get(grading_company=gc, language=lang) for gc, lang in zip(
+        item_create_factory.get(
+            grading_company=gc,
+            language=lang,
+            grade=g,
+            cert=c,
+        ) for gc, lang, g, c in zip(
             item_grading_companies,
             item_languages,
+            grades,
+            certs,
         )
     ]
     for item in items:

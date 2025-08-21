@@ -83,7 +83,8 @@ class Intent(Enum):
     KEEP = 0
     SELL = 1
     GRADE = 2
-    TBD = 3
+    CRACK = 3
+    TBD = 4
 
 
 class Qualifier(Enum):
@@ -99,6 +100,26 @@ class GradingCompany(Enum):
     PSA = 1
     CGC = 2
     BGS = 3
+
+    @property
+    def required_fields(self) -> list[str]:
+        mapping = {
+            GradingCompany.RAW: [],
+            GradingCompany.PSA: ['grade', 'cert'],
+            GradingCompany.CGC: ['grade', 'cert'],
+            GradingCompany.BGS: ['grade', 'cert'],
+        }
+        return mapping[self]
+
+    @property
+    def required_to_be_null(self) -> list[str]:
+        mapping = {
+            GradingCompany.RAW: ['grade', 'cert'],
+            GradingCompany.PSA: [],
+            GradingCompany.CGC: [],
+            GradingCompany.BGS: [],
+        }
+        return mapping[self]
 
 
 class ListingType(Enum):

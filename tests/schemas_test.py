@@ -59,6 +59,7 @@ def test_item_base_total_fees_no_sale(item_base_factory: ItemBaseFactory) -> Non
 def test_item_base_total_fees_with_sale(item_base_factory: ItemBaseFactory) -> None:
     item = item_base_factory.get(
         status=item_enums.Status.CLOSED,
+        list_type=item_enums.ListingType.FIXED,
         sale_date=date(2025, 5, 6),
         sale_total=100.,
         shipping=5.5,
@@ -90,6 +91,7 @@ def test_item_base_return_usd_with_sale(
 ) -> None:
     item = item_base_factory.get(
         status=item_enums.Status.CLOSED,
+        list_type=item_enums.ListingType.FIXED,
         sale_date=date(2025, 5, 5),
         sale_total=sale_total,
         shipping=shipping,
@@ -121,6 +123,7 @@ def test_item_base_return_jpy(
 ) -> None:
     item = item_base_factory.get(
         status=item_enums.Status.CLOSED,
+        list_type=item_enums.ListingType.FIXED,
         sale_date=date(2025, 5, 5),
         sale_total=sale_total,
         shipping=shipping,
@@ -163,6 +166,7 @@ def test_item_base_net_jpy(
 ) -> None:
     item = item_base_factory.get(
         status=item_enums.Status.CLOSED,
+        list_type=item_enums.ListingType.FIXED,
         purchase_price=purchase_price,
         grading_fee=grading_fees,
         sale_date=date(2025, 5, 5),
@@ -207,6 +211,7 @@ def test_item_base_net_percent(
 ) -> None:
     item = item_base_factory.get(
         status=item_enums.Status.CLOSED,
+        list_type=item_enums.ListingType.FIXED,
         purchase_price=purchase_price,
         grading_fee=grading_fees,
         sale_date=date(2025, 5, 5),
@@ -232,8 +237,7 @@ def test_item_base_required_field_not_allowed_as_empty_string(
     (
         pytest.param('name', 'kari', 'kari', id='string_field_not_empty'),
         pytest.param('purchase_price', 5, 5, id='int_field_not_empty'),
-        pytest.param('grade', 5., 5., id='float_field_not_empty'),
-        pytest.param('grade', None, None, id='none_field_not_empty'),
+        pytest.param('list_price', 5., 5., id='float_field_not_empty'),
         pytest.param(
             'category',
             item_enums.Category.BOX,
@@ -255,7 +259,15 @@ def test_item_base_empty_str_to_none_validator(
         input_value: Any,
         expected_value: Any,
 ) -> None:
-    field_settings = {field: input_value}
+    field_settings = {
+        field: input_value,
+        'status': item_enums.Status.LISTED,
+        'intent': item_enums.Intent.SELL,
+        'list_date': date(2025, 5, 5),
+        'list_type': item_enums.ListingType.FIXED,
+    }
+    if 'list_price' not in field_settings:
+        field_settings['list_price'] = 1.
     item = item_base_factory.get(**field_settings)
     actual_value = getattr(item, field)
     assert actual_value == expected_value
@@ -476,6 +488,179 @@ def test_check_required_null_fields_based_on_status_error_case(
         )
     error_msg = e.value.errors()[0]['msg']
     assert "status SUBMITTED requires the following fields to be null: ['list_date']" in error_msg
+
+
+def test_appropriate_listing_type_no_error_no_listing(item_base_factory: ItemBaseFactory) -> None:
+    item_base_factory.get(
+        purchase_date=date(2025, 5, 5),
+        status=item_enums.Status.STORAGE,
+        list_type=item_enums.ListingType.NO_LIST,
+    )
+
+
+def test_appropriate_listing_type_no_error_is_listed(item_base_factory: ItemBaseFactory) -> None:
+    item_base_factory.get(
+        purchase_date=date(2025, 5, 5),
+        status=item_enums.Status.LISTED,
+        list_type=item_enums.ListingType.FIXED,
+        list_date=date(2025, 5, 6),
+        list_price=1.,
+    )
+
+
+def test_appropriate_listing_type_no_error_is_closed(item_base_factory: ItemBaseFactory) -> None:
+    item_base_factory.get(
+        purchase_date=date(2025, 5, 5),
+        status=item_enums.Status.CLOSED,
+        list_type=item_enums.ListingType.AUCTION,
+        list_date=date(2025, 5, 6),
+        list_price=1.,
+        sale_date=date(2025, 5, 6),
+        sale_total=1.,
+        sale_fee=0.1,
+        shipping=0.1,
+        usd_to_jpy_rate=150.,
+    )
+
+
+def test_appropriate_listing_type_listing_error(item_base_factory: ItemBaseFactory) -> None:
+    with pytest.raises(ValidationError) as e:
+        item_base_factory.get(
+            purchase_date=date(2025, 5, 5),
+            status=item_enums.Status.LISTED,
+            list_type=item_enums.ListingType.NO_LIST,
+            list_date=date(2025, 5, 6),
+            list_price=1.,
+        )
+    error_msg = e.value.errors()[0]['msg']
+    assert 'Item cannot have list_type of NO_LIST if listed or sold' in error_msg
+
+
+def test_appropriate_listing_type_storage_error(item_base_factory: ItemBaseFactory) -> None:
+    with pytest.raises(ValidationError) as e:
+        item_base_factory.get(
+            purchase_date=date(2025, 5, 5),
+            status=item_enums.Status.STORAGE,
+            list_type=item_enums.ListingType.FIXED,
+        )
+    error_msg = e.value.errors()[0]['msg']
+    assert 'Item cannot have a list_type other than NO_LIST if not listed or sold' in error_msg
+
+
+def test_appropriate_intent_no_error_is_listed(item_base_factory: ItemBaseFactory) -> None:
+    item_base_factory.get(
+        purchase_date=date(2025, 5, 5),
+        status=item_enums.Status.LISTED,
+        intent=item_enums.Intent.SELL,
+        list_type=item_enums.ListingType.FIXED,
+        list_date=date(2025, 5, 6),
+        list_price=1.,
+    )
+
+
+def test_appropriate_intent_no_error_is_closed(item_base_factory: ItemBaseFactory) -> None:
+    item_base_factory.get(
+        purchase_date=date(2025, 5, 5),
+        status=item_enums.Status.CLOSED,
+        intent=item_enums.Intent.SELL,
+        list_type=item_enums.ListingType.AUCTION,
+        list_date=date(2025, 5, 6),
+        list_price=1.,
+        sale_date=date(2025, 5, 6),
+        sale_total=1.,
+        sale_fee=0.1,
+        shipping=0.1,
+        usd_to_jpy_rate=150.,
+    )
+
+
+def test_appropriate_intent_no_error_intent_is_crack(item_base_factory: ItemBaseFactory) -> None:
+    item_base_factory.get(
+        purchase_date=date(2025, 5, 5),
+        status=item_enums.Status.STORAGE,
+        intent=item_enums.Intent.CRACK,
+        grade=9.,
+        grading_company=item_enums.GradingCompany.CGC,
+        cert=1,
+    )
+
+
+def test_appropriate_intent_listed_error(item_base_factory: ItemBaseFactory) -> None:
+    with pytest.raises(ValidationError) as e:
+        item_base_factory.get(
+            purchase_date=date(2025, 5, 5),
+            status=item_enums.Status.LISTED,
+            intent=item_enums.Intent.KEEP,
+            list_type=item_enums.ListingType.FIXED,
+            list_date=date(2025, 5, 6),
+            list_price=1.,
+        )
+    error_msg = e.value.errors()[0]['msg']
+    assert 'Item cannot be listed or closed without intent of SELL' in error_msg
+
+
+def test_appropriate_intent_crack_error(item_base_factory: ItemBaseFactory) -> None:
+    with pytest.raises(ValidationError) as e:
+        item_base_factory.get(
+            purchase_date=date(2025, 5, 5),
+            status=item_enums.Status.STORAGE,
+            intent=item_enums.Intent.CRACK,
+            grade=9.,
+            grading_company=item_enums.GradingCompany.RAW,
+            cert=1,
+        )
+    error_msg = e.value.errors()[0]['msg']
+    assert 'Item cannot have intent of CRACK without being graded' in error_msg
+
+
+def test_check_required_fields_based_on_grading_company_no_error(
+        item_base_factory: ItemBaseFactory,
+) -> None:
+    item_base_factory.get(
+        purchase_date=date(2025, 5, 5),
+        status=item_enums.Status.STORAGE,
+        grading_company=item_enums.GradingCompany.PSA,
+        grade=10.,
+        cert=1,
+    )
+
+
+def test_check_required_fields_based_on_grading_company_error_case(
+        item_base_factory: ItemBaseFactory,
+) -> None:
+    with pytest.raises(ValidationError) as e:
+        item_base_factory.get(
+            purchase_date=date(2025, 5, 5),
+            status=item_enums.Status.STORAGE,
+            grading_company=item_enums.GradingCompany.PSA,
+            grade=10.,
+            cert=None,
+        )
+    error_msg = e.value.errors()[0]['msg']
+    assert "graded card requires the following missing fields: ['cert']" in error_msg
+
+
+def test_check_required_null_fields_based_on_grading_company_no_error(
+        item_base_factory: ItemBaseFactory,
+) -> None:
+    item_base_factory.get(
+        purchase_date=date(2025, 5, 5),
+        status=item_enums.Status.STORAGE,
+    )
+
+
+def test_check_required_null_fields_based_on_grading_company_error_case(
+        item_base_factory: ItemBaseFactory,
+) -> None:
+    with pytest.raises(ValidationError) as e:
+        item_base_factory.get(
+            purchase_date=date(2025, 5, 5),
+            status=item_enums.Status.STORAGE,
+            grading_company=item_enums.GradingCompany.RAW,
+            cert=1,
+        )
+    error_msg = e.value.errors()[0]['msg']
+    assert "raw card can not have the following non null fields: ['cert']" in error_msg
 
 
 def test_parse_enum() -> None:

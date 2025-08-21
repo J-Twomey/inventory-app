@@ -241,6 +241,58 @@ class ItemBase(BaseModel):
             )
         return self
 
+    @model_validator(mode='after')
+    def appropriate_listing_type(self) -> Self:
+        if self.status == Status.LISTED or self.status == Status.CLOSED:
+            if self.list_type == ListingType.NO_LIST:
+                raise ValueError('Item cannot have list_type of NO_LIST if listed or sold')
+        else:
+            if self.list_type != ListingType.NO_LIST:
+                raise ValueError(
+                    'Item cannot have a list_type other than NO_LIST if not listed or sold',
+                )
+        return self
+
+    @model_validator(mode='after')
+    def appropriate_intent(self) -> Self:
+        if self.status == Status.LISTED or self.status == Status.CLOSED:
+            if self.intent != Intent.SELL:
+                raise ValueError('Item cannot be listed or closed without intent of SELL')
+        elif self.intent == Intent.CRACK:
+            if any(
+                (
+                    (self.grade is None),
+                    (self.grading_company == GradingCompany.RAW),
+                    (self.cert is None),
+                ),
+            ):
+                raise ValueError('Item cannot have intent of CRACK without being graded')
+        return self
+
+    @model_validator(mode='after')
+    def check_required_fields_based_on_grading_company(self) -> Self:
+        missing = [
+            f for f in self.grading_company.required_fields
+            if getattr(self, f) is None
+        ]
+        if len(missing) > 0:
+            raise ValueError(
+                f'graded card requires the following missing fields: {missing}',
+            )
+        return self
+
+    @model_validator(mode='after')
+    def check_required_null_fields_based_on_grading_company(self) -> Self:
+        not_null = [
+            f for f in self.grading_company.required_to_be_null
+            if getattr(self, f) is not None
+        ]
+        if len(not_null) > 0:
+            raise ValueError(
+                f'raw card can not have the following non null fields: {not_null}',
+            )
+        return self
+
 
 class ItemCreate(ItemBase):
     def to_model_kwargs(
