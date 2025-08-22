@@ -613,6 +613,79 @@ def test_appropriate_intent_crack_error(item_base_factory: ItemBaseFactory) -> N
     assert 'Item cannot have intent of CRACK without being graded' in error_msg
 
 
+def test_appropriate_group_discount_no_discount(item_base_factory: ItemBaseFactory) -> None:
+    item_base_factory.get(group_discount=False)
+
+
+def test_appropriate_group_discount_no_error(item_base_factory: ItemBaseFactory) -> None:
+    item_base_factory.get(
+        purchase_date=date(2025, 5, 5),
+        status=item_enums.Status.CLOSED,
+        intent=item_enums.Intent.SELL,
+        list_type=item_enums.ListingType.AUCTION,
+        list_date=date(2025, 5, 6),
+        list_price=1.,
+        sale_date=date(2025, 5, 6),
+        sale_total=1.,
+        sale_fee=0.1,
+        shipping=0.1,
+        usd_to_jpy_rate=150.,
+        group_discount=True,
+    )
+
+
+def test_appropriate_group_discount_error(item_base_factory: ItemBaseFactory) -> None:
+    with pytest.raises(ValidationError) as e:
+        item_base_factory.get(
+            status=item_enums.Status.STORAGE,
+            group_discount=True,
+        )
+    error_msg = e.value.errors()[0]['msg']
+    assert 'Group discount cannot be assigned to an unsold item' in error_msg
+
+
+def test_appropriate_audit_target(item_base_factory: ItemBaseFactory) -> None:
+    item_base_factory.get(
+        status=item_enums.Status.VAULT,
+        audit_target=True,
+    )
+
+
+def test_appropriate_audit_target_listing_error(item_base_factory: ItemBaseFactory) -> None:
+    with pytest.raises(ValidationError) as e:
+        item_base_factory.get(
+            purchase_date=date(2025, 5, 5),
+            status=item_enums.Status.LISTED,
+            intent=item_enums.Intent.SELL,
+            list_type=item_enums.ListingType.AUCTION,
+            list_date=date(2025, 5, 6),
+            list_price=1.,
+            audit_target=True,
+        )
+    error_msg = e.value.errors()[0]['msg']
+    assert 'Item assigned as an audit target can not be listed or closed' in error_msg
+
+
+def test_appropriate_audit_target_closed_error(item_base_factory: ItemBaseFactory) -> None:
+    with pytest.raises(ValidationError) as e:
+        item_base_factory.get(
+            purchase_date=date(2025, 5, 5),
+            status=item_enums.Status.CLOSED,
+            intent=item_enums.Intent.SELL,
+            list_type=item_enums.ListingType.AUCTION,
+            list_date=date(2025, 5, 6),
+            list_price=1.,
+            sale_date=date(2025, 5, 6),
+            sale_total=1.,
+            sale_fee=0.1,
+            shipping=0.1,
+            usd_to_jpy_rate=150.,
+            audit_target=True,
+        )
+    error_msg = e.value.errors()[0]['msg']
+    assert 'Item assigned as an audit target can not be listed or closed' in error_msg
+
+
 def test_check_required_fields_based_on_grading_company_no_error(
         item_base_factory: ItemBaseFactory,
 ) -> None:

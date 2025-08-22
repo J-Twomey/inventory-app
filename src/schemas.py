@@ -270,6 +270,18 @@ class ItemBase(BaseModel):
         return self
 
     @model_validator(mode='after')
+    def appropriate_group_discount(self) -> Self:
+        if self.group_discount and self.status != Status.CLOSED:
+            raise ValueError('Group discount cannot be assigned to an unsold item')
+        return self
+
+    @model_validator(mode='after')
+    def appropriate_audit_target(self) -> Self:
+        if self.audit_target and (self.status == Status.CLOSED or self.status == Status.LISTED):
+            raise ValueError('Item assigned as an audit target can not be listed or closed')
+        return self
+
+    @model_validator(mode='after')
     def check_required_fields_based_on_grading_company(self) -> Self:
         missing = [
             f for f in self.grading_company.required_fields
