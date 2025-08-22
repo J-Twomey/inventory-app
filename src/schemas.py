@@ -167,7 +167,7 @@ class ItemBase(BaseModel):
             return [Qualifier[x.strip()] for x in v.split(',') if x.strip()]
         elif isinstance(v, list) and all(isinstance(x, Qualifier) for x in v):
             return v
-        raise ValueError('qualifiers must be provided as str or list[Qualifier]')
+        raise ValueError('Qualifiers must be provided as str or list[Qualifier]')
 
     @field_validator('cracked_from', mode='before')
     @classmethod
@@ -199,7 +199,7 @@ class ItemBase(BaseModel):
     def list_date_not_before_purchase_date(self) -> Self:
         if self.list_date is not None and self.list_date < self.purchase_date:
             raise ValueError(
-                f'listing date cannot be before purchase date '
+                f'Listing date cannot be before purchase date '
                 f'(got listing date: {self.list_date}, purchase date: {self.purchase_date})',
             )
         return self
@@ -212,7 +212,7 @@ class ItemBase(BaseModel):
             self.sale_date < self.list_date
         ):
             raise ValueError(
-                f'sale date cannot be before listing date '
+                f'Sale date cannot be before listing date '
                 f'(got sale date: {self.sale_date}, listing date: {self.list_date})',
             )
         return self
@@ -225,7 +225,7 @@ class ItemBase(BaseModel):
         ]
         if len(missing) > 0:
             raise ValueError(
-                f'status {self.status.name} requires the following missing fields: {missing}',
+                f'Status {self.status.name} requires the following missing fields: {missing}',
             )
         return self
 
@@ -237,7 +237,7 @@ class ItemBase(BaseModel):
         ]
         if len(not_null) > 0:
             raise ValueError(
-                f'status {self.status.name} requires the following fields to be null: {not_null}',
+                f'Status {self.status.name} requires the following fields to be null: {not_null}',
             )
         return self
 
@@ -289,7 +289,7 @@ class ItemBase(BaseModel):
         ]
         if len(missing) > 0:
             raise ValueError(
-                f'graded card requires the following missing fields: {missing}',
+                f'Graded card requires the following missing fields: {missing}',
             )
         return self
 
@@ -301,7 +301,7 @@ class ItemBase(BaseModel):
         ]
         if len(not_null) > 0:
             raise ValueError(
-                f'raw card can not have the following non null fields: {not_null}',
+                f'Raw card can not have the following non null fields: {not_null}',
             )
         return self
 

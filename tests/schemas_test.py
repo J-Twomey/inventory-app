@@ -304,7 +304,7 @@ def test_item_base_parse_qualifiers_wrong_type_input(item_base_factory: ItemBase
     with pytest.raises(ValidationError) as e:
         item_base_factory.get(qualifiers=5)  # type: ignore[arg-type]
     error_msg = e.value.errors()[0]['msg']
-    assert 'qualifiers must be provided as str or list[Qualifier]' in error_msg
+    assert 'Qualifiers must be provided as str or list[Qualifier]' in error_msg
 
 
 @pytest.mark.parametrize(
@@ -390,7 +390,7 @@ def test_item_base_list_date_before_purchase_date(item_base_factory: ItemBaseFac
         )
     error_msg = e.value.errors()[0]['msg']
     assert (
-        'listing date cannot be before purchase date (got listing date: 2025-05-04, '
+        'Listing date cannot be before purchase date (got listing date: 2025-05-04, '
         'purchase date: 2025-05-05)'
     ) in error_msg
 
@@ -426,7 +426,7 @@ def test_item_base_sale_date_before_list_date(item_base_factory: ItemBaseFactory
         )
     error_msg = e.value.errors()[0]['msg']
     assert (
-        'sale date cannot be before listing date (got sale date: 2025-05-05, '
+        'Sale date cannot be before listing date (got sale date: 2025-05-05, '
         'listing date: 2025-05-06)'
     ) in error_msg
 
@@ -465,7 +465,7 @@ def test_check_required_fields_based_on_status_error_case(
             usd_to_jpy_rate=100,
         )
     error_msg = e.value.errors()[0]['msg']
-    assert "status CLOSED requires the following missing fields: ['sale_total']" in error_msg
+    assert "Status CLOSED requires the following missing fields: ['sale_total']" in error_msg
 
 
 def test_check_required_null_fields_based_on_status_no_error(
@@ -487,7 +487,7 @@ def test_check_required_null_fields_based_on_status_error_case(
             list_date=date(2025, 5, 6),
         )
     error_msg = e.value.errors()[0]['msg']
-    assert "status SUBMITTED requires the following fields to be null: ['list_date']" in error_msg
+    assert "Status SUBMITTED requires the following fields to be null: ['list_date']" in error_msg
 
 
 def test_appropriate_listing_type_no_error_no_listing(item_base_factory: ItemBaseFactory) -> None:
@@ -710,7 +710,7 @@ def test_check_required_fields_based_on_grading_company_error_case(
             cert=None,
         )
     error_msg = e.value.errors()[0]['msg']
-    assert "graded card requires the following missing fields: ['cert']" in error_msg
+    assert "Graded card requires the following missing fields: ['cert']" in error_msg
 
 
 def test_check_required_null_fields_based_on_grading_company_no_error(
@@ -733,7 +733,7 @@ def test_check_required_null_fields_based_on_grading_company_error_case(
             cert=1,
         )
     error_msg = e.value.errors()[0]['msg']
-    assert "raw card can not have the following non null fields: ['cert']" in error_msg
+    assert "Raw card can not have the following non null fields: ['cert']" in error_msg
 
 
 def test_parse_enum() -> None:
