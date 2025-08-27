@@ -33,10 +33,9 @@ def test_create_item_all_nullables_provided(
         qualifiers=[item_enums.Qualifier.UNLIMITED],
         status=item_enums.Status.CLOSED,
         details='Mint',
-        grading_fee={1: 600, 2: 399},
-        grade=10.,
         grading_company=item_enums.GradingCompany.PSA,
-        cert=123456789,
+        purchase_grade=10.,
+        purchase_cert=123456789,
         list_price=500.,
         list_type=item_enums.ListingType.FIXED,
         list_date=date(2025, 10, 10),
@@ -50,7 +49,7 @@ def test_create_item_all_nullables_provided(
     item_from_db = db_session.query(models.Item).first()
     assert db_item.id is not None and db_item == item_from_db
     assert db_item.name == 'TESTER'
-    assert db_item.grading_fee_total == 999
+    assert db_item.sale_total == 550.
 
 
 def test_create_item_multiple_qualifiers(
@@ -249,8 +248,8 @@ def test_search_for_items_multiple_search_criteria(
         item_create_factory.get(
             grading_company=gc,
             language=lang,
-            grade=g,
-            cert=c,
+            purchase_grade=g,
+            purchase_cert=c,
         ) for gc, lang, g, c in zip(
             item_grading_companies,
             item_languages,
@@ -311,38 +310,38 @@ def test_build_search_filters_no_special_case() -> None:
     assert post_filters == []
 
 
-def test_build_search_filters_with_min_value() -> None:
-    params = {'name': 'Unown', 'total_cost_min': 100}
-    filters, post_filters = crud.build_search_filters(params)
+# def test_build_search_filters_with_min_value() -> None:
+#     params = {'name': 'Unown', 'total_cost_min': 100}
+#     filters, post_filters = crud.build_search_filters(params)
 
-    assert filters[0].left.key == 'name'
-    assert filters[0].right.value == 'Unown'
-    assert filters[0].operator is eq
-    # total_cost is a hybrid property: purchase_price + grading_fee_total + import_fee
-    lhs_filters: list[str] = [col.key for col in list(filters[1].left)]
-    assert lhs_filters[0] == 'purchase_price'
-    assert lhs_filters[1] == 'grading_fee_total'
-    assert lhs_filters[2] == 'import_fee'
-    assert filters[1].right.value == 100
-    assert filters[1].operator is ge
-    assert post_filters == []
+#     assert filters[0].left.key == 'name'
+#     assert filters[0].right.value == 'Unown'
+#     assert filters[0].operator is eq
+#     # total_cost is a hybrid property: purchase_price + grading_fee_total + import_fee
+#     lhs_filters: list[str] = [col.key for col in list(filters[1].left)]
+#     assert lhs_filters[0] == 'purchase_price'
+#     assert lhs_filters[1] == 'grading_fee_total'
+#     assert lhs_filters[2] == 'import_fee'
+#     assert filters[1].right.value == 100
+#     assert filters[1].operator is ge
+#     assert post_filters == []
 
 
-def test_build_search_filters_with_max_value() -> None:
-    params = {'name': 'Unown', 'total_cost_max': 100}
-    filters, post_filters = crud.build_search_filters(params)
+# def test_build_search_filters_with_max_value() -> None:
+#     params = {'name': 'Unown', 'total_cost_max': 100}
+#     filters, post_filters = crud.build_search_filters(params)
 
-    assert filters[0].left.key == 'name'
-    assert filters[0].right.value == 'Unown'
-    assert filters[0].operator is eq
-    # total_cost is a hybrid property: purchase_price + grading_fee_total + import_fee
-    lhs_filters: list[str] = [col.key for col in list(filters[1].left)]
-    assert lhs_filters[0] == 'purchase_price'
-    assert lhs_filters[1] == 'grading_fee_total'
-    assert lhs_filters[2] == 'import_fee'
-    assert filters[1].right.value == 100
-    assert filters[1].operator is le
-    assert post_filters == []
+#     assert filters[0].left.key == 'name'
+#     assert filters[0].right.value == 'Unown'
+#     assert filters[0].operator is eq
+#     # total_cost is a hybrid property: purchase_price + grading_fee_total + import_fee
+#     lhs_filters: list[str] = [col.key for col in list(filters[1].left)]
+#     assert lhs_filters[0] == 'purchase_price'
+#     assert lhs_filters[1] == 'grading_fee_total'
+#     assert lhs_filters[2] == 'import_fee'
+#     assert filters[1].right.value == 100
+#     assert filters[1].operator is le
+#     assert post_filters == []
 
 
 def test_build_search_features_with_post_filter() -> None:
@@ -414,7 +413,7 @@ def test_edit_item_multiple_changes(
 ) -> None:
     item = crud.create_item(db_session, item_create_factory.get())
     item_changes = schemas.ItemUpdate(
-        grade=10.,
+        purchase_grade=10.,
         grading_company=item_enums.GradingCompany.BGS,
     )
 
@@ -465,48 +464,48 @@ def test_edit_item_add_extra_qualifier_to_existing(
     ]
 
 
-def test_edit_item_change_existing_grading_fee(
-        db_session: Session,
-        item_create_factory: ItemCreateFactory,
-) -> None:
-    item = crud.create_item(
-        db_session,
-        item_create_factory.get(grading_fee={1: 100}),
-    )
-    # New grading fees should be combined with the existing before being passed through
-    new_grading_fee = item.grading_fee | {2: 200}
-    item_changes = schemas.ItemUpdate(grading_fee=new_grading_fee)
+# def test_edit_item_change_existing_grading_fee(
+#         db_session: Session,
+#         item_create_factory: ItemCreateFactory,
+# ) -> None:
+#     item = crud.create_item(
+#         db_session,
+#         item_create_factory.get(grading_fee={1: 100}),
+#     )
+#     # New grading fees should be combined with the existing before being passed through
+#     new_grading_fee = item.grading_fee | {2: 200}
+#     item_changes = schemas.ItemUpdate(grading_fee=new_grading_fee)
 
-    result = crud.edit_item(db_session, item.id, item_changes)
-    assert result == 303
+#     result = crud.edit_item(db_session, item.id, item_changes)
+#     assert result == 303
 
-    changed_item = crud.get_item(db_session, item.id)
-    assert changed_item is not None
+#     changed_item = crud.get_item(db_session, item.id)
+#     assert changed_item is not None
 
-    # Use to_display() to convert the dict key values to expected int type
-    display_item = changed_item.to_display()
-    assert display_item.grading_fee == {1: 100, 2: 200}
+#     # Use to_display() to convert the dict key values to expected int type
+#     display_item = changed_item.to_display()
+#     assert display_item.grading_fee == {1: 100, 2: 200}
 
-    # Check the total grading_fee_total has been correctly updated
-    assert display_item.grading_fee_total == 300
+#     # Check the total grading_fee_total has been correctly updated
+#     assert display_item.grading_fee_total == 300
 
 
-def test_edit_item_add_new_grading_fee(
-        db_session: Session,
-        item_create_factory: ItemCreateFactory,
-) -> None:
-    item = crud.create_item(db_session, item_create_factory.get())
-    item_changes = schemas.ItemUpdate(grading_fee={1: 100})
+# def test_edit_item_add_new_grading_fee(
+#         db_session: Session,
+#         item_create_factory: ItemCreateFactory,
+# ) -> None:
+#     item = crud.create_item(db_session, item_create_factory.get())
+#     item_changes = schemas.ItemUpdate(grading_fee={1: 100})
 
-    result = crud.edit_item(db_session, item.id, item_changes)
-    assert result == 303
+#     result = crud.edit_item(db_session, item.id, item_changes)
+#     assert result == 303
 
-    changed_item = crud.get_item(db_session, item.id)
-    assert changed_item is not None
+#     changed_item = crud.get_item(db_session, item.id)
+#     assert changed_item is not None
 
-    # Use to_display() to convert the dict key values to expected int type
-    display_item = changed_item.to_display()
-    assert display_item.grading_fee == {1: 100}
+#     # Use to_display() to convert the dict key values to expected int type
+#     display_item = changed_item.to_display()
+#     assert display_item.grading_fee == {1: 100}
 
-    # Check the total grading_fee_total has been correctly updated
-    assert display_item.grading_fee_total == 100
+#     # Check the total grading_fee_total has been correctly updated
+#     assert display_item.grading_fee_total == 100

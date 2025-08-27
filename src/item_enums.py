@@ -67,13 +67,12 @@ class Status(Enum):
     def required_to_be_null(self) -> list[str]:
         listing_fields = ['list_price', 'list_date']
         sale_fields = ['sale_total', 'sale_date', 'shipping', 'sale_fee', 'usd_to_jpy_rate']
-        graded_fields = ['grade', 'cert']
         mapping = {
             Status.CLOSED: [],
             Status.STORAGE: listing_fields + sale_fields,
             Status.LISTED: sale_fields,
             Status.VAULT: listing_fields + sale_fields,
-            Status.SUBMITTED: listing_fields + sale_fields + graded_fields,
+            Status.SUBMITTED: listing_fields + sale_fields,
             Status.ORDER: listing_fields + sale_fields,
         }
         return mapping[self]
@@ -101,25 +100,25 @@ class GradingCompany(Enum):
     CGC = 2
     BGS = 3
 
-    @property
-    def required_fields(self) -> list[str]:
-        mapping = {
-            GradingCompany.RAW: [],
-            GradingCompany.PSA: ['grade', 'cert'],
-            GradingCompany.CGC: ['grade', 'cert'],
-            GradingCompany.BGS: ['grade', 'cert'],
-        }
-        return mapping[self]
+    # @property
+    # def required_fields(self) -> list[str]:
+    #     mapping = {
+    #         GradingCompany.RAW: [],
+    #         GradingCompany.PSA: ['grade', 'cert'],
+    #         GradingCompany.CGC: ['grade', 'cert'],
+    #         GradingCompany.BGS: ['grade', 'cert'],
+    #     }
+    #     return mapping[self]
 
-    @property
-    def required_to_be_null(self) -> list[str]:
-        mapping = {
-            GradingCompany.RAW: ['grade', 'cert'],
-            GradingCompany.PSA: [],
-            GradingCompany.CGC: [],
-            GradingCompany.BGS: [],
-        }
-        return mapping[self]
+    # @property
+    # def required_to_be_null(self) -> list[str]:
+    #     mapping = {
+    #         GradingCompany.RAW: ['grade', 'cert'],
+    #         GradingCompany.PSA: [],
+    #         GradingCompany.CGC: [],
+    #         GradingCompany.BGS: [],
+    #     }
+    #     return mapping[self]
 
 
 class ListingType(Enum):

@@ -26,7 +26,6 @@ from fastapi import (
 )
 from pydantic import (
     BaseModel,
-    computed_field,
     ConfigDict,
     field_validator,
     model_validator,
@@ -66,11 +65,9 @@ class ItemBase(BaseModel):
     status: Status
     intent: Intent
     import_fee: int
-    grading_fee: dict[int, int]
-    cracked_from: list[int]
-    grade: float | None = None
     grading_company: GradingCompany
-    cert: int | None = None
+    purchase_cert: int | None = None
+    purchase_grade: float | None = None
     list_price: float | None = None
     list_type: ListingType
     list_date: date | None = None
@@ -83,63 +80,6 @@ class ItemBase(BaseModel):
     object_variant: ObjectVariant
     audit_target: bool = False
 
-    @computed_field  # type: ignore[prop-decorator]
-    @property
-    def grading_fee_total(self) -> int:
-        return sum(self.grading_fee.values())
-
-    @computed_field  # type: ignore[prop-decorator]
-    @property
-    def submission_numbers(self) -> list[int]:
-        return list(self.grading_fee)
-
-    @computed_field  # type: ignore[prop-decorator]
-    @property
-    def total_cost(self) -> int:
-        return self.purchase_price + self.grading_fee_total + self.import_fee
-
-    @computed_field  # type: ignore[prop-decorator]
-    @property
-    def total_fees(self) -> float | None:
-        if self.shipping is None or self.sale_fee is None:
-            return None
-        else:
-            return self.shipping + self.sale_fee
-
-    @computed_field  # type: ignore[prop-decorator]
-    @property
-    def return_usd(self) -> float | None:
-        if self.sale_total is None or self.total_fees is None:
-            return None
-        else:
-            return round(self.sale_total - self.total_fees, 2)
-
-    @computed_field  # type: ignore[prop-decorator]
-    @property
-    def return_jpy(self) -> int | None:
-        if self.return_usd is None or self.usd_to_jpy_rate is None:
-            return None
-        else:
-            return round(self.return_usd * self.usd_to_jpy_rate)
-
-    @computed_field  # type: ignore[prop-decorator]
-    @property
-    def net_jpy(self) -> int | None:
-        if self.return_jpy is None:
-            return None
-        else:
-            return round(self.return_jpy - self.total_cost)
-
-    @computed_field  # type: ignore[prop-decorator]
-    @property
-    def net_percent(self) -> float | None:
-        if self.net_jpy is None:
-            return None
-        elif self.total_cost == 0:
-            return 0.
-        else:
-            return round(100 * self.net_jpy / self.total_cost, 2)
-
     @field_validator('*', mode='before')
     @classmethod
     def empty_str_to_none(
@@ -150,8 +90,6 @@ class ItemBase(BaseModel):
         # Empty string is handled differently for these fields
         if info.field_name in {
             'qualifiers',
-            'grading_fee',
-            'cracked_from',
             'group_discount',
             'audit_target',
         }:
@@ -168,32 +106,6 @@ class ItemBase(BaseModel):
         elif isinstance(v, list) and all(isinstance(x, Qualifier) for x in v):
             return v
         raise ValueError('Qualifiers must be provided as str or list[Qualifier]')
-
-    @field_validator('cracked_from', mode='before')
-    @classmethod
-    def parse_cracked_from(cls, v: Any) -> list[int]:
-        if isinstance(v, str):
-            return [int(x.strip()) for x in v.split(',') if x.strip()]
-        elif isinstance(v, list) and all(isinstance(x, int) for x in v):
-            return v
-        raise ValueError('cracked_from must be provided as str or list[int]')
-
-    @field_validator('grading_fee', mode='before')
-    @classmethod
-    def parse_grading_fee(cls, v: Any) -> dict[int, int]:
-        if isinstance(v, str):
-            try:
-                parsed = json.loads(v)
-                return {int(k): int(v) for k, v in parsed.items()}
-            except Exception:
-                raise ValueError('grading_fee must be valid JSON')
-        elif (
-            isinstance(v, dict)
-            and all(isinstance(x, int) for x in v)
-            and all(isinstance(z, int) for z in v.values())
-        ):
-            return v
-        raise ValueError('grading_fee must be provided as str or dict[int, int]')
 
     @model_validator(mode='after')
     def list_date_not_before_purchase_date(self) -> Self:
@@ -254,22 +166,6 @@ class ItemBase(BaseModel):
         return self
 
     @model_validator(mode='after')
-    def appropriate_intent(self) -> Self:
-        if self.status == Status.LISTED or self.status == Status.CLOSED:
-            if self.intent != Intent.SELL:
-                raise ValueError('Item cannot be listed or closed without intent of SELL')
-        elif self.intent == Intent.CRACK:
-            if any(
-                (
-                    (self.grade is None),
-                    (self.grading_company == GradingCompany.RAW),
-                    (self.cert is None),
-                ),
-            ):
-                raise ValueError('Item cannot have intent of CRACK without being graded')
-        return self
-
-    @model_validator(mode='after')
     def appropriate_group_discount(self) -> Self:
         if self.group_discount and self.status != Status.CLOSED:
             raise ValueError('Group discount cannot be assigned to an unsold item')
@@ -281,29 +177,17 @@ class ItemBase(BaseModel):
             raise ValueError('Item assigned as an audit target can not be listed or closed')
         return self
 
-    @model_validator(mode='after')
-    def check_required_fields_based_on_grading_company(self) -> Self:
-        missing = [
-            f for f in self.grading_company.required_fields
-            if getattr(self, f) is None
-        ]
-        if len(missing) > 0:
-            raise ValueError(
-                f'Graded card requires the following missing fields: {missing}',
-            )
-        return self
-
-    @model_validator(mode='after')
-    def check_required_null_fields_based_on_grading_company(self) -> Self:
-        not_null = [
-            f for f in self.grading_company.required_to_be_null
-            if getattr(self, f) is not None
-        ]
-        if len(not_null) > 0:
-            raise ValueError(
-                f'Raw card can not have the following non null fields: {not_null}',
-            )
-        return self
+    # @model_validator(mode='after')
+    # def check_required_fields_based_on_grading_company(self) -> Self:
+    #     missing = [
+    #         f for f in self.grading_company.required_fields
+    #         if getattr(self, f) is None
+    #     ]
+    #     if len(missing) > 0:
+    #         raise ValueError(
+    #             f'Graded card requires the following missing fields: {missing}',
+    #         )
+    #     return self
 
 
 class ItemCreate(ItemBase):
@@ -334,9 +218,9 @@ class ItemCreateForm:
     status: str
     intent: str
     import_fee: str
-    grade: str
     grading_company: str
-    cert: str
+    purchase_grade: str
+    purchase_cert: str
     list_price: str
     list_type: str
     list_date: str
@@ -348,9 +232,6 @@ class ItemCreateForm:
     object_variant: str
     group_discount: bool
     audit_target: bool
-    submission_numbers: list[str] = field(default_factory=list)
-    grading_fees: list[str] = field(default_factory=list)
-    cracked_from: list[str] = field(default_factory=list)
     qualifiers: list[str] = field(default_factory=list)
 
     @classmethod
@@ -366,9 +247,9 @@ class ItemCreateForm:
         status: Annotated[str, Form()],
         intent: Annotated[str, Form()],
         import_fee: Annotated[str, Form()],
-        grade: Annotated[str, Form()],
         grading_company: Annotated[str, Form()],
-        cert: Annotated[str, Form()],
+        purchase_grade: Annotated[str, Form()],
+        purchase_cert: Annotated[str, Form()],
         list_price: Annotated[str, Form()],
         list_type: Annotated[str, Form()],
         list_date: Annotated[str, Form()],
@@ -378,9 +259,6 @@ class ItemCreateForm:
         sale_fee: Annotated[str, Form()],
         usd_to_jpy_rate: Annotated[str, Form()],
         object_variant: Annotated[str, Form()],
-        submission_numbers: Annotated[list[str], Form(default_factory=list)],
-        grading_fees: Annotated[list[str], Form(default_factory=list)],
-        cracked_from: Annotated[list[str], Form(default_factory=list)],
         qualifiers: Annotated[list[str], Form(default_factory=list)],
         group_discount: Annotated[bool, Form()] = False,
         audit_target: Annotated[bool, Form()] = False,
@@ -397,9 +275,9 @@ class ItemCreateForm:
             status=status,
             intent=intent,
             import_fee=import_fee,
-            grade=grade,
             grading_company=grading_company,
-            cert=cert,
+            purchase_grade=purchase_grade,
+            purchase_cert=purchase_cert,
             list_price=list_price,
             list_type=list_type,
             list_date=list_date,
@@ -408,9 +286,6 @@ class ItemCreateForm:
             shipping=shipping,
             sale_fee=sale_fee,
             usd_to_jpy_rate=usd_to_jpy_rate,
-            submission_numbers=submission_numbers,
-            grading_fees=grading_fees,
-            cracked_from=cracked_from,
             group_discount=group_discount,
             object_variant=object_variant,
             audit_target=audit_target,
@@ -438,13 +313,9 @@ class ItemCreateForm:
             status=parse_enum(self.status, Status),
             intent=parse_enum(self.intent, Intent),
             import_fee=int(self.import_fee),
-            grading_fee=build_grading_fee_dict(self.submission_numbers, self.grading_fees),
-            cracked_from=parse_nullable_list_of_str_to_list_of_int(
-                self.cracked_from,
-            ),
-            grade=parse_nullable(self.grade, float),
             grading_company=parse_enum(self.grading_company, GradingCompany),
-            cert=parse_nullable(self.cert, int),
+            purchase_grade=parse_nullable(self.purchase_grade, float),
+            purchase_cert=parse_nullable(self.purchase_cert, int),
             list_price=parse_nullable(self.list_price, float),
             list_type=parse_enum(self.list_type, ListingType),
             list_date=list_date_,
@@ -473,11 +344,9 @@ class ItemUpdate(BaseModel):
     status: Status | None = None
     intent: Intent | None = None
     import_fee: int | None = None
-    grading_fee: dict[int, int] | None = None
-    cracked_from: list[int] | None = None
-    grade: float | None = None
     grading_company: GradingCompany | None = None
-    cert: int | None = None
+    purchase_grade: float | None = None
+    purchase_cert: int | None = None
     list_price: float | None = None
     list_type: ListingType | None = None
     list_date: date | None = None
@@ -489,14 +358,6 @@ class ItemUpdate(BaseModel):
     group_discount: bool = False
     object_variant: ObjectVariant | None = None
     audit_target: bool = False
-
-    @computed_field  # type: ignore[prop-decorator]
-    @property
-    def grading_fee_total(self) -> int | None:
-        if self.grading_fee is not None:
-            return sum(self.grading_fee.values())
-        else:
-            return None
 
     def to_model_kwargs(self) -> dict[str, Any]:
         data = self.model_dump(exclude_unset=True)
@@ -514,8 +375,8 @@ class ItemUpdate(BaseModel):
             data['list_type'] = self.list_type.value
         if self.object_variant is not None:
             data['object_variant'] = self.object_variant.value
-        if data.get('grading_fee_total') is None:
-            data.pop('grading_fee_total', None)
+        # if data.get('grading_fee_total') is None:
+        #     data.pop('grading_fee_total', None)
         return data
 
 
@@ -531,10 +392,9 @@ class ItemUpdateForm:
     status: str | None = None
     intent: str | None = None
     import_fee: str | None = None
-    grading_fee: str | None = None
-    grade: str | None = None
     grading_company: str | None = None
-    cert: str | None = None
+    purchase_grade: str | None = None
+    purchase_cert: str | None = None
     list_price: str | None = None
     list_type: str | None = None
     list_date: str | None = None
@@ -546,18 +406,12 @@ class ItemUpdateForm:
     group_discount: bool = False
     object_variant: str | None = None
     audit_target: bool = False
-    submission_numbers: list[str] = field(default_factory=list)
-    grading_fees: list[str] = field(default_factory=list)
-    cracked_from: list[str] = field(default_factory=list)
     qualifiers: list[str] = field(default_factory=list)
 
     @classmethod
     def as_form(
         cls,
         qualifiers: Annotated[list[str], Form(default_factory=list)],
-        submission_numbers: Annotated[list[str], Form(default_factory=list)],
-        grading_fees: Annotated[list[str], Form(default_factory=list)],
-        cracked_from: Annotated[list[str], Form(default_factory=list)],
         name: Annotated[str | None, Form()] = None,
         set_name: Annotated[str | None, Form()] = None,
         category: Annotated[str | None, Form()] = None,
@@ -568,9 +422,9 @@ class ItemUpdateForm:
         status: Annotated[str | None, Form()] = None,
         intent: Annotated[str | None, Form()] = None,
         import_fee: Annotated[str | None, Form()] = None,
-        grade: Annotated[str | None, Form()] = None,
         grading_company: Annotated[str | None, Form()] = None,
-        cert: Annotated[str | None, Form()] = None,
+        purchase_grade: Annotated[str | None, Form()] = None,
+        purchase_cert: Annotated[str | None, Form()] = None,
         list_price: Annotated[str | None, Form()] = None,
         list_type: Annotated[str | None, Form()] = None,
         list_date: Annotated[str | None, Form()] = None,
@@ -595,9 +449,9 @@ class ItemUpdateForm:
             status=status,
             intent=intent,
             import_fee=import_fee,
-            grade=grade,
             grading_company=grading_company,
-            cert=cert,
+            purchase_grade=purchase_grade,
+            purchase_cert=purchase_cert,
             list_price=list_price,
             list_type=list_type,
             list_date=list_date,
@@ -606,9 +460,6 @@ class ItemUpdateForm:
             shipping=shipping,
             sale_fee=sale_fee,
             usd_to_jpy_rate=usd_to_jpy_rate,
-            submission_numbers=submission_numbers,
-            grading_fees=grading_fees,
-            cracked_from=cracked_from,
             group_discount=group_discount,
             object_variant=object_variant,
             audit_target=audit_target,
@@ -627,13 +478,13 @@ class ItemUpdateForm:
         set_if_value(update_vals, 'status', parse_nullable_enum(self.status, Status))
         set_if_value(update_vals, 'intent', parse_nullable_enum(self.intent, Intent))
         set_if_value(update_vals, 'import_fee', parse_nullable(self.import_fee, int))
-        set_if_value(update_vals, 'grade', parse_nullable(self.grade, float))
         set_if_value(
             update_vals,
             'grading_company',
             parse_nullable_enum(self.grading_company, GradingCompany),
         )
-        set_if_value(update_vals, 'cert', parse_nullable(self.cert, int))
+        set_if_value(update_vals, 'purchase_grade', parse_nullable(self.purchase_grade, float))
+        set_if_value(update_vals, 'purchase_cert', parse_nullable(self.purchase_cert, int))
         set_if_value(update_vals, 'list_price', parse_nullable(self.list_price, float))
         set_if_value(update_vals, 'list_type', parse_nullable_enum(self.list_type, ListingType))
         set_if_value(update_vals, 'list_date', parse_nullable_date(self.list_date))
@@ -642,11 +493,6 @@ class ItemUpdateForm:
         set_if_value(update_vals, 'shipping', parse_nullable(self.shipping, float))
         set_if_value(update_vals, 'sale_fee', parse_nullable(self.sale_fee, float))
         set_if_value(update_vals, 'usd_to_jpy_rate', parse_nullable(self.usd_to_jpy_rate, float))
-        set_if_value(
-            update_vals,
-            'cracked_from',
-            parse_nullable_list_of_str_to_list_of_int(self.cracked_from),
-        )
         set_if_value(update_vals, 'group_discount', self.group_discount)
         set_if_value(
             update_vals,
@@ -654,12 +500,6 @@ class ItemUpdateForm:
             parse_nullable_enum(self.object_variant, ObjectVariant),
         )
         set_if_value(update_vals, 'audit_target', self.audit_target)
-
-        if len(self.submission_numbers) > 0 and len(self.grading_fees) > 0:
-            update_vals['grading_fee'] = build_grading_fee_dict(
-                self.submission_numbers,
-                self.grading_fees,
-            )
         return ItemUpdate(**update_vals)
 
 
@@ -853,7 +693,7 @@ class ItemSearchForm:
         )
 
 
-class DisplayItem(BaseModel):
+class ItemDisplay(BaseModel):
     id: int
     name: str
     set_name: str
@@ -866,13 +706,7 @@ class DisplayItem(BaseModel):
     status: Status
     intent: Intent
     import_fee: int
-    grading_fee: dict[int, int]
-    grading_fee_total: int
-    submission_numbers: list[int]
-    cracked_from: list[int]
-    grade: float | None
     grading_company: GradingCompany
-    cert: int | None
     list_price: float | None
     list_type: ListingType
     list_date: date | None
@@ -885,12 +719,44 @@ class DisplayItem(BaseModel):
     object_variant: ObjectVariant
     audit_target: bool
     # Property values
+    total_grading_fees: int
     total_cost: int
+    grade: float | None
+    cert: int | None
     total_fees: float | None
     return_usd: float | None
     return_jpy: int | None
     net_jpy: int | None
     net_percent: float | None
+
+
+    @model_validator(mode='after')
+    def appropriate_intent(self) -> Self:
+        if self.status == Status.LISTED or self.status == Status.CLOSED:
+            if self.intent != Intent.SELL:
+                raise ValueError('Item cannot be listed or closed without intent of SELL')
+        elif self.intent == Intent.CRACK:
+            if any(
+                (
+                    (self.grade is None),
+                    (self.grading_company == GradingCompany.RAW),
+                    (self.cert is None),
+                ),
+            ):
+                raise ValueError('Item cannot have intent of CRACK without being graded')
+        return self
+
+    # @model_validator(mode='after')
+    # def check_required_null_fields_based_on_grading_company(self) -> Self:
+    #     not_null = [
+    #         f for f in self.grading_company.required_to_be_null
+    #         if getattr(self, f) is not None
+    #     ]
+    #     if len(not_null) > 0:
+    #         raise ValueError(
+    #             f'Raw card can not have the following non null fields: {not_null}',
+    #         )
+    #     return self
 
 
 def parse_enum(
@@ -979,16 +845,16 @@ def set_if_value(
         d[key] = value
 
 
-def build_grading_fee_dict(
-        sub_nums: list[str],
-        fees: list[str],
-) -> dict[int, int]:
-    # Remove empty string that gets sent if multiple submissions
-    sub_nums = [sn for sn in sub_nums if sn != '']
-    fees = [f for f in fees if f != '']
-    return {
-        int(k): int(v) for k, v in zip(sub_nums, fees, strict=True)
-    }
+# def build_grading_fee_dict(
+#         sub_nums: list[str],
+#         fees: list[str],
+# ) -> dict[int, int]:
+#     # Remove empty string that gets sent if multiple submissions
+#     sub_nums = [sn for sn in sub_nums if sn != '']
+#     fees = [f for f in fees if f != '']
+#     return {
+#         int(k): int(v) for k, v in zip(sub_nums, fees, strict=True)
+#     }
 
 
 def parse_nullable_list_of_str_to_list_of_int(input_list: list[str] | None) -> list[int]:

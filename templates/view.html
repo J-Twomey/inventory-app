@@ -379,8 +379,8 @@
           <td class="centre-aligned">{{ item.intent.name.capitalize() }}</td>
           <td>{{ item.purchase_date }}</td>
           <td class="right-aligned">{{ ('¥' ~ '{:,.0f}'.format(item.purchase_price)) }}</td>
-          <td class="right-aligned {{ 'faint' if item.grading_fee_total == 0 else '' }}">
-            {{ '' if item.grading_fee_total is none else '¥' ~ '{:,.0f}'.format(item.grading_fee_total) }}
+          <td class="right-aligned {{ 'faint' if item.total_grading_fees == 0 else '' }}">
+            {{ '' if item.total_grading_fees is none else '¥' ~ '{:,.0f}'.format(item.total_grading_fees) }}
           </td>
           <td class="right-aligned {{ 'faint' if item.total_cost == 0 else '' }}">
             {{ '' if item.total_cost is none else '¥' ~ '{:,.0f}'.format(item.total_cost) }}

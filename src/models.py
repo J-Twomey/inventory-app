@@ -6,16 +6,18 @@ from sqlalchemy import (
     cast,
     Date,
     Float,
+    ForeignKey,
     func,
     Integer,
-    JSON,
     null,
+    select,
     String,
 )
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import (
     Mapped,
     mapped_column,
+    relationship,
 )
 from sqlalchemy.sql.elements import (
     BinaryExpression,
@@ -34,7 +36,7 @@ from .item_enums import (
     Qualifier,
     Status,
 )
-from .schemas import DisplayItem
+from .schemas import ItemDisplay
 
 
 NullableDate = Mapped[date | None]
@@ -69,13 +71,14 @@ class Item(Base):
     status: Mapped[int] = mapped_column(Integer)
     intent: Mapped[int] = mapped_column(Integer)
     import_fee: Mapped[int] = mapped_column(Integer)
-    grading_fee: Mapped[dict[int, int]] = mapped_column(JSON)
-    grading_fee_total: Mapped[int] = mapped_column(Integer)
-    submission_numbers: Mapped[list[int]] = mapped_column(JSON)
-    cracked_from: Mapped[list[int]] = mapped_column(JSON)
-    grade: NullableFloat = NullableFloatColumn()
+    # grading_fee: Mapped[dict[int, int]] = mapped_column(JSON)
+    # grading_fee_total: Mapped[int] = mapped_column(Integer)
+    # submission_numbers: Mapped[list[int]] = mapped_column(JSON)
+    # cracked_from: Mapped[list[int]] = mapped_column(JSON)
+    # grade: NullableFloat = NullableFloatColumn()
     grading_company: Mapped[int] = mapped_column(Integer)
-    cert: NullableInt = NullableIntColumn()
+    purchase_cert: NullableInt = NullableIntColumn()
+    purchase_grade: NullableFloat = NullableFloatColumn()
     list_price: NullableFloat = NullableFloatColumn()
     list_type: Mapped[int] = mapped_column(Integer)
     list_date: NullableDate = NullableDateColumn()
@@ -88,13 +91,97 @@ class Item(Base):
     object_variant: Mapped[int] = mapped_column(Integer)
     audit_target: Mapped[bool] = mapped_column(Boolean)
 
+    submissions: Mapped[list['ItemSubmission']] = relationship(
+        back_populates='original_item',
+        cascade='all, delete-orphan'
+    )
+
+    @hybrid_property
+    def total_grading_fees(self) -> int:
+        return sum(sub.grading_fee for sub in self.submissions if sub.grading_fee is not None)
+
+    @total_grading_fees.expression  # type: ignore[no-redef]
+    def total_grading_fees(cls) -> BinaryExpression[int]:
+        return (
+            select(func.sum(ItemSubmission.grading_fee))
+            .where(ItemSubmission.item_id == cls.id)
+            .correlate(cls)
+            .scalar_subquery()
+        )
+
     @hybrid_property
     def total_cost(self) -> int:
-        return self.purchase_price + self.grading_fee_total + self.import_fee
+        return self.purchase_price + self.total_grading_fees + self.import_fee
 
     @total_cost.expression  # type: ignore[no-redef]
     def total_cost(cls) -> BinaryExpression[int]:
-        return cls.purchase_price + cls.grading_fee_total + cls.import_fee
+        return cls.purchase_price + cls.total_grading_fees + cls.import_fee
+
+    @hybrid_property
+    def grade(self) -> int | None:
+        '''
+        If a submission exists then take the newest grade from there (unless cracked), otherwise
+        check if a purchase_grade exists (meaning the card was bought already graded)
+        '''
+        latest_submission = max(
+            self.submissions,
+            key=lambda s: s.submission_number,
+            default=None
+        )
+        if latest_submission is not None and not latest_submission.is_cracked:
+            return latest_submission.grade
+        else:
+            return self.purchase_grade
+
+    @grade.expression  # type: ignore[no-redef]
+    def grade(cls) -> ColumnElement[int | None]:
+        latest_subquery = (
+            select(ItemSubmission.grade, ItemSubmission.is_cracked)
+            .where(ItemSubmission.item_id == cls.id)
+            .order_by(ItemSubmission.submission_number.desc())
+            .limit(1)
+            .scalar_subquery()
+        )
+        return func.coalesce(
+            case(
+                (latest_subquery.c.is_cracked == True, cls.purchase_grade),
+                else_=latest_subquery.c.grade
+            ),
+            cls.purchase_grade
+        )
+
+    @hybrid_property
+    def cert(self) -> int | None:
+        '''
+        If a submission exists then take the newest cert from there (unless cracked), otherwise
+        check if a purchase_cert exists (meaning the card was bought already graded)
+        '''
+        latest_submission = max(
+            self.submissions,
+            key=lambda s: s.submission_number,
+            default=None
+        )
+        if latest_submission is not None and not latest_submission.is_cracked:
+            return latest_submission.cert
+        else:
+            return self.purchase_cert
+
+    @cert.expression  # type: ignore[no-redef]
+    def cert(cls) -> ColumnElement[int | None]:
+        latest_subquery = (
+            select(ItemSubmission.cert, ItemSubmission.is_cracked)
+            .where(ItemSubmission.item_id == cls.id)
+            .order_by(ItemSubmission.submission_number.desc())
+            .limit(1)
+            .scalar_subquery()
+        )
+        return func.coalesce(
+            case(
+                (latest_subquery.c.is_cracked == True, cls.purchase_cert),
+                else_=latest_subquery.c.cert
+            ),
+            cls.purchase_cert
+        )
 
     @hybrid_property
     def total_fees(self) -> float | None:
@@ -187,8 +274,8 @@ class Item(Base):
             else_=0.,
         )
 
-    def to_display(self) -> DisplayItem:
-        return DisplayItem(
+    def to_display(self) -> ItemDisplay:
+        return ItemDisplay(
             id=self.id,
             name=self.name,
             set_name=self.set_name,
@@ -201,13 +288,7 @@ class Item(Base):
             status=Status(self.status),
             intent=Intent(self.intent),
             import_fee=self.import_fee,
-            grading_fee=self.grading_fee,
-            grading_fee_total=self.grading_fee_total,
-            submission_numbers=self.submission_numbers,
-            cracked_from=self.cracked_from,
-            grade=self.grade,
             grading_company=GradingCompany(self.grading_company),
-            cert=self.cert,
             list_price=self.list_price,
             list_type=ListingType(self.list_type),
             list_date=self.list_date,
@@ -219,10 +300,29 @@ class Item(Base):
             group_discount=self.group_discount,
             object_variant=ObjectVariant(self.object_variant),
             audit_target=self.audit_target,
+            total_grading_fees=self.total_grading_fees,
             total_cost=self.total_cost,
+            grade=self.grade,
+            cert=self.cert,
             total_fees=self.total_fees,
             return_usd=self.return_usd,
             return_jpy=self.return_jpy,
             net_jpy=self.net_jpy,
             net_percent=self.net_percent,
         )
+
+
+class ItemSubmission(Base):
+    __tablename__ = 'item_submission'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    item_id: Mapped[int] = mapped_column(ForeignKey('items.id'), index=True)
+    grading_fee: NullableInt = NullableIntColumn()
+    submission_number: Mapped[int] = mapped_column(Integer)
+    grade: NullableInt = NullableIntColumn()
+    cert: NullableInt = NullableIntColumn()
+    is_cracked: Mapped[bool] = mapped_column(Boolean)
+
+    original_item: Mapped[Item] = relationship(
+        back_populates='submissions'
+    )

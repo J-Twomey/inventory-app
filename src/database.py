@@ -8,7 +8,7 @@ from sqlalchemy.orm import (
 )
 
 
-SQLALCHEMY_DATABASE_URL = 'sqlite:///./test5.db'
+SQLALCHEMY_DATABASE_URL = 'sqlite:///./db/test6.db'
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL,

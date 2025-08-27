@@ -72,25 +72,11 @@
   <label>Import Fee:</label>
   <input type="number" name="import_fee" value="0" required><br><br>
 
-  <label>Grading Fees:</label>
-  <div id="grading-fees-container">
-    <div class="grading-fee-row">
-      <input type="number" name="submission_numbers" placeholder="Sub#" />
-      <input type="number" name="grading_fees" placeholder="Fee" />
-    </div>
-  </div>
-  <br>
+  <label>Purchase Cert #:</label>
+  <input type="number" name="purchase_cert"><br><br>
 
-  <label>Cracked From:</label>
-  <div id="cracked-from-container">
-    <div class="cracked_from-row">
-      <input type="number" name="cracked_from" placeholder="Sub#" />
-    </div>
-  </div>
-  <br>
-
-  <label>Grade:</label>
-  <input type="number" name="grade" step="any"><br><br>
+  <label>Purchase Grade:</label>
+  <input type="number" name="purchase_grade" step="any"><br><br>
 
   <label>Grading Company:</label>
   <select name="grading_company">
@@ -100,9 +86,6 @@
       </option>
     {% endfor %}
   </select><br><br>
-
-  <label>Cert #:</label>
-  <input type="number" name="cert"><br><br>
 
   <label>List Price:</label>
   <input type="number" name="list_price" step="any"><br><br>
