@@ -1,11 +1,7 @@
 from datetime import date
 
 from sqlalchemy.orm import Session
-from sqlalchemy.sql.operators import (
-    eq,
-    ge,
-    le,
-)
+from sqlalchemy.sql.operators import eq
 
 import src.crud as crud
 import src.item_enums as item_enums

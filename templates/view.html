@@ -31,8 +31,8 @@
           <select name="category" id="category_search_select">
             <option value="">Any</option>
             {% for category in category_enum %}
-              <option value="{{ category.name }}" {% if form_data and form_data.category == category.name %}selected{% endif %}>
-                {{ category.name.title()}}
+              <option value="{{ category.name }}" {% if form_data and form_data.category == category %}selected{% endif %}>
+                {{ category.name.title() }}
               </option>
             {% endfor %}
           </select>
@@ -41,8 +41,8 @@
           <select name="language" id="language_search_select">
             <option value="">Any</option>
             {% for language in language_enum %}
-              <option value="{{ language.name }}" {% if form_data and form_data.language == language.name %}selected{% endif %}>
-                {{ language.name.title().replace('_', ' ')}}
+              <option value="{{ language.name }}" {% if form_data and form_data.language == language %}selected{% endif %}>
+                {{ language.name.title().replace('_', ' ') }}
               </option>
             {% endfor %}
           </select>
@@ -51,8 +51,8 @@
           <select name="intent" id="intent_search_select">
             <option value="">Any</option>
             {% for intent in intent_enum %}
-              <option value="{{ intent.name }}" {% if form_data and form_data.intent == intent.name %}selected{% endif %}>
-                {{ intent.name.title()}}
+              <option value="{{ intent.name }}" {% if form_data and form_data.intent == intent %}selected{% endif %}>
+                {{ intent.name.title() }}
               </option>
             {% endfor %}
           </select>
@@ -61,8 +61,8 @@
           <select name="status" id="status_search_select">
             <option value="">Any</option>
             {% for status in status_enum %}
-              <option value="{{ status.name }}" {% if form_data and form_data.status == status.name %}selected{% endif %}>
-                {{ status.name.title()}}
+              <option value="{{ status.name }}" {% if form_data and form_data.status == status %}selected{% endif %}>
+                {{ status.name.title() }}
               </option>
             {% endfor %}
           </select>
@@ -71,8 +71,8 @@
           <select name="object_variant" id="object_variant_search_select">
             <option value="">Any</option>
             {% for object_variant in object_variant_enum %}
-              <option value="{{ object_variant.name }}" {% if form_data and form_data.object_variant == object_variant.name %}selected{% endif %}>
-                {{ object_variant.name.title().replace('_', ' ')}}
+              <option value="{{ object_variant.name }}" {% if form_data and form_data.object_variant == object_variant %}selected{% endif %}>
+                {{ object_variant.name.title().replace('_', ' ') }}
               </option>
             {% endfor %}
           </select>
@@ -104,8 +104,8 @@
           <select name="grading_company" id="grading_company_search_select">
             <option value="">Any</option>
             {% for grading_company in grading_company_enum %}
-              <option value="{{ grading_company.name }}" {% if form_data and form_data.grading_company == grading_company.name %}selected{% endif %}>
-                {{ grading_company.name.title()}}
+              <option value="{{ grading_company.name }}" {% if form_data and form_data.grading_company == grading_company %}selected{% endif %}>
+                {{ grading_company.name }}
               </option>
             {% endfor %}
           </select>
@@ -129,8 +129,8 @@
           <label>Qualifiers:</label><br>
           {% for qualifier in qualifier_enum %}
             <label>
-              <input type="checkbox" name="qualifiers" value="{{ qualifier.name }}" {% if form_data and qualifier.name in form_data.qualifiers %}checked{% endif %}>
-              {{ qualifier.name.replace('_', ' ').title() }}
+              <input type="checkbox" name="qualifiers" value="{{ qualifier.name }}" {% if form_data and qualifier in form_data.qualifiers %}checked{% endif %}>
+              {{ qualifier.name.title().replace('_', ' ') }}
             </label><br>
           {% endfor %}
         </div>
@@ -222,8 +222,8 @@
           <select name="list_type" id="list_type_search_select">
             <option value="">Any</option>
             {% for list_type in list_type_enum %}
-              <option value="{{ list_type.name }}" {% if form_data and form_data.list_type == list_type.name %}selected{% endif %}>
-                {{ list_type.name.title().replace('_', ' ')}}
+              <option value="{{ list_type.name }}" {% if form_data and form_data.list_type == list_type %}selected{% endif %}>
+                {{ list_type.name.title().replace('_', ' ') }}
               </option>
             {% endfor %}
           </select>
@@ -367,8 +367,8 @@
         <tr>
           <td>{{ item.name }}</td>
           <td>{{ item.set_name }}</td>
-          <td>{{ item.category.name.capitalize() }}</td>
-          <td>{{ item.language.name.capitalize() }}</td>
+          <td>{{ item.category }}</td>
+          <td>{{ item.language }}</td>
           <td class=" centre-aligned {{ 'faint' if item.grade == None else '' }}">
             {% if item.grade is not none %}
               {{ item.grade|int if item.grade == item.grade|int else item.grade }}
@@ -376,7 +376,7 @@
               ''
             {% endif %}
           </td>
-          <td class="centre-aligned">{{ item.intent.name.capitalize() }}</td>
+          <td class="centre-aligned">{{ item.intent }}</td>
           <td>{{ item.purchase_date }}</td>
           <td class="right-aligned">{{ ('¥' ~ '{:,.0f}'.format(item.purchase_price)) }}</td>
           <td class="right-aligned {{ 'faint' if item.total_grading_fees == 0 else '' }}">
@@ -385,7 +385,7 @@
           <td class="right-aligned {{ 'faint' if item.total_cost == 0 else '' }}">
             {{ '' if item.total_cost is none else '¥' ~ '{:,.0f}'.format(item.total_cost) }}
           </td>
-          <td class="centre-aligned">{{ item.status.name.capitalize() }}</td>
+          <td class="centre-aligned">{{ item.status }}</td>
           <td class="right-aligned {{ 'faint' if item.list_price == None else '' }}">
             {{ '' if item.list_price is none else ('$' ~ '{:,.2f}'.format(item.list_price)) }}
           </td>
@@ -433,7 +433,7 @@
             <strong>Exchange Rate:</strong> {{ item.usd_to_jpy_rate }}<br>
             <strong>Qualifiers:</strong>
                 {% for q in item.qualifiers %}
-                    {{ q.name.lower().replace('_', ' ').title() }}{% if not loop.last %}, {% endif %}
+                    {{ q }}{% if not loop.last %}, {% endif %}
                 {% endfor %}<br>
             <strong>Details:</strong> {{ item.details }}<br>
           </td>

@@ -8,11 +8,15 @@ from sqlalchemy import (
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.elements import BinaryExpression
 
-from .models import Item
+from .models import (
+    Item,
+    ItemSubmission,
+)
 from .schemas import (
     ItemCreate,
     ItemSearch,
     ItemUpdate,
+    SubmissionCreate,
 )
 
 
@@ -140,3 +144,29 @@ def build_search_filters(
 
 def get_all_submission_values(db: Session) -> list[int]:
     return [1, 2]
+
+
+def create_submission(
+        db: Session,
+        submissions: list[SubmissionCreate],
+) -> None:
+    try:
+        for submission_data in submissions:
+            submission = ItemSubmission(**submission_data.model_dump())
+            db.add(submission)
+
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+
+
+def get_newest_submissions(
+        db: Session,
+        skip: int = 0,
+        limit: int = 100,
+) -> Sequence[ItemSubmission]:
+    items = db.query(
+        ItemSubmission
+    ).order_by(ItemSubmission.id.desc()).offset(skip).limit(limit).all()
+    return list(reversed(items))

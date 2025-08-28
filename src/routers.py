@@ -1,6 +1,7 @@
 from fastapi import (
     APIRouter,
     Depends,
+    Form,
     HTTPException,
     Request,
 )
@@ -14,10 +15,13 @@ from starlette.responses import Response
 
 from .crud import (
     create_item,
+    create_submission,
     delete_item_by_id,
     edit_item,
     get_all_submission_values,
+    get_item,
     get_newest_items,
+    get_newest_submissions,
     search_for_items,
 )
 from .database import get_db
@@ -34,8 +38,10 @@ from .item_enums import (
 from .models import Item
 from .schemas import (
     ItemCreateForm,
+    ItemDisplay,
     ItemSearchForm,
     ItemUpdateForm,
+    SubmissionCreate,
 )
 
 
@@ -87,7 +93,7 @@ def view_items(
 
 
 @router.get('/add')
-def show_add_form(request: Request) -> Response:
+def show_add_item_form(request: Request) -> Response:
     return templates.TemplateResponse(
         'add_item.html',
         {
@@ -105,7 +111,7 @@ def show_add_form(request: Request) -> Response:
 
 
 @router.post('/add')
-def submit_add_form(
+def submit_add_item_form(
         form: ItemCreateForm = Depends(ItemCreateForm.as_form),
         db: Session = Depends(get_db),
 ) -> RedirectResponse:
@@ -126,7 +132,7 @@ def delete_item(
 
 
 @router.get('/edit/{item_id}', response_class=HTMLResponse)
-def open_edit_form(
+def open_edit_item_form(
         item_id: int,
         request: Request,
         db: Session = Depends(get_db),
@@ -162,3 +168,67 @@ def submit_edit_item(
     edit_params = update_form.to_item_update()
     edit_result = edit_item(db, item_id, edit_params)
     return RedirectResponse('/view', status_code=edit_result)
+
+
+@router.get('/submissions_view', response_class=HTMLResponse)
+def view_submissions(
+        request: Request,
+        db: Session = Depends(get_db),
+        show_limit: int = 20,
+) -> Response:
+    submissions = get_newest_submissions(db, skip=0, limit=show_limit)
+    display_submissions = [sub.to_display() for sub in submissions]
+    return templates.TemplateResponse(
+        'submissions_view.html',
+        {
+            'request': request,
+            'submissions': display_submissions,
+        },
+    )
+
+
+@router.get('/submissions_add')
+def show_add_submission_form(request: Request) -> Response:
+    return templates.TemplateResponse(
+        'add_submission.html',
+        {
+            'request': request,
+            'qualifier_enum': Qualifier,
+            'category_enum': Category,
+            'language_enum': Language,
+            'status_enum': Status,
+            'intent_enum': Intent,
+            'grading_company_enum': GradingCompany,
+            'list_type_enum': ListingType,
+            'object_variant_enum': ObjectVariant,
+        },
+    )
+
+
+@router.post('/submissions_add')
+def submit_add_submission_form(
+        submission_number: int = Form(...),
+        item_ids: list[int] = Form(...),
+        db: Session = Depends(get_db),
+) -> RedirectResponse:
+    submissions = [
+        SubmissionCreate(
+            item_id=i,
+            submission_number=submission_number
+        )
+        for i in item_ids
+    ]
+    create_submission(db, submissions)
+    return RedirectResponse(url='/view', status_code=303)
+
+
+@router.get('/item_info_for_submission_form/{item_id}')
+def get_item_info_for_submission_form(
+        item_id: int,
+        db: Session = Depends(get_db),
+) -> ItemDisplay:
+    item = get_item(db, item_id)
+    if item is None:
+        return ItemDisplay(id=item_id, name='N/A')
+    else:
+        return item.to_display()

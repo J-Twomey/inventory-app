@@ -1,4 +1,3 @@
-import json
 from dataclasses import (
     dataclass,
     field,
@@ -696,55 +695,53 @@ class ItemSearchForm:
 class ItemDisplay(BaseModel):
     id: int
     name: str
-    set_name: str
-    category: Category
-    language: Language
-    qualifiers: list[Qualifier]
-    details: str | None
-    purchase_date: date
-    purchase_price: int
-    status: Status
-    intent: Intent
-    import_fee: int
-    grading_company: GradingCompany
-    list_price: float | None
-    list_type: ListingType
-    list_date: date | None
-    sale_total: float | None
-    sale_date: date | None
-    shipping: float | None
-    sale_fee: float | None
-    usd_to_jpy_rate: float | None
-    group_discount: bool
-    object_variant: ObjectVariant
-    audit_target: bool
+    set_name: str | None = None
+    category: str | None = None
+    language: str | None = None
+    qualifiers: list[str] | None = None
+    details: str | None = None
+    purchase_date: date | None = None
+    purchase_price: int | None = None
+    status: str | None = None
+    intent: str | None = None
+    import_fee: int | None = None
+    grading_company: str | None = None
+    list_price: float | None = None
+    list_type: str | None = None
+    list_date: date | None = None
+    sale_total: float | None = None
+    sale_date: date | None = None
+    shipping: float | None = None
+    sale_fee: float | None = None
+    usd_to_jpy_rate: float | None = None
+    group_discount: bool | None = None
+    object_variant: str | None = None
+    audit_target: bool | None = None
     # Property values
-    total_grading_fees: int
-    total_cost: int
-    grade: float | None
-    cert: int | None
-    total_fees: float | None
-    return_usd: float | None
-    return_jpy: int | None
-    net_jpy: int | None
-    net_percent: float | None
-
-
-    @model_validator(mode='after')
-    def appropriate_intent(self) -> Self:
-        if self.status == Status.LISTED or self.status == Status.CLOSED:
-            if self.intent != Intent.SELL:
-                raise ValueError('Item cannot be listed or closed without intent of SELL')
-        elif self.intent == Intent.CRACK:
-            if any(
-                (
-                    (self.grade is None),
-                    (self.grading_company == GradingCompany.RAW),
-                    (self.cert is None),
-                ),
-            ):
-                raise ValueError('Item cannot have intent of CRACK without being graded')
-        return self
+    total_grading_fees: int | None = None
+    total_cost: int | None = None
+    grade: float | None = None
+    cert: int | None = None
+    total_fees: float | None = None
+    return_usd: float | None = None
+    return_jpy: int | None = None
+    net_jpy: int | None = None
+    net_percent: float | None = None
+    # @model_validator(mode='after')
+    # def appropriate_intent(self) -> Self:
+    #     if self.status == Status.LISTED or self.status == Status.CLOSED:
+    #         if self.intent != Intent.SELL:
+    #             raise ValueError('Item cannot be listed or closed without intent of SELL')
+    #     elif self.intent == Intent.CRACK:
+    #         if any(
+    #             (
+    #                 (self.grade is None),
+    #                 (self.grading_company == GradingCompany.RAW),
+    #                 (self.cert is None),
+    #             ),
+    #         ):
+    #             raise ValueError('Item cannot have intent of CRACK without being graded')
+    #     return self
 
     # @model_validator(mode='after')
     # def check_required_null_fields_based_on_grading_company(self) -> Self:
@@ -757,6 +754,38 @@ class ItemDisplay(BaseModel):
     #             f'Raw card can not have the following non null fields: {not_null}',
     #         )
     #     return self
+
+
+class SubmissionBase(BaseModel):
+    item_id: int
+    submission_number: int
+    grading_fee: int | None = None
+    grade: float | None = None
+    cert: int | None = None
+    is_cracked: bool = False
+
+
+class SubmissionCreate(SubmissionBase):
+    item_id: int
+    submission_number: int
+
+
+class SubmissionDisplay(BaseModel):
+    id: int
+    item_id: int
+    submission_number: int
+    grading_fee: int | None = None
+    grade: float | None = None
+    cert: int | None = None
+    is_cracked: bool = False
+    # Fields from Item
+    name: str
+    set_name: str
+    language: str
+    category: str
+    purchase_price: int
+    import_fee: int
+    return_jpy: int | None = None
 
 
 def parse_enum(
@@ -845,18 +874,6 @@ def set_if_value(
         d[key] = value
 
 
-# def build_grading_fee_dict(
-#         sub_nums: list[str],
-#         fees: list[str],
-# ) -> dict[int, int]:
-#     # Remove empty string that gets sent if multiple submissions
-#     sub_nums = [sn for sn in sub_nums if sn != '']
-#     fees = [f for f in fees if f != '']
-#     return {
-#         int(k): int(v) for k, v in zip(sub_nums, fees, strict=True)
-#     }
-
-
 def parse_nullable_list_of_str_to_list_of_int(input_list: list[str] | None) -> list[int]:
     if input_list is None:
         return []
@@ -871,3 +888,42 @@ def parse_nullable_percent(value: str | None) -> float | None:
     if value_parsed is not None:
         value_parsed /= 100.
     return value_parsed
+
+
+# def create_empty_item_display() -> ItemDisplay:
+#     return ItemDisplay(
+#         id=-1,
+#         name='N/A',
+#         set_name='N/A',
+#         category=Category.CARD,
+#         language=Language.JAPANESE,
+#         qualifiers=[],
+#         details=None,
+#         purchase_date=date(2000, 1, 1),
+#         purchase_price=0,
+#         status=Status.STORAGE,
+#         intent=Intent.TBD,
+#         import_fee=0,
+#         grading_company=GradingCompany.RAW,
+#         list_price=None,
+#         list_type=ListingType.NO_LIST,
+#         list_date=None,
+#         sale_total=None,
+#         sale_date=None,
+#         shipping=None,
+#         sale_fee=None,
+#         usd_to_jpy_rate=None,
+#         group_discount=False,
+#         object_variant=ObjectVariant.STANDARD,
+#         audit_target=False,
+#         # Property values
+#         total_grading_fees=0,
+#         total_cost=0,
+#         grade=None,
+#         cert=None,
+#         total_fees=None,
+#         return_usd=None,
+#         return_jpy=None,
+#         net_jpy=None,
+#         net_percent=None,
+#     )

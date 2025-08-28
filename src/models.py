@@ -36,7 +36,10 @@ from .item_enums import (
     Qualifier,
     Status,
 )
-from .schemas import ItemDisplay
+from .schemas import (
+    ItemDisplay,
+    SubmissionDisplay,
+)
 
 
 NullableDate = Mapped[date | None]
@@ -71,11 +74,6 @@ class Item(Base):
     status: Mapped[int] = mapped_column(Integer)
     intent: Mapped[int] = mapped_column(Integer)
     import_fee: Mapped[int] = mapped_column(Integer)
-    # grading_fee: Mapped[dict[int, int]] = mapped_column(JSON)
-    # grading_fee_total: Mapped[int] = mapped_column(Integer)
-    # submission_numbers: Mapped[list[int]] = mapped_column(JSON)
-    # cracked_from: Mapped[list[int]] = mapped_column(JSON)
-    # grade: NullableFloat = NullableFloatColumn()
     grading_company: Mapped[int] = mapped_column(Integer)
     purchase_cert: NullableInt = NullableIntColumn()
     purchase_grade: NullableFloat = NullableFloatColumn()
@@ -279,18 +277,18 @@ class Item(Base):
             id=self.id,
             name=self.name,
             set_name=self.set_name,
-            category=Category(self.category),
-            language=Language(self.language),
-            qualifiers=self.qualifiers,
+            category=Category(self.category).name.title(),
+            language=Language(self.language).name.title().replace('_', ' '),
+            qualifiers=[q.name.title().replace('_', ' ') for q in self.qualifiers],
             details=self.details,
             purchase_date=self.purchase_date,
             purchase_price=self.purchase_price,
-            status=Status(self.status),
-            intent=Intent(self.intent),
+            status=Status(self.status).name.title(),
+            intent=Intent(self.intent).name.title(),
             import_fee=self.import_fee,
-            grading_company=GradingCompany(self.grading_company),
+            grading_company=GradingCompany(self.grading_company).name,
             list_price=self.list_price,
-            list_type=ListingType(self.list_type),
+            list_type=ListingType(self.list_type).name.title().replace('_', ' '),
             list_date=self.list_date,
             sale_total=self.sale_total,
             sale_date=self.sale_date,
@@ -298,7 +296,7 @@ class Item(Base):
             sale_fee=self.sale_fee,
             usd_to_jpy_rate=self.usd_to_jpy_rate,
             group_discount=self.group_discount,
-            object_variant=ObjectVariant(self.object_variant),
+            object_variant=ObjectVariant(self.object_variant).name.title().replace('_', ' '),
             audit_target=self.audit_target,
             total_grading_fees=self.total_grading_fees,
             total_cost=self.total_cost,
@@ -317,8 +315,8 @@ class ItemSubmission(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     item_id: Mapped[int] = mapped_column(ForeignKey('items.id'), index=True)
-    grading_fee: NullableInt = NullableIntColumn()
     submission_number: Mapped[int] = mapped_column(Integer)
+    grading_fee: NullableInt = NullableIntColumn()
     grade: NullableInt = NullableIntColumn()
     cert: NullableInt = NullableIntColumn()
     is_cracked: Mapped[bool] = mapped_column(Boolean)
@@ -326,3 +324,21 @@ class ItemSubmission(Base):
     original_item: Mapped[Item] = relationship(
         back_populates='submissions'
     )
+
+    def to_display(self) -> SubmissionDisplay:
+        return SubmissionDisplay(
+            id=self.id,
+            item_id=self.item_id,
+            submission_number=self.submission_number,
+            grading_fee=self.grading_fee,
+            grade=self.grade,
+            cert=self.cert,
+            is_cracked=self.is_cracked,
+            name=self.original_item.name,
+            set_name=self.original_item.set_name,
+            language=Language(self.original_item.language).name.title().replace('_', ' '),
+            category=Category(self.original_item.category).name.title(),
+            purchase_price=self.original_item.purchase_price,
+            import_fee=self.original_item.import_fee,
+            return_jpy=self.original_item.return_jpy,
+        )

@@ -1,10 +1,7 @@
-from datetime import date
-
 import pytest
 from sqlalchemy.orm import Session
 
 import src.crud as crud
-import src.item_enums as item_enums
 from .conftest import ItemFactory
 
 
