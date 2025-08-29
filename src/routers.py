@@ -17,11 +17,14 @@ from .crud import (
     create_item,
     create_submission,
     delete_item_by_id,
+    delete_submission_by_id,
     edit_item,
+    edit_submission,
     get_all_submission_values,
     get_item,
     get_newest_items,
     get_newest_submissions,
+    get_submission,
     search_for_items,
 )
 from .database import get_db
@@ -42,6 +45,7 @@ from .schemas import (
     ItemSearchForm,
     ItemUpdateForm,
     SubmissionCreate,
+    SubmissionUpdateForm,
 )
 
 
@@ -137,7 +141,7 @@ def open_edit_item_form(
         request: Request,
         db: Session = Depends(get_db),
 ) -> Response:
-    item = db.query(Item).filter(Item.id == item_id).first()
+    item = get_item(db, item_id)
     if item is None:
         raise HTTPException(status_code=404, detail='Item not found')
     else:
@@ -232,3 +236,46 @@ def get_item_info_for_submission_form(
         return ItemDisplay(id=item_id, name='N/A')
     else:
         return item.to_display()
+
+
+@router.get('/submissions_delete/{submission_id}')
+def delete_submission(
+        submission_id: int,
+        db: Session = Depends(get_db),
+) -> RedirectResponse:
+    success = delete_submission_by_id(db, submission_id)
+    if not success:
+        raise HTTPException(status_code=404, detail='Submission not found')
+    return RedirectResponse(url='/submissions_view', status_code=303)
+
+
+
+@router.get('/submissions_edit/{submission_id}', response_class=HTMLResponse)
+def open_edit_submission_form(
+        submission_id: int,
+        request: Request,
+        db: Session = Depends(get_db),
+) -> Response:
+    submission = get_submission(db, submission_id)
+    if submission is None:
+        raise HTTPException(status_code=404, detail='Submission not found')
+    else:
+        display_submission = submission.to_display()
+    return templates.TemplateResponse(
+        'edit_submission.html',
+        {
+            'request': request,
+            'submission': display_submission,
+        },
+    )
+
+
+@router.post('/submissions_edit/{submission_id}')
+def submit_edit_submission(
+        submission_id: int,
+        update_form: SubmissionUpdateForm = Depends(SubmissionUpdateForm.as_form),
+        db: Session = Depends(get_db),
+) -> RedirectResponse:
+    edit_params = update_form.to_submission_update()
+    edit_result = edit_submission(db, submission_id, edit_params)
+    return RedirectResponse('/submissions_view', status_code=edit_result)
