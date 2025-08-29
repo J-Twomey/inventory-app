@@ -770,6 +770,56 @@ class SubmissionCreate(SubmissionBase):
     submission_number: int
 
 
+class SubmissionUpdate(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+
+    item_id: int | None = None
+    submission_number: int | None = None
+    grading_fee: int | None = None
+    grade: float | None = None
+    cert: int | None = None
+    is_cracked: bool = False
+
+
+@dataclass
+class SubmissionUpdateForm:
+    item_id: str | None = None
+    submission_number: str | None = None
+    grading_fee: str | None = None
+    grade: str | None = None
+    cert: str | None = None
+    is_cracked: bool = False
+
+    @classmethod
+    def as_form(
+        cls,
+        item_id: Annotated[str | None, Form()] = None,
+        submission_number: Annotated[str | None, Form()] = None,
+        grading_fee: Annotated[str | None, Form()] = None,
+        grade: Annotated[str | None, Form()] = None,
+        cert: Annotated[str | None, Form()] = None,
+        is_cracked: Annotated[bool, Form()] = False,
+    ) -> 'SubmissionUpdateForm':
+        return cls(
+            item_id=item_id,
+            submission_number=submission_number,
+            grading_fee=grading_fee,
+            grade=grade,
+            cert=cert,
+            is_cracked=is_cracked,
+        )
+
+    def to_submission_update(self) -> SubmissionUpdate:
+        update_vals: dict[str, Any] = {}
+        set_if_value(update_vals, 'item_id', parse_nullable(self.item_id, int))
+        set_if_value(update_vals, 'submission_number', parse_nullable(self.submission_number, int))
+        set_if_value(update_vals, 'grading_fee', parse_nullable(self.grading_fee, int))
+        set_if_value(update_vals, 'grade', parse_nullable(self.grade, float))
+        set_if_value(update_vals, 'cert', parse_nullable(self.cert, int))
+        set_if_value(update_vals, 'is_cracked', self.is_cracked)
+        return SubmissionUpdate(**update_vals)
+
+
 class SubmissionDisplay(BaseModel):
     id: int
     item_id: int

@@ -17,6 +17,7 @@ from .schemas import (
     ItemSearch,
     ItemUpdate,
     SubmissionCreate,
+    SubmissionUpdate,
 )
 
 
@@ -161,6 +162,13 @@ def create_submission(
         raise
 
 
+def get_submission(
+        db: Session,
+        submission_id: int,
+) -> ItemSubmission | None:
+    return db.query(ItemSubmission).filter(ItemSubmission.id == submission_id).first()
+
+
 def get_newest_submissions(
         db: Session,
         skip: int = 0,
@@ -170,3 +178,34 @@ def get_newest_submissions(
         ItemSubmission
     ).order_by(ItemSubmission.id.desc()).offset(skip).limit(limit).all()
     return list(reversed(items))
+
+
+def delete_submission_by_id(
+        db: Session,
+        submission_id: int,
+) -> bool:
+    submission = get_submission(db, submission_id)
+    if submission is None:
+        return False
+    db.delete(submission)
+    db.commit()
+    return True
+
+
+def edit_submission(
+        db: Session,
+        submission_id: int,
+        submission_update: SubmissionUpdate,
+) -> int:
+    submission = get_submission(db, submission_id)
+    if submission is None:
+        return 404
+
+    update_data = submission_update.model_dump()
+
+    for key, value in update_data.items():
+        setattr(submission, key, value)
+
+    db.commit()
+    db.refresh(submission)
+    return 303

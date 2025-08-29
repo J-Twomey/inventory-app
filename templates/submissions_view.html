@@ -25,6 +25,7 @@
         <th>Grade Fee</th>
         <th>Received</th>
         <th>Net</th>
+        <th>Actions</th>
       </tr>
     </thead>
     <tbody>
@@ -58,6 +59,16 @@
                       green
                     {% endif %}">
             {{ '' if submission.return_jpy is none else '¥' ~ '{:,.0f}'.format(net) }}
+          </td>
+          <td>
+            <a href="/submissions_delete/{{ submission.id }}"
+                    onclick="return confirm('Are you sure you want to delete this submission?')"
+                    style="color: red; margin-right: 10px;">
+              Del
+            </a>
+            <a href="/submissions_edit/{{ submission.id }}" style="color: purple;">
+              Edit
+            </a>
           </td>
         </tr>
       {% endfor %}
