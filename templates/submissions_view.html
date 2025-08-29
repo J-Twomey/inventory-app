@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Submission List</title>
+  <link href="/static/css/styles.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<a href="/" class="btn btn-purple btn-small margin-bottom-20 inline">Back To Landing Page</a>
+
+<div style="margin-top: 25px; font-size: 14px;">
+  <table border="1" cellpadding="6" cellspacing="0">
+    <thead>
+      <tr>
+        <th>Item</th>
+        <th>Submission</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for submission in submissions %}
+        <tr>
+          <td>{{ submission.name }}</td>
+          <td>{{ submission.submission_number }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if not items %}
+  <p>No submissions found.</p>
+{% endif %}
+
+</body>
+</html>
