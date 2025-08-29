@@ -339,6 +339,7 @@
   <table border="1" cellpadding="6" cellspacing="0">
     <thead>
       <tr>
+        <th>ID</th>
         <th>Name</th>
         <th>Set</th>
         <th>Type</th>
@@ -365,11 +366,12 @@
     <tbody>
       {% for item in items %}
         <tr>
+          <td>{{ item.id }}</td>
           <td>{{ item.name }}</td>
           <td>{{ item.set_name }}</td>
           <td>{{ item.category }}</td>
           <td>{{ item.language }}</td>
-          <td class=" centre-aligned {{ 'faint' if item.grade == None else '' }}">
+          <td class=" centre-aligned {{ 'faint' if item.grade is none else '' }}">
             {% if item.grade is not none %}
               {{ item.grade|int if item.grade == item.grade|int else item.grade }}
             {% else %}
@@ -386,31 +388,45 @@
             {{ '' if item.total_cost is none else '¥' ~ '{:,.0f}'.format(item.total_cost) }}
           </td>
           <td class="centre-aligned">{{ item.status }}</td>
-          <td class="right-aligned {{ 'faint' if item.list_price == None else '' }}">
+          <td class="right-aligned {{ 'faint' if item.list_price is none else '' }}">
             {{ '' if item.list_price is none else ('$' ~ '{:,.2f}'.format(item.list_price)) }}
           </td>
-          <td class="{{ 'faint' if item.list_date == None else '' }}">
+          <td class="{{ 'faint' if item.list_date is none else '' }}">
             {{ '' if item.list_date is none else item.list_date }}
           </td>
-          <td class="right-aligned {{ 'faint' if item.sale_total == None else '' }}">
+          <td class="right-aligned {{ 'faint' if item.sale_total is none else '' }}">
             {{ '' if item.sale_total is none else ('$' ~ '{:,.2f}'.format(item.sale_total)) }}
           </td>
-          <td class="{{ 'faint' if item.sale_date == None else '' }}">
+          <td class="{{ 'faint' if item.sale_date is none else '' }}">
             {{ '' if item.sale_date is none else item.sale_date }}
           </td>
-          <td class="right-aligned {{ 'faint' if item.total_fees == None else '' }}">
+          <td class="right-aligned {{ 'faint' if item.total_fees is none else '' }}">
             {{ '' if item.total_fees is none else ('$' ~ '{:,.2f}'.format(item.total_fees)) }}
           </td>
-          <td class="right-aligned {{ 'faint' if item.return_usd == None else '' }}">
+          <td class="right-aligned {{ 'faint' if item.return_usd is none else '' }}">
             {{ '' if item.return_usd is none else ('$' ~ '{:,.2f}'.format(item.return_usd)) }}
           </td>
-          <td class="right-aligned {{ 'faint' if item.return_jpy == None else '' }}">
+          <td class="right-aligned {{ 'faint' if item.return_jpy is none else '' }}">
             {{ '' if item.return_jpy is none else ('¥' ~ '{:,.0f}'.format(item.return_jpy)) }}
           </td>
-          <td class="right-aligned {{ 'faint' if item.net_jpy == None else '' }}">
+          <td class="right-aligned
+                    {% if item.net_jpy is none %}
+                      faint
+                    {% elif item.net_jpy > 0 %}
+                      green
+                    {% else %}
+                      cyan
+                    {% endif %}">
             {{ '' if item.net_jpy is none else ('¥' ~ '{:,.0f}'.format(item.net_jpy)) }}
           </td>
-          <td class="right-aligned {{ 'faint' if item.net_percent == None else '' }}">
+          <td class="right-aligned
+                    {% if item.net_jpy is none %}
+                      faint
+                    {% elif item.net_jpy > 0 %}
+                      green
+                    {% else %}
+                      cyan
+                    {% endif %}">
             {{ '' if item.net_percent is none else ( item.net_percent ~ '%') }}
           </td>
           <td>
