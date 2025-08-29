@@ -38,7 +38,6 @@ from .item_enums import (
     Qualifier,
     Status,
 )
-from .models import Item
 from .schemas import (
     ItemCreateForm,
     ItemDisplay,
@@ -247,7 +246,6 @@ def delete_submission(
     if not success:
         raise HTTPException(status_code=404, detail='Submission not found')
     return RedirectResponse(url='/submissions_view', status_code=303)
-
 
 
 @router.get('/submissions_edit/{submission_id}', response_class=HTMLResponse)
