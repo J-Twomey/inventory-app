@@ -201,7 +201,7 @@ def edit_submission(
     if submission is None:
         return 404
 
-    update_data = submission_update.model_dump()
+    update_data = submission_update.to_model_kwargs()
 
     for key, value in update_data.items():
         setattr(submission, key, value)

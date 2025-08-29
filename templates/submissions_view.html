@@ -19,6 +19,7 @@
         <th>Language</th>
         <th>Type</th>
         <th>Sub #</th>
+        <th>Company</th>
         <th>Cert</th>
         <th>Grade</th>
         <th>Cost</th>
@@ -43,8 +44,17 @@
           <td>{{ submission.language }}</td>
           <td>{{ submission.category }}</td>
           <td class="centre-aligned">{{ submission.submission_number }}</td>
-          <td>{{ submission.cert }}</td>
-          <td>{{ submission.grade }}</td>
+          <td>{{ submission.submission_company }}</td>
+          <td class="centre-aligned {{ 'faint' if submission.grade is none else '' }}">{{ submission.cert }}</td>
+          <td class="centre-aligned {{ 'faint' if submission.grade is none else '' }}">
+              {% if submission.grade is none %}
+                ''
+              {% elif submission.grade == submission.grade|int %}
+                {{ submission.grade|int }}
+              {% else %}
+                {{ submission.grade }}
+              {% endif %}
+          </td>
           <td class="right-aligned">{{ '¥' ~ '{:,.0f}'.format(cost) }}</td>
           <td class="right-aligned {{ 'faint' if submission.grading_fee is none else '' }}">
             {{ '' if submission.grading_fee is none else '¥' ~ '{:,.0f}'.format(submission.grading_fee) }}

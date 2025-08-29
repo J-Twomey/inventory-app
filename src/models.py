@@ -316,6 +316,7 @@ class ItemSubmission(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     item_id: Mapped[int] = mapped_column(ForeignKey('items.id'), index=True)
     submission_number: Mapped[int] = mapped_column(Integer)
+    submission_company: Mapped[int] = mapped_column(Integer)
     grading_fee: NullableInt = NullableIntColumn()
     grade: NullableInt = NullableIntColumn()
     cert: NullableInt = NullableIntColumn()
@@ -330,6 +331,7 @@ class ItemSubmission(Base):
             id=self.id,
             item_id=self.item_id,
             submission_number=self.submission_number,
+            submission_company=GradingCompany(self.submission_company).name,
             grading_fee=self.grading_fee,
             grade=self.grade,
             cert=self.cert,

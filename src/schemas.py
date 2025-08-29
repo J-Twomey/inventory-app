@@ -374,8 +374,6 @@ class ItemUpdate(BaseModel):
             data['list_type'] = self.list_type.value
         if self.object_variant is not None:
             data['object_variant'] = self.object_variant.value
-        # if data.get('grading_fee_total') is None:
-        #     data.pop('grading_fee_total', None)
         return data
 
 
@@ -759,6 +757,7 @@ class ItemDisplay(BaseModel):
 class SubmissionBase(BaseModel):
     item_id: int
     submission_number: int
+    submission_company: GradingCompany
     grading_fee: int | None = None
     grade: float | None = None
     cert: int | None = None
@@ -768,6 +767,7 @@ class SubmissionBase(BaseModel):
 class SubmissionCreate(SubmissionBase):
     item_id: int
     submission_number: int
+    submission_company: int
 
 
 class SubmissionUpdate(BaseModel):
@@ -775,16 +775,24 @@ class SubmissionUpdate(BaseModel):
 
     item_id: int | None = None
     submission_number: int | None = None
+    submission_company: GradingCompany | None = None
     grading_fee: int | None = None
     grade: float | None = None
     cert: int | None = None
     is_cracked: bool = False
+
+    def to_model_kwargs(self) -> dict[str, Any]:
+        data = self.model_dump(exclude_unset=True)
+        if self.submission_company is not None:
+            data['submission_company'] = self.submission_company.value
+        return data
 
 
 @dataclass
 class SubmissionUpdateForm:
     item_id: str | None = None
     submission_number: str | None = None
+    submission_company: str | None = None
     grading_fee: str | None = None
     grade: str | None = None
     cert: str | None = None
@@ -795,6 +803,7 @@ class SubmissionUpdateForm:
         cls,
         item_id: Annotated[str | None, Form()] = None,
         submission_number: Annotated[str | None, Form()] = None,
+        submission_company: Annotated[str | None, Form()] = None,
         grading_fee: Annotated[str | None, Form()] = None,
         grade: Annotated[str | None, Form()] = None,
         cert: Annotated[str | None, Form()] = None,
@@ -803,6 +812,7 @@ class SubmissionUpdateForm:
         return cls(
             item_id=item_id,
             submission_number=submission_number,
+            submission_company=submission_company,
             grading_fee=grading_fee,
             grade=grade,
             cert=cert,
@@ -813,6 +823,11 @@ class SubmissionUpdateForm:
         update_vals: dict[str, Any] = {}
         set_if_value(update_vals, 'item_id', parse_nullable(self.item_id, int))
         set_if_value(update_vals, 'submission_number', parse_nullable(self.submission_number, int))
+        set_if_value(
+            update_vals,
+            'submission_company',
+            parse_nullable_enum(self.submission_company, GradingCompany),
+        )
         set_if_value(update_vals, 'grading_fee', parse_nullable(self.grading_fee, int))
         set_if_value(update_vals, 'grade', parse_nullable(self.grade, float))
         set_if_value(update_vals, 'cert', parse_nullable(self.cert, int))
@@ -824,6 +839,7 @@ class SubmissionDisplay(BaseModel):
     id: int
     item_id: int
     submission_number: int
+    submission_company: str
     grading_fee: int | None = None
     grade: float | None = None
     cert: int | None = None
@@ -938,42 +954,3 @@ def parse_nullable_percent(value: str | None) -> float | None:
     if value_parsed is not None:
         value_parsed /= 100.
     return value_parsed
-
-
-# def create_empty_item_display() -> ItemDisplay:
-#     return ItemDisplay(
-#         id=-1,
-#         name='N/A',
-#         set_name='N/A',
-#         category=Category.CARD,
-#         language=Language.JAPANESE,
-#         qualifiers=[],
-#         details=None,
-#         purchase_date=date(2000, 1, 1),
-#         purchase_price=0,
-#         status=Status.STORAGE,
-#         intent=Intent.TBD,
-#         import_fee=0,
-#         grading_company=GradingCompany.RAW,
-#         list_price=None,
-#         list_type=ListingType.NO_LIST,
-#         list_date=None,
-#         sale_total=None,
-#         sale_date=None,
-#         shipping=None,
-#         sale_fee=None,
-#         usd_to_jpy_rate=None,
-#         group_discount=False,
-#         object_variant=ObjectVariant.STANDARD,
-#         audit_target=False,
-#         # Property values
-#         total_grading_fees=0,
-#         total_cost=0,
-#         grade=None,
-#         cert=None,
-#         total_fees=None,
-#         return_usd=None,
-#         return_jpy=None,
-#         net_jpy=None,
-#         net_percent=None,
-#     )

@@ -196,14 +196,7 @@ def show_add_submission_form(request: Request) -> Response:
         'add_submission.html',
         {
             'request': request,
-            'qualifier_enum': Qualifier,
-            'category_enum': Category,
-            'language_enum': Language,
-            'status_enum': Status,
-            'intent_enum': Intent,
             'grading_company_enum': GradingCompany,
-            'list_type_enum': ListingType,
-            'object_variant_enum': ObjectVariant,
         },
     )
 
@@ -211,18 +204,20 @@ def show_add_submission_form(request: Request) -> Response:
 @router.post('/submissions_add')
 def submit_add_submission_form(
         submission_number: int = Form(...),
+        submission_company: str = Form(...),
         item_ids: list[int] = Form(...),
         db: Session = Depends(get_db),
 ) -> RedirectResponse:
     submissions = [
         SubmissionCreate(
             item_id=i,
-            submission_number=submission_number
+            submission_number=submission_number,
+            submission_company=GradingCompany[submission_company],
         )
         for i in item_ids
     ]
     create_submission(db, submissions)
-    return RedirectResponse(url='/view', status_code=303)
+    return RedirectResponse(url='/submissions_view', status_code=303)
 
 
 @router.get('/item_info_for_submission_form/{item_id}')
@@ -264,6 +259,7 @@ def open_edit_submission_form(
         {
             'request': request,
             'submission': display_submission,
+            'grading_company_enum': GradingCompany,
         },
     )
 
