@@ -13,22 +13,59 @@
   <table border="1" cellpadding="6" cellspacing="0">
     <thead>
       <tr>
+        <th>ID</th>
         <th>Item</th>
-        <th>Submission</th>
+        <th>Set</th>
+        <th>Language</th>
+        <th>Type</th>
+        <th>Sub #</th>
+        <th>Cert</th>
+        <th>Grade</th>
+        <th>Cost</th>
+        <th>Grade Fee</th>
+        <th>Received</th>
+        <th>Net</th>
       </tr>
     </thead>
     <tbody>
       {% for submission in submissions %}
-        <tr>
+        {% set cost = submission.purchase_price + submission.import_fee %}
+        {% set net = submission.return_jpy - cost if submission.return_jpy is not none else none %}
+        <tr class="{% if submission.is_cracked %}
+                    yellow
+                  {% elif submission.return_jpy is not none %}
+                    gray
+                  {% endif %}">
+          <td>{{ submission.item_id }}</td>
           <td>{{ submission.name }}</td>
-          <td>{{ submission.submission_number }}</td>
+          <td>{{ submission.set_name }}</td>
+          <td>{{ submission.language }}</td>
+          <td>{{ submission.category }}</td>
+          <td class="centre-aligned">{{ submission.submission_number }}</td>
+          <td>{{ submission.cert }}</td>
+          <td>{{ submission.grade }}</td>
+          <td class="right-aligned">{{ '¥' ~ '{:,.0f}'.format(cost) }}</td>
+          <td class="right-aligned {{ 'faint' if submission.grading_fee is none else '' }}">
+            {{ '' if submission.grading_fee is none else '¥' ~ '{:,.0f}'.format(submission.grading_fee) }}
+          </td>
+          <td class="right-aligned {{ 'faint' if submission.return_jpy is none else '' }}">
+            {{ '' if submission.return_jpy is none else '¥' ~ '{:,.0f}'.format(submission.return_jpy) }}
+          </td>
+          <td class="right-aligned
+                    {% if net is none %}
+                      faint
+                    {% elif net > 0 %}
+                      green
+                    {% endif %}">
+            {{ '' if submission.return_jpy is none else '¥' ~ '{:,.0f}'.format(net) }}
+          </td>
         </tr>
       {% endfor %}
     </tbody>
   </table>
 </div>
 
-{% if not items %}
+{% if not submissions %}
   <p>No submissions found.</p>
 {% endif %}
 

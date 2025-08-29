@@ -92,6 +92,22 @@
   background-color: black;
 }
 
+.gray {
+  background-color: gray;
+}
+
+.green {
+  background-color: lime;
+}
+
+.cyan {
+  background-color: cyan;
+}
+
+.yellow {
+  background-color: yellow;
+}
+
 .right-aligned {
   text-align: right;
 }
