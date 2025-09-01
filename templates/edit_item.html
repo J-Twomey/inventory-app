@@ -12,11 +12,6 @@
   <a href="/" class="btn btn-purple btn-small margin-bottom-20 inline">Back To Landing Page</a>
   <a href="/view" class="btn btn-blue btn-small margin-bottom-20 inline">Back To View Page</a>
 </div>
-<p>item.list_type: {{ item.qualifiers }}</p>
-<p>item.list_type.name: {{ item.list_type.name if item.list_type is not none else 'None' }}</p>
-{% for list_type in qualifier_enum %}
-  <p>loop list_type: {{ list_type }}</p>
-{% endfor %}
 
 <form method="post" action="/edit/{{ item.id }}">
 
