@@ -13,7 +13,7 @@
   <table border="1" cellpadding="6" cellspacing="0">
     <thead>
       <tr>
-        <th>ID</th>
+        <th>Item ID</th>
         <th>Item</th>
         <th>Set</th>
         <th>Language</th>
@@ -32,7 +32,7 @@
     <tbody>
       {% for submission in submissions %}
         {% set cost = submission.purchase_price + submission.import_fee %}
-        {% set net = submission.return_jpy - cost if submission.return_jpy is not none else none %}
+        {% set net = submission.return_jpy - cost - submission.grading_fee if submission.return_jpy is not none else none %}
         <tr class="{% if submission.is_cracked %}
                     yellow
                   {% elif submission.return_jpy is not none %}
