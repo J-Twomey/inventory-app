@@ -72,20 +72,20 @@
   <label>Import Fee:</label>
   <input type="number" name="import_fee" value="0" required><br><br>
 
-  <label>Purchase Cert #:</label>
-  <input type="number" name="purchase_cert"><br><br>
-
-  <label>Purchase Grade:</label>
-  <input type="number" name="purchase_grade" step="any"><br><br>
-
-  <label>Grading Company:</label>
-  <select name="grading_company">
+  <label>Purchase Grading Company:</label>
+  <select name="purchase_grading_company">
     {% for grading_company in grading_company_enum %}
       <option value="{{ grading_company.name }}">
         {{ grading_company.name.title() }}
       </option>
     {% endfor %}
   </select><br><br>
+
+  <label>Purchase Cert #:</label>
+  <input type="number" name="purchase_cert"><br><br>
+
+  <label>Purchase Grade:</label>
+  <input type="number" name="purchase_grade" step="any"><br><br>
 
   <label>List Price:</label>
   <input type="number" name="list_price" step="any"><br><br>

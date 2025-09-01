@@ -74,7 +74,7 @@ class Item(Base):
     status: Mapped[int] = mapped_column(Integer)
     intent: Mapped[int] = mapped_column(Integer)
     import_fee: Mapped[int] = mapped_column(Integer)
-    grading_company: Mapped[int] = mapped_column(Integer)
+    purchase_grading_company: Mapped[int] = mapped_column(Integer)
     purchase_cert: NullableInt = NullableIntColumn()
     purchase_grade: NullableFloat = NullableFloatColumn()
     list_price: NullableFloat = NullableFloatColumn()
@@ -91,7 +91,7 @@ class Item(Base):
 
     submissions: Mapped[list['ItemSubmission']] = relationship(
         back_populates='original_item',
-        cascade='all, delete-orphan'
+        cascade='all, delete-orphan',
     )
 
     @hybrid_property
@@ -116,25 +116,28 @@ class Item(Base):
         return cls.purchase_price + cls.total_grading_fees + cls.import_fee
 
     @hybrid_property
-    def grade(self) -> int | None:
-        '''
-        If a submission exists then take the newest grade from there (unless cracked), otherwise
-        check if a purchase_grade exists (meaning the card was bought already graded)
-        '''
+    def grading_company(self) -> int | None:
         latest_submission = max(
             self.submissions,
             key=lambda s: s.submission_number,
-            default=None
+            default=None,
         )
         if latest_submission is not None and not latest_submission.is_cracked:
-            return latest_submission.grade
+            return latest_submission.submission_company
         else:
-            return self.purchase_grade
+            return self.purchase_grading_company
 
-    @grade.expression  # type: ignore[no-redef]
-    def grade(cls) -> ColumnElement[int | None]:
-        latest_subquery = (
-            select(ItemSubmission.grade, ItemSubmission.is_cracked)
+    @grading_company.expression  # type: ignore[no-redef]
+    def grading_company(cls):
+        latest_company = (
+            select(ItemSubmission.submission_company)
+            .where(ItemSubmission.item_id == cls.id)
+            .order_by(ItemSubmission.submission_number.desc())
+            .limit(1)
+            .scalar_subquery()
+        )
+        latest_cracked = (
+            select(ItemSubmission.is_cracked)
             .where(ItemSubmission.item_id == cls.id)
             .order_by(ItemSubmission.submission_number.desc())
             .limit(1)
@@ -142,10 +145,10 @@ class Item(Base):
         )
         return func.coalesce(
             case(
-                (latest_subquery.c.is_cracked == True, cls.purchase_grade),
-                else_=latest_subquery.c.grade
+                (latest_cracked is True, cls.purchase_grading_company),
+                else_=latest_company,
             ),
-            cls.purchase_grade
+            cls.purchase_grading_company,
         )
 
     @hybrid_property
@@ -157,7 +160,7 @@ class Item(Base):
         latest_submission = max(
             self.submissions,
             key=lambda s: s.submission_number,
-            default=None
+            default=None,
         )
         if latest_submission is not None and not latest_submission.is_cracked:
             return latest_submission.cert
@@ -166,8 +169,16 @@ class Item(Base):
 
     @cert.expression  # type: ignore[no-redef]
     def cert(cls) -> ColumnElement[int | None]:
-        latest_subquery = (
-            select(ItemSubmission.cert, ItemSubmission.is_cracked)
+        latest_cert = (
+            select(ItemSubmission.cert)
+            .where(ItemSubmission.item_id == cls.id)
+            .order_by(ItemSubmission.submission_number.desc())
+            .limit(1)
+            .scalar_subquery()
+        )
+
+        latest_cracked = (
+            select(ItemSubmission.is_cracked)
             .where(ItemSubmission.item_id == cls.id)
             .order_by(ItemSubmission.submission_number.desc())
             .limit(1)
@@ -175,10 +186,50 @@ class Item(Base):
         )
         return func.coalesce(
             case(
-                (latest_subquery.c.is_cracked == True, cls.purchase_cert),
-                else_=latest_subquery.c.cert
+                (latest_cracked is True, cls.purchase_cert),
+                else_=latest_cert,
             ),
-            cls.purchase_cert
+            cls.purchase_cert,
+        )
+
+    @hybrid_property
+    def grade(self) -> float | None:
+        '''
+        If a submission exists then take the newest grade from there (unless cracked), otherwise
+        check if a purchase_grade exists (meaning the card was bought already graded)
+        '''
+        latest_submission = max(
+            self.submissions,
+            key=lambda s: s.submission_number,
+            default=None,
+        )
+        if latest_submission is not None and not latest_submission.is_cracked:
+            return latest_submission.grade
+        else:
+            return self.purchase_grade
+
+    @grade.expression  # type: ignore[no-redef]
+    def grade(cls) -> ColumnElement[float | None]:
+        latest_grade = (
+            select(ItemSubmission.grade)
+            .where(ItemSubmission.item_id == cls.id)
+            .order_by(ItemSubmission.submission_number.desc())
+            .limit(1)
+            .scalar_subquery()
+        )
+        latest_cracked = (
+            select(ItemSubmission.is_cracked)
+            .where(ItemSubmission.item_id == cls.id)
+            .order_by(ItemSubmission.submission_number.desc())
+            .limit(1)
+            .scalar_subquery()
+        )
+        return func.coalesce(
+            case(
+                (latest_cracked is True, cls.purchase_grade),
+                else_=latest_grade,
+            ),
+            cls.purchase_grade,
         )
 
     @hybrid_property
@@ -323,7 +374,7 @@ class ItemSubmission(Base):
     is_cracked: Mapped[bool] = mapped_column(Boolean)
 
     original_item: Mapped[Item] = relationship(
-        back_populates='submissions'
+        back_populates='submissions',
     )
 
     def to_display(self) -> SubmissionDisplay:

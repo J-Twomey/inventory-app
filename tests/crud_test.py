@@ -29,7 +29,7 @@ def test_create_item_all_nullables_provided(
         qualifiers=[item_enums.Qualifier.UNLIMITED],
         status=item_enums.Status.CLOSED,
         details='Mint',
-        grading_company=item_enums.GradingCompany.PSA,
+        purchase_grading_company=item_enums.GradingCompany.PSA,
         purchase_grade=10.,
         purchase_cert=123456789,
         list_price=500.,
@@ -242,7 +242,7 @@ def test_search_for_items_multiple_search_criteria(
     certs = [None, 1, 1, 1]
     items = [
         item_create_factory.get(
-            grading_company=gc,
+            purchase_grading_company=gc,
             language=lang,
             purchase_grade=g,
             purchase_cert=c,
@@ -410,7 +410,7 @@ def test_edit_item_multiple_changes(
     item = crud.create_item(db_session, item_create_factory.get())
     item_changes = schemas.ItemUpdate(
         purchase_grade=10.,
-        grading_company=item_enums.GradingCompany.BGS,
+        purchase_grading_company=item_enums.GradingCompany.BGS,
     )
 
     result = crud.edit_item(db_session, item.id, item_changes)

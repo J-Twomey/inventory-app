@@ -64,7 +64,7 @@ class ItemBase(BaseModel):
     status: Status
     intent: Intent
     import_fee: int
-    grading_company: GradingCompany
+    purchase_grading_company: GradingCompany
     purchase_cert: int | None = None
     purchase_grade: float | None = None
     list_price: float | None = None
@@ -199,7 +199,7 @@ class ItemCreate(ItemBase):
         data['language'] = self.language.value
         data['status'] = self.status.value
         data['intent'] = self.intent.value
-        data['grading_company'] = self.grading_company.value
+        data['purchase_grading_company'] = self.purchase_grading_company.value
         data['list_type'] = self.list_type.value
         data['object_variant'] = self.object_variant.value
         return data
@@ -217,7 +217,7 @@ class ItemCreateForm:
     status: str
     intent: str
     import_fee: str
-    grading_company: str
+    purchase_grading_company: str
     purchase_grade: str
     purchase_cert: str
     list_price: str
@@ -246,7 +246,7 @@ class ItemCreateForm:
         status: Annotated[str, Form()],
         intent: Annotated[str, Form()],
         import_fee: Annotated[str, Form()],
-        grading_company: Annotated[str, Form()],
+        purchase_grading_company: Annotated[str, Form()],
         purchase_grade: Annotated[str, Form()],
         purchase_cert: Annotated[str, Form()],
         list_price: Annotated[str, Form()],
@@ -274,7 +274,7 @@ class ItemCreateForm:
             status=status,
             intent=intent,
             import_fee=import_fee,
-            grading_company=grading_company,
+            purchase_grading_company=purchase_grading_company,
             purchase_grade=purchase_grade,
             purchase_cert=purchase_cert,
             list_price=list_price,
@@ -312,7 +312,7 @@ class ItemCreateForm:
             status=parse_enum(self.status, Status),
             intent=parse_enum(self.intent, Intent),
             import_fee=int(self.import_fee),
-            grading_company=parse_enum(self.grading_company, GradingCompany),
+            purchase_grading_company=parse_enum(self.purchase_grading_company, GradingCompany),
             purchase_grade=parse_nullable(self.purchase_grade, float),
             purchase_cert=parse_nullable(self.purchase_cert, int),
             list_price=parse_nullable(self.list_price, float),
@@ -343,7 +343,7 @@ class ItemUpdate(BaseModel):
     status: Status | None = None
     intent: Intent | None = None
     import_fee: int | None = None
-    grading_company: GradingCompany | None = None
+    purchase_grading_company: GradingCompany | None = None
     purchase_grade: float | None = None
     purchase_cert: int | None = None
     list_price: float | None = None
@@ -368,8 +368,8 @@ class ItemUpdate(BaseModel):
             data['status'] = self.status.value
         if self.intent is not None:
             data['intent'] = self.intent.value
-        if self.grading_company is not None:
-            data['grading_company'] = self.grading_company.value
+        if self.purchase_grading_company is not None:
+            data['purchase_grading_company'] = self.purchase_grading_company.value
         if self.list_type is not None:
             data['list_type'] = self.list_type.value
         if self.object_variant is not None:
@@ -389,7 +389,7 @@ class ItemUpdateForm:
     status: str | None = None
     intent: str | None = None
     import_fee: str | None = None
-    grading_company: str | None = None
+    purchase_grading_company: str | None = None
     purchase_grade: str | None = None
     purchase_cert: str | None = None
     list_price: str | None = None
@@ -419,7 +419,7 @@ class ItemUpdateForm:
         status: Annotated[str | None, Form()] = None,
         intent: Annotated[str | None, Form()] = None,
         import_fee: Annotated[str | None, Form()] = None,
-        grading_company: Annotated[str | None, Form()] = None,
+        purchase_grading_company: Annotated[str | None, Form()] = None,
         purchase_grade: Annotated[str | None, Form()] = None,
         purchase_cert: Annotated[str | None, Form()] = None,
         list_price: Annotated[str | None, Form()] = None,
@@ -446,7 +446,7 @@ class ItemUpdateForm:
             status=status,
             intent=intent,
             import_fee=import_fee,
-            grading_company=grading_company,
+            purchase_grading_company=purchase_grading_company,
             purchase_grade=purchase_grade,
             purchase_cert=purchase_cert,
             list_price=list_price,
@@ -477,8 +477,8 @@ class ItemUpdateForm:
         set_if_value(update_vals, 'import_fee', parse_nullable(self.import_fee, int))
         set_if_value(
             update_vals,
-            'grading_company',
-            parse_nullable_enum(self.grading_company, GradingCompany),
+            'purchase_grading_company',
+            parse_nullable_enum(self.purchase_grading_company, GradingCompany),
         )
         set_if_value(update_vals, 'purchase_grade', parse_nullable(self.purchase_grade, float))
         set_if_value(update_vals, 'purchase_cert', parse_nullable(self.purchase_cert, int))
@@ -516,8 +516,8 @@ class ItemSearch(BaseModel):
     status: Annotated[int | None, Form()] = None
     intent: Annotated[int | None, Form()] = None
     cracked_from: Annotated[int | None, Form()] = None
-    grade: Annotated[float | None, Form()] = None
     grading_company: Annotated[int | None, Form()] = None
+    grade: Annotated[float | None, Form()] = None
     cert: Annotated[int | None, Form()] = None
     list_type: Annotated[int | None, Form()] = None
     list_date_min: Annotated[date | None, Form()] = None
@@ -554,8 +554,8 @@ class ItemSearchForm:
     status: str | None = None
     intent: str | None = None
     cracked_from: str | None = None
-    grade: str | None = None
     grading_company: str | None = None
+    grade: str | None = None
     cert: str | None = None
     list_type: str | None = None
     list_date_min: str | None = None
@@ -592,8 +592,8 @@ class ItemSearchForm:
         status: Annotated[str | None, Query()] = None,
         intent: Annotated[str | None, Query()] = None,
         cracked_from: Annotated[str | None, Query()] = None,
-        grade: Annotated[str | None, Query()] = None,
         grading_company: Annotated[str | None, Query()] = None,
+        grade: Annotated[str | None, Query()] = None,
         cert: Annotated[str | None, Query()] = None,
         list_type: Annotated[str | None, Query()] = None,
         list_date_min: Annotated[str | None, Query()] = None,
@@ -628,8 +628,8 @@ class ItemSearchForm:
             status=status,
             intent=intent,
             cracked_from=cracked_from,
-            grade=grade,
             grading_company=grading_company,
+            grade=grade,
             cert=cert,
             list_type=list_type,
             list_date_min=list_date_min,
@@ -666,8 +666,8 @@ class ItemSearchForm:
             status=parse_nullable_enum(self.status, Status, as_int=True),
             intent=parse_nullable_enum(self.intent, Intent, as_int=True),
             cracked_from=parse_nullable(self.cracked_from, int),
-            grade=parse_nullable(self.grade, float),
             grading_company=parse_nullable_enum(self.grading_company, GradingCompany, as_int=True),
+            grade=parse_nullable(self.grade, float),
             cert=parse_nullable(self.cert, int),
             list_type=parse_nullable_enum(self.list_type, ListingType, as_int=True),
             list_date_min=parse_nullable_date(self.list_date_min),
@@ -703,7 +703,6 @@ class ItemDisplay(BaseModel):
     status: str | None = None
     intent: str | None = None
     import_fee: int | None = None
-    grading_company: str | None = None
     list_price: float | None = None
     list_type: str | None = None
     list_date: date | None = None
@@ -718,6 +717,7 @@ class ItemDisplay(BaseModel):
     # Property values
     total_grading_fees: int | None = None
     total_cost: int | None = None
+    grading_company: str | None = None
     grade: float | None = None
     cert: int | None = None
     total_fees: float | None = None
@@ -765,9 +765,10 @@ class SubmissionBase(BaseModel):
 
 
 class SubmissionCreate(SubmissionBase):
-    item_id: int
-    submission_number: int
-    submission_company: int
+    def to_model_kwargs(self) -> dict[str, int | float | bool]:
+        data = self.model_dump()
+        data['submission_company'] = self.submission_company.value
+        return data
 
 
 class SubmissionUpdate(BaseModel):

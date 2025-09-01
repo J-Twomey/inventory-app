@@ -81,7 +81,7 @@ def search_for_items(
         statement = statement.where(and_(*filters))
     results = db.execute(statement).scalars().all()
 
-    # Post filtering (for qualifiers and cracked_from)
+    # Post filtering (for qualifiers)
     for field, value in post_filters:
         if field == 'qualifiers':
             qualifier_values = [q for q in value]
@@ -89,8 +89,6 @@ def search_for_items(
                 item for item in results
                 if all(q in item.qualifiers for q in qualifier_values)
             ]
-        elif field == 'cracked_from':
-            results = [item for item in results if value in item.cracked_from]
     return results
 
 
@@ -116,7 +114,7 @@ def edit_item(
 
 
 def build_search_filters(
-        search_params: dict[str, Any]
+        search_params: dict[str, Any],
 ) -> tuple[list[BinaryExpression[Any]], list[tuple[str, Any]]]:
     filters: list[BinaryExpression[Any]] = []
     post_filters: list[tuple[str, Any]] = []
@@ -153,7 +151,7 @@ def create_submission(
 ) -> None:
     try:
         for submission_data in submissions:
-            submission = ItemSubmission(**submission_data.model_dump())
+            submission = ItemSubmission(**submission_data.to_model_kwargs())
             db.add(submission)
 
         db.commit()
@@ -175,7 +173,7 @@ def get_newest_submissions(
         limit: int = 100,
 ) -> Sequence[ItemSubmission]:
     items = db.query(
-        ItemSubmission
+        ItemSubmission,
     ).order_by(ItemSubmission.id.desc()).offset(skip).limit(limit).all()
     return list(reversed(items))
 

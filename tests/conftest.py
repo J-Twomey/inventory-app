@@ -72,9 +72,7 @@ class ItemFactory:
         status: int = item_enums.Status.STORAGE.value,
         intent: int = item_enums.Intent.SELL.value,
         import_fee: int = 0,
-        # grading_fee: dict[int, int] | None = None,
-        # cracked_from: list[int] | None = None,
-        grading_company: int = item_enums.GradingCompany.RAW.value,
+        purchase_grading_company: int = item_enums.GradingCompany.RAW.value,
         purchase_grade: float | None = None,
         purchase_cert: float | None = None,
         list_price: float | None = None,
@@ -91,12 +89,6 @@ class ItemFactory:
     ) -> Item:
         if qualifiers is None:
             qualifiers = []
-        # if grading_fee is None:
-        #     grading_fee = {}
-        # if cracked_from is None:
-        #     cracked_from = []
-        # submission_numbers = list(grading_fee)
-        # grading_fee_total = sum(grading_fee.values())
         return Item(
             id=id,
             name=name,
@@ -110,11 +102,7 @@ class ItemFactory:
             status=status,
             intent=intent,
             import_fee=import_fee,
-            # grading_fee=grading_fee,
-            # grading_fee_total=grading_fee_total,
-            # submission_numbers=submission_numbers,
-            # cracked_from=cracked_from,
-            grading_company=grading_company,
+            purchase_grading_company=purchase_grading_company,
             purchase_grade=purchase_grade,
             purchase_cert=purchase_cert,
             list_price=list_price,
@@ -150,9 +138,7 @@ class ItemBaseFactory:
         status: item_enums.Status = item_enums.Status.STORAGE,
         intent: item_enums.Intent = item_enums.Intent.SELL,
         import_fee: int = 0,
-        # grading_fee: dict[int, int] | None = None,
-        # cracked_from: list[int] | None = None,
-        grading_company: item_enums.GradingCompany = item_enums.GradingCompany.RAW,
+        purchase_grading_company: item_enums.GradingCompany = item_enums.GradingCompany.RAW,
         purchase_grade: float | None = None,
         purchase_cert: int | None = None,
         list_price: float | None = None,
@@ -169,10 +155,6 @@ class ItemBaseFactory:
     ) -> ItemBase:
         if qualifiers is None:
             qualifiers = []
-        # if grading_fee is None:
-        #     grading_fee = {}
-        # if cracked_from is None:
-        #     cracked_from = []
         return ItemBase(
             name=name,
             set_name=set_name,
@@ -185,9 +167,7 @@ class ItemBaseFactory:
             status=status,
             intent=intent,
             import_fee=import_fee,
-            # grading_fee=grading_fee,
-            # cracked_from=cracked_from,
-            grading_company=grading_company,
+            purchase_grading_company=purchase_grading_company,
             purchase_grade=purchase_grade,
             purchase_cert=purchase_cert,
             list_price=list_price,
@@ -223,9 +203,7 @@ class ItemCreateFactory:
         status: item_enums.Status = item_enums.Status.STORAGE,
         intent: item_enums.Intent = item_enums.Intent.SELL,
         import_fee: int = 0,
-        # grading_fee: dict[int, int] | None = None,
-        # cracked_from: list[int] | None = None,
-        grading_company: item_enums.GradingCompany = item_enums.GradingCompany.RAW,
+        purchase_grading_company: item_enums.GradingCompany = item_enums.GradingCompany.RAW,
         purchase_grade: float | None = None,
         purchase_cert: int | None = None,
         list_price: float | None = None,
@@ -242,10 +220,6 @@ class ItemCreateFactory:
     ) -> ItemCreate:
         if qualifiers is None:
             qualifiers = []
-        # if grading_fee is None:
-        #     grading_fee = {}
-        # if cracked_from is None:
-        #     cracked_from = []
         return ItemCreate(
             name=name,
             set_name=set_name,
@@ -258,10 +232,8 @@ class ItemCreateFactory:
             status=status,
             intent=intent,
             import_fee=import_fee,
-            # grading_fee=grading_fee,
-            # cracked_from=cracked_from,
+            purchase_grading_company=purchase_grading_company,
             purchase_grade=purchase_grade,
-            grading_company=grading_company,
             purchase_cert=purchase_cert,
             list_price=list_price,
             list_type=list_type,
