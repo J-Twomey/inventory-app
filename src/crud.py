@@ -8,6 +8,10 @@ from sqlalchemy import (
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.elements import BinaryExpression
 
+from .item_enums import (
+    Intent,
+    Status,
+)
 from .models import (
     Item,
     ItemSubmission,
@@ -18,6 +22,10 @@ from .schemas import (
     ItemUpdate,
     SubmissionCreate,
     SubmissionUpdate,
+)
+from .validators import (
+    check_intent,
+    check_status,
 )
 
 
@@ -152,6 +160,11 @@ def create_submission(
     try:
         for submission_data in submissions:
             submission = ItemSubmission(**submission_data.to_model_kwargs())
+            linked_item = get_item(db, submission.item_id)
+            if linked_item is None:
+                raise ValueError(f'Item with id {submission.item_id} not found')
+            check_intent(linked_item, desired=Intent.GRADE)
+            check_status(linked_item, desired=Status.STORAGE)
             db.add(submission)
 
         db.commit()

@@ -203,11 +203,12 @@ def show_add_submission_form(request: Request) -> Response:
 
 @router.post('/submissions_add')
 def submit_add_submission_form(
+        request: Request,
         submission_number: int = Form(...),
         submission_company: str = Form(...),
         item_ids: list[int] = Form(...),
         db: Session = Depends(get_db),
-) -> RedirectResponse:
+) -> Response:
     submissions = [
         SubmissionCreate(
             item_id=i,
@@ -216,7 +217,21 @@ def submit_add_submission_form(
         )
         for i in item_ids
     ]
-    create_submission(db, submissions)
+    try:
+        create_submission(db, submissions)
+    except ValueError as e:
+        error_message = str(e)
+        return templates.TemplateResponse(
+            'add_submission.html',
+            {
+                'request': request,
+                'item_ids': item_ids,
+                'submission_number': submission_number,
+                'submission_company': submission_company,
+                'grading_company_enum': GradingCompany,
+                'error_message': error_message,
+            },
+        )
     return RedirectResponse(url='/submissions_view', status_code=303)
 
 

@@ -11,12 +11,15 @@
 
 <form method="post" action="/submissions_add" enctype="application/x-www-form-urlencoded">
   <label for="submission_number">Submission Number:</label>
-  <input type="number" id="submission_number" name="submission_number" required><br><br>
+  <input type="number" id="submission_number" name="submission_number"
+        value="{{ submission_number }}" required><br><br>
+
   <label>Submission Company:</label>
   <select name="submission_company">
     {% for grading_company in grading_company_enum %}
       {% if grading_company.name != 'RAW' %}
-        <option value="{{ grading_company.name }}">
+        <option value="{{ grading_company.name }}"
+          {% if grading_company.name == submission_company %}selected{% endif %}>
           {{ grading_company.name }}
         </option>
       {% endif %}
@@ -40,27 +43,52 @@
         <th class="del-col">Del</th>
       </tr>
     </thead>
-    <tbody>
-      <tr>
-        <td><input type="number" name="item_ids" class="item-id-input" required></td>
-        <td class="item-name"></td>
-        <td class="item-set"></td>
-        <td class="item-type"></td>
-        <td class="item-language"></td>
-        <td class="item-intent"></td>
-        <td class="item-purchase-date"></td>
-        <td class="item-purchase-price"></td>
-        <td class="item-status"></td>
-        <td class="item-qualifiers"></td>
-        <td class="item-details"></td>
-        <td class="del-col"><button type="button" class="delete-row-btn">Del</button></td>
-      </tr>
+    <tbody id="submissions-tbody">
+      {% if item_ids %}
+        {% for item_id in item_ids %}
+          <tr>
+            <td><input type="number" name="item_ids" class="item-id-input" value="{{ item_id }}" required></td>
+            <td class="item-name"></td>
+            <td class="item-set"></td>
+            <td class="item-type"></td>
+            <td class="item-language"></td>
+            <td class="item-intent"></td>
+            <td class="item-purchase-date"></td>
+            <td class="item-purchase-price"></td>
+            <td class="item-status"></td>
+            <td class="item-qualifiers"></td>
+            <td class="item-details"></td>
+            <td class="del-col"><button type="button" class="delete-row-btn">Del</button></td>
+          </tr>
+        {% endfor %}
+      {% else %}
+        <tr>
+          <td><input type="number" name="item_ids" class="item-id-input" required></td>
+          <td class="item-name"></td>
+          <td class="item-set"></td>
+          <td class="item-type"></td>
+          <td class="item-language"></td>
+          <td class="item-intent"></td>
+          <td class="item-purchase-date"></td>
+          <td class="item-purchase-price"></td>
+          <td class="item-status"></td>
+          <td class="item-qualifiers"></td>
+          <td class="item-details"></td>
+          <td class="del-col"><button type="button" class="delete-row-btn">Del</button></td>
+        </tr>
+      {% endif %}
     </tbody>
   </table>
 
   <button type="button" id="add-row">Add Row</button><br><br>
   <button type="submit">Submit Submissions</button>
 </form>
+
+{% if error_message %}
+  <div class="error-message" style="color: red; margin-top: 1em;">
+    {{ error_message }}
+  </div>
+{% endif %}
 
 <script type="module" src="{{ url_for('static', path='js/add_submission.js') }}"></script>
 
