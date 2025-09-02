@@ -86,6 +86,7 @@ class ItemFactory:
         group_discount: bool = False,
         object_variant: int = item_enums.ObjectVariant.STANDARD.value,
         audit_target: bool = False,
+        cracked_from_purchase: bool = False,
     ) -> Item:
         if qualifiers is None:
             qualifiers = []
@@ -116,6 +117,7 @@ class ItemFactory:
             group_discount=group_discount,
             object_variant=object_variant,
             audit_target=audit_target,
+            cracked_from_purchase=cracked_from_purchase,
         )
 
 
@@ -152,6 +154,7 @@ class ItemBaseFactory:
         group_discount: bool = False,
         object_variant: item_enums.ObjectVariant = item_enums.ObjectVariant.STANDARD,
         audit_target: bool = False,
+        cracked_from_purchase: bool = False,
     ) -> ItemBase:
         if qualifiers is None:
             qualifiers = []
@@ -181,6 +184,7 @@ class ItemBaseFactory:
             group_discount=group_discount,
             object_variant=object_variant,
             audit_target=audit_target,
+            cracked_from_purchase=cracked_from_purchase,
         )
 
 
@@ -217,6 +221,7 @@ class ItemCreateFactory:
         group_discount: bool = False,
         object_variant: item_enums.ObjectVariant = item_enums.ObjectVariant.STANDARD,
         audit_target: bool = False,
+        cracked_from_purchase: bool = False,
     ) -> ItemCreate:
         if qualifiers is None:
             qualifiers = []
@@ -246,6 +251,7 @@ class ItemCreateFactory:
             group_discount=group_discount,
             object_variant=object_variant,
             audit_target=audit_target,
+            cracked_from_purchase=cracked_from_purchase,
         )
 
 

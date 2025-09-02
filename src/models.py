@@ -9,9 +9,11 @@ from sqlalchemy import (
     ForeignKey,
     func,
     Integer,
+    literal,
     null,
     select,
     String,
+    true,
 )
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import (
@@ -88,6 +90,7 @@ class Item(Base):
     group_discount: Mapped[bool] = mapped_column(Boolean)
     object_variant: Mapped[int] = mapped_column(Integer)
     audit_target: Mapped[bool] = mapped_column(Boolean)
+    cracked_from_purchase: Mapped[bool] = mapped_column(Boolean)
 
     submissions: Mapped[list['ItemSubmission']] = relationship(
         back_populates='original_item',
@@ -122,10 +125,16 @@ class Item(Base):
             key=lambda s: s.submission_number,
             default=None,
         )
-        if latest_submission is not None and not latest_submission.is_cracked:
-            return latest_submission.submission_company
+        if latest_submission is None:
+            if self.cracked_from_purchase:
+                return GradingCompany.RAW.value
+            else:
+                return self.purchase_grading_company
         else:
-            return self.purchase_grading_company
+            if latest_submission.is_cracked:
+                return GradingCompany.RAW.value
+            else:
+                return latest_submission.submission_company
 
     @grading_company.expression  # type: ignore[no-redef]
     def grading_company(cls):
@@ -143,29 +152,37 @@ class Item(Base):
             .limit(1)
             .scalar_subquery()
         )
-        return func.coalesce(
-            case(
-                (latest_cracked is True, cls.purchase_grading_company),
+        return case(
+            (
+                latest_company.is_(None),
+                case(
+                    (cls.cracked_from_purchase.is_(true()), literal(GradingCompany.RAW.value)),
+                    else_=cls.purchase_grading_company,
+                ),
+            ),
+            else_=case(
+                (latest_cracked.is_(true()), literal(GradingCompany.RAW.value)),
                 else_=latest_company,
             ),
-            cls.purchase_grading_company,
         )
 
     @hybrid_property
     def cert(self) -> int | None:
-        '''
-        If a submission exists then take the newest cert from there (unless cracked), otherwise
-        check if a purchase_cert exists (meaning the card was bought already graded)
-        '''
         latest_submission = max(
             self.submissions,
             key=lambda s: s.submission_number,
             default=None,
         )
-        if latest_submission is not None and not latest_submission.is_cracked:
-            return latest_submission.cert
+        if latest_submission is None:
+            if self.cracked_from_purchase:
+                return None
+            else:
+                return self.purchase_cert
         else:
-            return self.purchase_cert
+            if latest_submission.is_cracked:
+                return None
+            else:
+                return latest_submission.cert
 
     @cert.expression  # type: ignore[no-redef]
     def cert(cls) -> ColumnElement[int | None]:
@@ -176,7 +193,6 @@ class Item(Base):
             .limit(1)
             .scalar_subquery()
         )
-
         latest_cracked = (
             select(ItemSubmission.is_cracked)
             .where(ItemSubmission.item_id == cls.id)
@@ -184,29 +200,37 @@ class Item(Base):
             .limit(1)
             .scalar_subquery()
         )
-        return func.coalesce(
-            case(
-                (latest_cracked is True, cls.purchase_cert),
+        return case(
+            (
+                latest_cert.is_(None),
+                case(
+                    (cls.cracked_from_purchase.is_(true()), literal(None, type_=Integer())),
+                    else_=cls.purchase_cert,
+                ),
+            ),
+            else_=case(
+                (latest_cracked.is_(true()), literal(None, type_=Integer())),
                 else_=latest_cert,
             ),
-            cls.purchase_cert,
         )
 
     @hybrid_property
     def grade(self) -> float | None:
-        '''
-        If a submission exists then take the newest grade from there (unless cracked), otherwise
-        check if a purchase_grade exists (meaning the card was bought already graded)
-        '''
         latest_submission = max(
             self.submissions,
             key=lambda s: s.submission_number,
             default=None,
         )
-        if latest_submission is not None and not latest_submission.is_cracked:
-            return latest_submission.grade
+        if latest_submission is None:
+            if self.cracked_from_purchase:
+                return None
+            else:
+                return self.purchase_grade
         else:
-            return self.purchase_grade
+            if latest_submission.is_cracked:
+                return None
+            else:
+                return latest_submission.grade
 
     @grade.expression  # type: ignore[no-redef]
     def grade(cls) -> ColumnElement[float | None]:
@@ -224,12 +248,18 @@ class Item(Base):
             .limit(1)
             .scalar_subquery()
         )
-        return func.coalesce(
-            case(
-                (latest_cracked is True, cls.purchase_grade),
+        return case(
+            (
+                latest_grade.is_(None),
+                case(
+                    (cls.cracked_from_purchase.is_(true()), literal(None, type_=Float())),
+                    else_=cls.purchase_grade,
+                ),
+            ),
+            else_=case(
+                (latest_cracked.is_(true()), literal(None, type_=Float())),
                 else_=latest_grade,
             ),
-            cls.purchase_grade,
         )
 
     @hybrid_property

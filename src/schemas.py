@@ -78,6 +78,7 @@ class ItemBase(BaseModel):
     group_discount: bool = False
     object_variant: ObjectVariant
     audit_target: bool = False
+    cracked_from_purchase: bool = False
 
     @field_validator('*', mode='before')
     @classmethod
@@ -91,6 +92,7 @@ class ItemBase(BaseModel):
             'qualifiers',
             'group_discount',
             'audit_target',
+            'cracked_from_purchase',
         }:
             return v
         if v == '':
@@ -231,6 +233,7 @@ class ItemCreateForm:
     object_variant: str
     group_discount: bool
     audit_target: bool
+    cracked_from_purchase: bool
     qualifiers: list[str] = field(default_factory=list)
 
     @classmethod
@@ -261,6 +264,7 @@ class ItemCreateForm:
         qualifiers: Annotated[list[str], Form(default_factory=list)],
         group_discount: Annotated[bool, Form()] = False,
         audit_target: Annotated[bool, Form()] = False,
+        cracked_from_purchase: Annotated[bool, Form()] = False,
     ) -> 'ItemCreateForm':
         return cls(
             name=name,
@@ -288,6 +292,7 @@ class ItemCreateForm:
             group_discount=group_discount,
             object_variant=object_variant,
             audit_target=audit_target,
+            cracked_from_purchase=cracked_from_purchase,
         )
 
     def to_item_create(self) -> ItemCreate:
@@ -326,6 +331,7 @@ class ItemCreateForm:
             group_discount=self.group_discount,
             object_variant=parse_enum(self.object_variant, ObjectVariant),
             audit_target=self.audit_target,
+            cracked_from_purchase=self.cracked_from_purchase,
         )
 
 
@@ -357,6 +363,7 @@ class ItemUpdate(BaseModel):
     group_discount: bool = False
     object_variant: ObjectVariant | None = None
     audit_target: bool = False
+    cracked_from_purchase: bool = False
 
     def to_model_kwargs(self) -> dict[str, Any]:
         data = self.model_dump(exclude_unset=True)
@@ -403,6 +410,7 @@ class ItemUpdateForm:
     group_discount: bool = False
     object_variant: str | None = None
     audit_target: bool = False
+    cracked_from_purchase: bool = False
     qualifiers: list[str] = field(default_factory=list)
 
     @classmethod
@@ -433,6 +441,7 @@ class ItemUpdateForm:
         object_variant: Annotated[str | None, Form()] = None,
         group_discount: Annotated[bool, Form()] = False,
         audit_target: Annotated[bool, Form()] = False,
+        cracked_from_purchase: Annotated[bool, Form()] = False,
     ) -> 'ItemUpdateForm':
         return cls(
             name=name,
@@ -460,6 +469,7 @@ class ItemUpdateForm:
             group_discount=group_discount,
             object_variant=object_variant,
             audit_target=audit_target,
+            cracked_from_purchase=cracked_from_purchase,
         )
 
     def to_item_update(self) -> ItemUpdate:
@@ -497,6 +507,7 @@ class ItemUpdateForm:
             parse_nullable_enum(self.object_variant, ObjectVariant),
         )
         set_if_value(update_vals, 'audit_target', self.audit_target)
+        set_if_value(update_vals, 'cracked_from_purchase', self.cracked_from_purchase)
         return ItemUpdate(**update_vals)
 
 
