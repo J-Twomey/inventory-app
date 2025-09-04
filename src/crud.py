@@ -108,17 +108,22 @@ def edit_item(
     item = get_item(db, item_id)
     if item is None:
         return 404
+    perform_item_update(item, item_update)
+    db.commit()
+    db.refresh(item)
+    return 303
 
+
+def perform_item_update(
+        item: Item,
+        item_update: ItemUpdate,
+) -> None:
     update_data = item_update.to_model_kwargs()
     # always add qualifiers even if it is an empty list
     update_data['qualifiers'] = item_update.qualifiers
 
     for key, value in update_data.items():
         setattr(item, key, value)
-
-    db.commit()
-    db.refresh(item)
-    return 303
 
 
 def build_search_filters(
@@ -167,6 +172,10 @@ def create_submission(
             check_status(linked_item, desired=Status.STORAGE)
             db.add(submission)
 
+            # Update item to be SUBMITTED
+            item_update = ItemUpdate(status=Status.SUBMITTED)
+            perform_item_update(linked_item, item_update)
+
         db.commit()
     except Exception:
         db.rollback()
@@ -198,6 +207,14 @@ def delete_submission_by_id(
     submission = get_submission(db, submission_id)
     if submission is None:
         return False
+
+    linked_item = get_item(db, submission.item_id)
+    if linked_item is None:
+        raise ValueError(f'Item with id {submission.item_id} not found')
+
+    # Return item status to STORAGE
+    item_update = ItemUpdate(status=Status.STORAGE)
+    perform_item_update(linked_item, item_update)
     db.delete(submission)
     db.commit()
     return True
