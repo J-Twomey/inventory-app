@@ -91,7 +91,15 @@ class Qualifier(Enum):
     FIRST_EDITION = 1
     NON_HOLO = 2
     REVERSE_HOLO = 3
-    CRYSTAL = 4
+    SPECIAL_REVERSE_HOLO = 4
+    CRYSTAL = 5
+    PRIME = 6
+    BREAK = 7
+    SUPER_RARE = 8
+    HYPER_RARE = 9
+    CHARACTER_RARE = 10
+    ART_RARE = 11
+    SPECIAL_ART_RARE = 12
 
 
 class GradingCompany(Enum):
