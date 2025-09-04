@@ -73,6 +73,10 @@ def delete_item_by_id(
     item = get_item(db, item_id)
     if item is None:
         return False
+    # Delete all submissions associated with this item (if any)
+    submissions = get_all_submissions_for_item(db, item_id)
+    for submission in submissions:
+        perform_delete_submission(db, submission)
     db.delete(item)
     db.commit()
     return True
@@ -189,6 +193,13 @@ def get_submission(
     return db.query(ItemSubmission).filter(ItemSubmission.id == submission_id).first()
 
 
+def get_all_submissions_for_item(
+        db: Session,
+        item_id: int,
+) -> list[ItemSubmission]:
+    return db.query(ItemSubmission).filter(ItemSubmission.item_id == item_id).all()
+
+
 def get_newest_submissions(
         db: Session,
         skip: int = 0,
@@ -215,9 +226,16 @@ def delete_submission_by_id(
     # Return item status to STORAGE
     item_update = ItemUpdate(status=Status.STORAGE)
     perform_item_update(linked_item, item_update)
-    db.delete(submission)
+    perform_delete_submission(db, submission)
     db.commit()
     return True
+
+
+def perform_delete_submission(
+        db: Session,
+        submission: ItemSubmission,
+) -> None:
+    db.delete(submission)
 
 
 def edit_submission(
