@@ -88,3 +88,49 @@ addRowBtn.addEventListener('click', () => {
     newRow.remove();
   });
 });
+
+// Save form state into localStorage
+function saveFormState() {
+  const formState = {
+    submission_number: document.querySelector('[name="submission_number"]').value,
+    submission_company: document.querySelector('[name="submission_company"]').value,
+    item_ids: Array.from(document.querySelectorAll('.item-id-input')).map(input => input.value)
+  };
+  localStorage.setItem('submissionForm', JSON.stringify(formState));
+}
+
+// Restore form state from localStorage
+function restoreFormState() {
+  const saved = localStorage.getItem('submissionForm');
+  if (!saved) return;
+
+  const formState = JSON.parse(saved);
+
+  // Restore top-level fields
+  const numInput = document.querySelector('[name="submission_number"]');
+  const companySelect = document.querySelector('[name="submission_company"]');
+  if (numInput) numInput.value = formState.submission_number || '';
+  if (companySelect) companySelect.value = formState.submission_company || '';
+
+  // Restore rows (rebuild if more than one was saved)
+  for (let i = 1; i < formState.item_ids.length; i++) {
+    document.getElementById('add-row').click();
+  }
+
+  // Fill in values and fetch details
+  const itemInputs = document.querySelectorAll('.item-id-input');
+  itemInputs.forEach((input, idx) => {
+    input.value = formState.item_ids[idx] || '';
+    if (input.value) {
+      updateRowFromItemId(input);
+    }
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Restore state on load
+  restoreFormState();
+
+  // Save whenever inputs change
+  document.addEventListener('input', saveFormState);
+});

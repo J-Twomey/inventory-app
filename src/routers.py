@@ -232,7 +232,7 @@ def submit_add_submission_form(
                 'error_message': error_message,
             },
         )
-    return RedirectResponse(url='/submissions_view', status_code=303)
+    return RedirectResponse(url='/submissions_view?submitted=1', status_code=303)
 
 
 @router.get('/item_info_for_submission_form/{item_id}')
