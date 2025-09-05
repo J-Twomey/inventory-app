@@ -24,7 +24,7 @@ async function updateRowFromItemId(inputRow) {
   row.querySelector('.item-purchase-date').textContent = data.purchase_date || '';
   row.querySelector('.item-purchase-price').textContent = data.purchase_price || '';
   row.querySelector('.item-status').textContent = data.status || '';
-  row.querySelector('.item-qualifiers').textContent = data.qualifiers || '';
+  row.querySelector('.item-qualifiers').textContent = (data.qualifiers || []).join(', ');
   row.querySelector('.item-details').textContent = data.details || '';
 }
 
