@@ -54,9 +54,15 @@
   <label>Status:</label>
   <select name="status">
     {% for status in status_enum %}
-      <option value="{{ status.name }}">
-        {{ status.name.title() }}
-      </option>
+      {% if status.name == 'ORDER' %}
+        <option value="{{ status.name }}" selected>
+          {{ status.name.title() }}
+        </option>
+      {% else %}
+        <option value="{{ status.name }}">
+          {{ status.name.title() }}
+        </option>
+      {% endif %}
     {% endfor %}
   </select><br><br>
 
