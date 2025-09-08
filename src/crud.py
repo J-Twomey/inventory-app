@@ -158,10 +158,6 @@ def build_search_filters(
     return filters, post_filters
 
 
-def get_all_submission_values(db: Session) -> list[int]:
-    return [1, 2]
-
-
 def create_submission(
         db: Session,
         submissions: list[SubmissionCreate],

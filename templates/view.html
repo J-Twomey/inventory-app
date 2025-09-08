@@ -109,16 +109,6 @@
               </option>
             {% endfor %}
           </select>
-
-          <label for="cracked_from">Cracked From:</label>
-          <select name="cracked_from" id="cracked_from_search_select">
-            <option value="">Any</option>
-            {% for value in submission_options %}
-              <option value="{{ value }}" {% if form_data and form_data.cracked_from|int == value %}selected{% endif %}>
-                {{ value }}
-              </option>
-            {% endfor %}
-          </select>
         </div>
       </div>
 
