@@ -82,7 +82,7 @@
   <select name="purchase_grading_company">
     {% for grading_company in grading_company_enum %}
       <option value="{{ grading_company.name }}">
-        {{ grading_company.name.title() }}
+        {{ grading_company.name }}
       </option>
     {% endfor %}
   </select><br><br>
