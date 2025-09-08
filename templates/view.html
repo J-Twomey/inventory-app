@@ -126,8 +126,22 @@
         <div class="divider">----- Qualifiers -----</div>
 
         <div class="label-row">
-          <label>Qualifiers:</label><br>
-          {% for qualifier in qualifier_enum %}
+          {% set qualifiers = qualifier_enum | list %}
+          {% set N = 7 %}
+          {% for qualifier in qualifiers[:N] %}
+            <label>
+              <input
+                type="checkbox"
+                name="qualifiers"
+                value="{{ qualifier.name }}" {% if form_data and qualifier.name in form_data.qualifiers %}checked{% endif %}
+              >
+              {{ qualifier.name.title().replace('_', ' ') }}
+            </label><br>
+          {% endfor %}
+        </div>
+
+        <div class="label-row">
+          {% for qualifier in qualifiers[N:] %}
             <label>
               <input
                 type="checkbox"
@@ -222,7 +236,7 @@
         </div>
 
         <div class="label-row">
-          <label for="list_type">Listing Type:</label>
+          <label for="list_type">List Type:</label>
           <select name="list_type" id="list_type_search_select">
             <option value="">Any</option>
             {% for list_type in list_type_enum %}
