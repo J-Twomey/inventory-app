@@ -856,7 +856,7 @@ class SubmissionDisplay(BaseModel):
     profit_per_closed: int
 
 
-class ItemSubmissionBase(BaseModel):
+class GradingRecordBase(BaseModel):
     item_id: int
     submission_number: int
     grading_fee: int
@@ -865,12 +865,12 @@ class ItemSubmissionBase(BaseModel):
     is_cracked: bool = False
 
 
-class ItemSubmissionCreate(ItemSubmissionBase):
+class GradingRecordCreate(GradingRecordBase):
     def to_model_kwargs(self) -> dict[str, int | float | bool | None]:
         return self.model_dump()
 
 
-class ItemSubmissionUpdate(BaseModel):
+class GradingRecordUpdate(BaseModel):
     model_config = ConfigDict(extra='forbid')
 
     item_id: int | None = None
@@ -885,7 +885,7 @@ class ItemSubmissionUpdate(BaseModel):
 
 
 @dataclass
-class ItemSubmissionUpdateForm:
+class GradingRecordUpdateForm:
     item_id: str | None = None
     submission_number: str | None = None
     grading_fee: str | None = None
@@ -902,7 +902,7 @@ class ItemSubmissionUpdateForm:
         grade: Annotated[str | None, Form()] = None,
         cert: Annotated[str | None, Form()] = None,
         is_cracked: Annotated[bool, Form()] = False,
-    ) -> 'ItemSubmissionUpdateForm':
+    ) -> 'GradingRecordUpdateForm':
         return cls(
             item_id=item_id,
             submission_number=submission_number,
@@ -912,7 +912,7 @@ class ItemSubmissionUpdateForm:
             is_cracked=is_cracked,
         )
 
-    def to_item_submission_update(self) -> ItemSubmissionUpdate:
+    def to_grading_record_update(self) -> GradingRecordUpdate:
         update_vals: dict[str, Any] = {}
         set_if_value(update_vals, 'item_id', parse_nullable(self.item_id, int))
         set_if_value(update_vals, 'submission_number', parse_nullable(self.submission_number, int))
@@ -920,10 +920,10 @@ class ItemSubmissionUpdateForm:
         set_if_value(update_vals, 'grade', parse_nullable(self.grade, float))
         set_if_value(update_vals, 'cert', parse_nullable(self.cert, int))
         set_if_value(update_vals, 'is_cracked', self.is_cracked)
-        return ItemSubmissionUpdate(**update_vals)
+        return GradingRecordUpdate(**update_vals)
 
 
-class ItemSubmissionDisplay(BaseModel):
+class GradingRecordDisplay(BaseModel):
     id: int
     item_id: int
     submission_number: int

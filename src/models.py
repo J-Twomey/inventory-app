@@ -39,8 +39,8 @@ from .item_enums import (
     Status,
 )
 from .schemas import (
+    GradingRecordDisplay,
     ItemDisplay,
-    ItemSubmissionDisplay,
     SubmissionDisplay,
 )
 
@@ -93,7 +93,7 @@ class Item(Base):
     audit_target: Mapped[bool] = mapped_column(Boolean)
     cracked_from_purchase: Mapped[bool] = mapped_column(Boolean)
 
-    submissions: Mapped[list['ItemSubmission']] = relationship(
+    submissions: Mapped[list['GradingRecord']] = relationship(
         back_populates='original_item',
         cascade='all, delete-orphan',
         passive_deletes=True,
@@ -106,8 +106,8 @@ class Item(Base):
     @total_grading_fees.expression  # type: ignore[no-redef]
     def total_grading_fees(cls) -> BinaryExpression[int]:
         return (
-            select(func.sum(ItemSubmission.grading_fee))
-            .where(ItemSubmission.item_id == cls.id)
+            select(func.sum(GradingRecord.grading_fee))
+            .where(GradingRecord.item_id == cls.id)
             .correlate(cls)
             .scalar_subquery()
         )
@@ -141,16 +141,16 @@ class Item(Base):
     @grading_company.expression  # type: ignore[no-redef]
     def grading_company(cls):
         latest_company = (
-            select(ItemSubmission.submission_company)
-            .where(ItemSubmission.item_id == cls.id)
-            .order_by(ItemSubmission.submission_number.desc())
+            select(GradingRecord.submission_company)
+            .where(GradingRecord.item_id == cls.id)
+            .order_by(GradingRecord.submission_number.desc())
             .limit(1)
             .scalar_subquery()
         )
         latest_cracked = (
-            select(ItemSubmission.is_cracked)
-            .where(ItemSubmission.item_id == cls.id)
-            .order_by(ItemSubmission.submission_number.desc())
+            select(GradingRecord.is_cracked)
+            .where(GradingRecord.item_id == cls.id)
+            .order_by(GradingRecord.submission_number.desc())
             .limit(1)
             .scalar_subquery()
         )
@@ -189,16 +189,16 @@ class Item(Base):
     @cert.expression  # type: ignore[no-redef]
     def cert(cls) -> ColumnElement[int | None]:
         latest_cert = (
-            select(ItemSubmission.cert)
-            .where(ItemSubmission.item_id == cls.id)
-            .order_by(ItemSubmission.submission_number.desc())
+            select(GradingRecord.cert)
+            .where(GradingRecord.item_id == cls.id)
+            .order_by(GradingRecord.submission_number.desc())
             .limit(1)
             .scalar_subquery()
         )
         latest_cracked = (
-            select(ItemSubmission.is_cracked)
-            .where(ItemSubmission.item_id == cls.id)
-            .order_by(ItemSubmission.submission_number.desc())
+            select(GradingRecord.is_cracked)
+            .where(GradingRecord.item_id == cls.id)
+            .order_by(GradingRecord.submission_number.desc())
             .limit(1)
             .scalar_subquery()
         )
@@ -237,16 +237,16 @@ class Item(Base):
     @grade.expression  # type: ignore[no-redef]
     def grade(cls) -> ColumnElement[float | None]:
         latest_grade = (
-            select(ItemSubmission.grade)
-            .where(ItemSubmission.item_id == cls.id)
-            .order_by(ItemSubmission.submission_number.desc())
+            select(GradingRecord.grade)
+            .where(GradingRecord.item_id == cls.id)
+            .order_by(GradingRecord.submission_number.desc())
             .limit(1)
             .scalar_subquery()
         )
         latest_cracked = (
-            select(ItemSubmission.is_cracked)
-            .where(ItemSubmission.item_id == cls.id)
-            .order_by(ItemSubmission.submission_number.desc())
+            select(GradingRecord.is_cracked)
+            .where(GradingRecord.item_id == cls.id)
+            .order_by(GradingRecord.submission_number.desc())
             .limit(1)
             .scalar_subquery()
         )
@@ -402,7 +402,7 @@ class Submission(Base):
     return_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     break_even_date: Mapped[date | None] = mapped_column(Date, nullable=True)
 
-    submission_items: Mapped[list['ItemSubmission']] = relationship(
+    submission_items: Mapped[list['GradingRecord']] = relationship(
         back_populates='submission',
         cascade='all, delete-orphan',
         passive_deletes=True,
@@ -511,8 +511,8 @@ class Submission(Base):
         )
 
 
-class ItemSubmission(Base):
-    __tablename__ = 'item_submission'
+class GradingRecord(Base):
+    __tablename__ = 'grading_record'
 
     id: Mapped[int] = mapped_column(primary_key=True)
     item_id: Mapped[int] = mapped_column(
@@ -547,8 +547,8 @@ class ItemSubmission(Base):
             .scalar_subquery()
         )
 
-    def to_display(self) -> ItemSubmissionDisplay:
-        return ItemSubmissionDisplay(
+    def to_display(self) -> GradingRecordDisplay:
+        return GradingRecordDisplay(
             id=self.id,
             item_id=self.item_id,
             submission_number=self.submission_number,

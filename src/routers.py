@@ -19,14 +19,14 @@ from .crud import (
     create_item,
     create_submission,
     delete_item_by_id,
-    delete_submission_item_by_id,
+    delete_grading_record_by_id,
+    edit_grading_record,
     edit_item,
-    edit_submission_item,
+    get_grading_record,
     get_item,
     get_newest_items,
     get_newest_submissions,
-    get_newest_submission_items,
-    get_submission_item,
+    get_newest_grading_records,
     search_for_items,
 )
 from .database import get_db
@@ -41,11 +41,11 @@ from .item_enums import (
     Status,
 )
 from .schemas import (
+    GradingRecordCreate,
+    GradingRecordUpdateForm,
     ItemCreateForm,
     ItemDisplay,
     ItemSearchForm,
-    ItemSubmissionCreate,
-    ItemSubmissionUpdateForm,
     ItemUpdateForm,
     SubmissionCreate,
 )
@@ -201,24 +201,24 @@ def view_submissions_summary(
     )
 
 
-@router.get('/submissions_view', response_class=HTMLResponse)
-def view_submissions(
+@router.get('/grading_records_view', response_class=HTMLResponse)
+def view_grading_records(
         request: Request,
         db: Session = Depends(get_db),
         show_limit: int = 20,
 ) -> Response:
-    submission_items = get_newest_submission_items(db, skip=0, limit=show_limit)
-    display_submissions = [item.to_display() for item in submission_items]
+    grading_records = get_newest_grading_records(db, skip=0, limit=show_limit)
+    display_records = [record.to_display() for record in grading_records]
     return templates.TemplateResponse(
-        'submissions_view.html',
+        'grading_records_view.html',
         {
             'request': request,
-            'submission_items': display_submissions,
+            'records': display_records,
         },
     )
 
 
-@router.get('/submissions_add')
+@router.get('/add_submission')
 def show_add_submission_form(request: Request) -> Response:
     return templates.TemplateResponse(
         'add_submission.html',
@@ -229,7 +229,7 @@ def show_add_submission_form(request: Request) -> Response:
     )
 
 
-@router.post('/submissions_add')
+@router.post('/add_submission')
 def submit_add_submission_form(
         request: Request,
         submission_number: int = Form(...),
@@ -245,8 +245,8 @@ def submit_add_submission_form(
         return_date=None,
         break_even_date=None,
     )
-    submissions = [
-        ItemSubmissionCreate(
+    records = [
+        GradingRecordCreate(
             item_id=i,
             submission_number=submission_number,
             grading_fee=0,
@@ -254,7 +254,7 @@ def submit_add_submission_form(
         for i in item_ids
     ]
     try:
-        create_submission(db, submission_summary, submissions)
+        create_submission(db, submission_summary, records)
     except ValueError as e:
         error_message = str(e)
         return templates.TemplateResponse(
@@ -268,7 +268,7 @@ def submit_add_submission_form(
                 'error_message': error_message,
             },
         )
-    return RedirectResponse(url='/submissions_view?submitted=1', status_code=303)
+    return RedirectResponse(url='/grading_records_view?submitted=1', status_code=303)
 
 
 @router.get('/item_info_for_submission_form/{item_id}')
@@ -283,47 +283,47 @@ def get_item_info_for_submission_form(
         return item.to_display()
 
 
-@router.get('/submission_item_delete/{submission_item_id}')
+@router.get('/grading_record_delete/{grading_record_id}')
 def delete_submission_item(
-        submission_item_id: int,
+        grading_record_id: int,
         db: Session = Depends(get_db),
 ) -> RedirectResponse:
-    success = delete_submission_item_by_id(db, submission_item_id)
+    success = delete_grading_record_by_id(db, grading_record_id)
     if not success:
-        raise HTTPException(status_code=404, detail='Submission not found')
-    return RedirectResponse(url='/submissions_view', status_code=303)
+        raise HTTPException(status_code=404, detail='Grading record not found')
+    return RedirectResponse(url='/grading_records_view', status_code=303)
 
 
-@router.get('/submission_item_edit/{submission_item_id}', response_class=HTMLResponse)
-def open_edit_submission_item_form(
-        submission_item_id: int,
+@router.get('/grading_record_edit/{grading_record_id}', response_class=HTMLResponse)
+def open_edit_grading_record_form(
+        grading_record_id: int,
         request: Request,
         db: Session = Depends(get_db),
 ) -> Response:
-    submission = get_submission_item(db, submission_item_id)
-    if submission is None:
-        raise HTTPException(status_code=404, detail='Submission not found')
+    record = get_grading_record(db, grading_record_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail='Grading_record not found')
     else:
-        display_submission = submission.to_display()
+        display_record = record.to_display()
     return templates.TemplateResponse(
-        'edit_submission.html',
+        'edit_grading_record.html',
         {
             'request': request,
-            'submission': display_submission,
+            'record': display_record,
             'grading_company_enum': GradingCompany,
         },
     )
 
 
-@router.post('/submission_item_edit/{submission_item_id}')
-def submit_edit_submission_item(
-        submission_item_id: int,
-        update_form: ItemSubmissionUpdateForm = Depends(ItemSubmissionUpdateForm.as_form),
+@router.post('/grading_record_edit/{grading_record_id}')
+def submit_edit_grading_record(
+        grading_record_id: int,
+        update_form: GradingRecordUpdateForm = Depends(GradingRecordUpdateForm.as_form),
         db: Session = Depends(get_db),
 ) -> RedirectResponse:
-    edit_params = update_form.to_item_submission_update()
-    edit_result = edit_submission_item(db, submission_item_id, edit_params)
-    return RedirectResponse('/submissions_view', status_code=edit_result)
+    edit_params = update_form.to_grading_record_update()
+    edit_result = edit_grading_record(db, grading_record_id, edit_params)
+    return RedirectResponse('/grading_records_view', status_code=edit_result)
 
 
 def format_dollar(value: float | None) -> str:

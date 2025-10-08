@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Edit Grading Record</title>
+  <link href="/static/css/styles.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<h1>Grading Record Edit</h1>
+<div>
+  <a href="/" class="btn btn-purple btn-small margin-bottom-20 inline">Back To Landing Page</a>
+  <a href="/grading_records_view" class="btn btn-blue btn-small margin-bottom-20 inline">Back To Grading Records View Page</a>
+</div>
+
+<form method="post" action="/grading_record_edit/{{ record.id }}">
+  <label>Item ID:</label>
+  <input type="number" name="item_id" value="{{ record.item_id }}"><br><br>
+  <label>Submission Number:</label>
+  <input type="number" name="submission_number" value="{{ record.submission_number }}"><br><br>
+  <label>Grading Fee:</label>
+  <input type="number" name="grading_fee" value="{{ record.grading_fee }}"><br><br>
+  <label>Grade:</label>
+  <input type="number" name="grade" value="{{ record.grade }}"><br><br>
+  <label>Cert</label>
+  <input type="number" name="cert" value="{{ record.cert }}"><br><br>
+  <label>Cracked:</label>
+  <input type="checkbox" name="is_cracked" {% if record.is_cracked %}checked{% endif %}><br><br>
+  <button type="submit">Save Changes</button>
+</form>
+
+</body>
+</html>

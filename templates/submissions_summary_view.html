@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Submissions Summary</title>
+  <link href="/static/css/styles.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<a href="/" class="btn btn-purple btn-small margin-bottom-20 inline">Back To Landing Page</a>
+
+<div style="margin-top: 25px; font-size: 14px;">
+  <table border="1" cellpadding="6" cellspacing="0">
+    <thead>
+      <tr>
+        <th>Sub #</th>
+        <th>Sub Date</th>
+        <th>Ret Date</th>
+        <th>Card Cost</th>
+        <th>Grading Cost</th>
+        <th>Total Cost</th>
+        <th>Total Return</th>
+        <th>Profit</th>
+        <th>Profit on Sold</th>
+        <th>Break Even Date</th>
+        <th># Cards</th>
+        <th># Sold</th>
+        <th>% Sold</th>
+        <th>Profit per Sold</th>
+        <th># Closed</th>
+        <th>% Closed</th>
+        <th>Profit per Closed</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for summary in submission_summaries %}
+        <tr>
+          <td>{{ summary.submission_number }}</td>
+          <td>{{ summary.submission_date }}</td>
+          <td>{{ summary.return_date }}</td>
+          <td>{{ summary.card_cost | yen }}</td>
+          <td>{{ summary.grading_cost | yen }}</td>
+          <td>{{ summary.total_cost | yen }}</td>
+          <td>{{ summary.total_return | yen }}</td>
+          <td>{{ summary.total_profit | yen }}</td>
+          <td>{{ summary.profit_on_sold | yen }}</td>
+          <td>{{ summary.break_even_date }}</td>
+          <td>{{ summary.num_cards }}</td>
+          <td>{{ summary.num_sold }}</td>
+          <td>{{ summary.percent_sold }}</td>
+          <td>{{ summary.profit_per_sold | yen }}</td>
+          <td>{{ summary.num_closed }}</td>
+          <td>{{ summary.percent_closed }}</td>
+          <td>{{ summary.profit_per_closed | yen }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+</body>
+</html>

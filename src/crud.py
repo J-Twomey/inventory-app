@@ -13,16 +13,16 @@ from .item_enums import (
     Status,
 )
 from .models import (
+    GradingRecord,
     Item,
-    ItemSubmission,
     Submission,
 )
 from .schemas import (
+    GradingRecordCreate,
+    GradingRecordUpdate,
     ItemCreate,
     ItemSearch,
     ItemUpdate,
-    ItemSubmissionCreate,
-    ItemSubmissionUpdate,
     SubmissionCreate,
 )
 from .validators import (
@@ -86,10 +86,6 @@ def delete_item_by_id(
     item = get_item(db, item_id)
     if item is None:
         return False
-    # Delete all submissions associated with this item (if any)
-    submissions = get_all_submissions_for_item(db, item_id)
-    for submission in submissions:
-        perform_delete_submission_item(db, submission)
     db.delete(item)
     db.commit()
     return True
@@ -174,22 +170,22 @@ def build_search_filters(
 def create_submission(
         db: Session,
         submission_summary: SubmissionCreate,
-        submission_items: list[ItemSubmissionCreate],
+        grading_records: list[GradingRecordCreate],
 ) -> None:
     try:
         submission_summary_data = submission_summary.to_model_kwargs()
         db.add(Submission(**submission_summary_data))
 
-        for submission_data in submission_items:
-            submission_item = ItemSubmission(**submission_data.to_model_kwargs())
-            linked_item = get_item(db, submission_item.item_id)
+        for grading_record in grading_records:
+            record = GradingRecord(**grading_record.to_model_kwargs())
+            linked_item = get_item(db, record.item_id)
             if linked_item is None:
-                raise ValueError(f'Item with id {submission_item.item_id} not found')
+                raise ValueError(f'Item with id {record.item_id} not found')
             check_intent(linked_item, desired=Intent.GRADE)
             check_status(linked_item, desired=Status.STORAGE)
-            db.add(submission_item)
+            db.add(record)
 
-            # Update item to be SUBMITTED
+            # Update item to SUBMITTED
             item_update = ItemUpdate(status=Status.SUBMITTED)
             perform_item_update(linked_item, item_update)
 
@@ -210,72 +206,72 @@ def get_newest_submissions(
     return list(reversed(submissions))
 
 
-def get_submission_item(
+def get_grading_record(
         db: Session,
-        submission_id: int,
-) -> ItemSubmission | None:
-    return db.query(ItemSubmission).filter(ItemSubmission.id == submission_id).first()
+        record_id: int,
+) -> GradingRecord | None:
+    return db.query(GradingRecord).filter(GradingRecord.id == record_id).first()
 
 
-def get_all_submissions_for_item(
+def get_all_grading_records_for_item(
         db: Session,
         item_id: int,
-) -> list[ItemSubmission]:
-    return db.query(ItemSubmission).filter(ItemSubmission.item_id == item_id).all()
+) -> list[GradingRecord]:
+    return db.query(GradingRecord).filter(GradingRecord.item_id == item_id).all()
 
 
-def get_newest_submission_items(
+def get_newest_grading_records(
         db: Session,
         skip: int = 0,
         limit: int = 100,
-) -> Sequence[ItemSubmission]:
+) -> Sequence[GradingRecord]:
     items = db.query(
-        ItemSubmission,
-    ).order_by(ItemSubmission.id.desc()).offset(skip).limit(limit).all()
+        GradingRecord,
+    ).order_by(GradingRecord.id.desc()).offset(skip).limit(limit).all()
     return list(reversed(items))
 
 
-def delete_submission_item_by_id(
+def delete_grading_record_by_id(
         db: Session,
         submission_id: int,
 ) -> bool:
-    submission = get_submission_item(db, submission_id)
-    if submission is None:
+    record = get_grading_record(db, submission_id)
+    if record is None:
         return False
 
-    linked_item = get_item(db, submission.item_id)
+    linked_item = get_item(db, record.item_id)
     if linked_item is None:
-        raise ValueError(f'Item with id {submission.item_id} not found')
+        raise ValueError(f'Item with id {record.item_id} not found')
 
     # Return item status to STORAGE
     item_update = ItemUpdate(status=Status.STORAGE)
     perform_item_update(linked_item, item_update)
-    perform_delete_submission_item(db, submission)
+    perform_delete_grading_record(db, record)
     db.commit()
     return True
 
 
-def perform_delete_submission_item(
+def perform_delete_grading_record(
         db: Session,
-        submission: ItemSubmission,
+        record: GradingRecord,
 ) -> None:
-    db.delete(submission)
+    db.delete(record)
 
 
-def edit_submission_item(
+def edit_grading_record(
         db: Session,
-        submission_id: int,
-        submission_update: ItemSubmissionUpdate,
+        record_id: int,
+        record_update: GradingRecordUpdate,
 ) -> int:
-    submission = get_submission_item(db, submission_id)
-    if submission is None:
+    record = get_grading_record(db, record_id)
+    if record is None:
         return 404
 
-    update_data = submission_update.to_model_kwargs()
+    update_data = record_update.to_model_kwargs()
 
     for key, value in update_data.items():
-        setattr(submission, key, value)
+        setattr(record, key, value)
 
     db.commit()
-    db.refresh(submission)
+    db.refresh(record)
     return 303

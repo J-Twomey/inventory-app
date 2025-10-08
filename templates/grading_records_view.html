@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Grading Records List</title>
+  <link href="/static/css/styles.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<a href="/" class="btn btn-purple btn-small margin-bottom-20 inline">Back To Landing Page</a>
+
+<div style="margin-top: 25px; font-size: 14px;">
+  <table border="1" cellpadding="6" cellspacing="0">
+    <thead>
+      <tr>
+        <th>Item ID</th>
+        <th>Item</th>
+        <th>Set</th>
+        <th>Language</th>
+        <th>Type</th>
+        <th>Sub #</th>
+        <th>Company</th>
+        <th>Cert</th>
+        <th>Grade</th>
+        <th>Cost</th>
+        <th>Grade Fee</th>
+        <th>Received</th>
+        <th>Net</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for record in records %}
+        {% set cost = record.purchase_price + record.import_fee %}
+        {% set net = record.return_jpy - cost - record.grading_fee if record.return_jpy is not none else none %}
+        <tr class="{% if record.is_cracked %}
+                    yellow
+                  {% elif record.return_jpy is not none %}
+                    gray
+                  {% endif %}">
+          <td>{{ record.item_id }}</td>
+          <td>{{ record.name }}</td>
+          <td>{{ record.set_name }}</td>
+          <td>{{ record.language }}</td>
+          <td>{{ record.category }}</td>
+          <td class="centre-aligned">{{ record.submission_number }}</td>
+          <td>{{ record.submission_company }}</td>
+          <td class="centre-aligned {{ 'faint' if record.grade is none else '' }}">{{ record.cert }}</td>
+          <td class="centre-aligned {{ 'faint' if record.grade is none else '' }}">
+              {% if record.grade is none %}
+                ''
+              {% elif record.grade == record.grade | int %}
+                {{ record.grade|int }}
+              {% else %}
+                {{ record.grade }}
+              {% endif %}
+          </td>
+          <td class="right-aligned">{{ cost | yen }}</td>
+          <td class="right-aligned {{ 'faint' if record.grade is none else '' }}">
+            {{ record.grading_fee | yen }}
+          </td>
+          <td class="right-aligned {{ 'faint' if record.return_jpy is none else '' }}">
+            {{ '' if record.return_jpy is none else record.return_jpy | yen }}
+          </td>
+          <td class="right-aligned
+                    {% if net is none %}
+                      faint
+                    {% elif net > 0 %}
+                      green
+                    {% endif %}">
+            {{ '' if record.return_jpy is none else net | yen }}
+          </td>
+          <td>
+            <a href="/grading_record_delete/{{ record.id }}"
+                    onclick="return confirm('Are you sure you want to delete this grading record?')"
+                    style="color: red; margin-right: 10px;">
+              Del
+            </a>
+            <a href="/grading_record_edit/{{ record.id }}" style="color: purple;">
+              Edit
+            </a>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if not records %}
+  <p>No grading records found.</p>
+{% endif %}
+
+<script type="module" src="{{ url_for('static', path='js/clear_submission_cache.js') }}"></script>
+
+</body>
+</html>
