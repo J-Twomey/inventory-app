@@ -388,34 +388,34 @@
           </td>
           <td class="centre-aligned">{{ item.intent }}</td>
           <td>{{ item.purchase_date }}</td>
-          <td class="right-aligned">{{ ('¥' ~ '{:,.0f}'.format(item.purchase_price)) }}</td>
+          <td class="right-aligned">{{ item.purchase_price | yen }}</td>
           <td class="right-aligned {{ 'faint' if item.total_grading_fees == 0 else '' }}">
-            {{ '' if item.total_grading_fees is none else '¥' ~ '{:,.0f}'.format(item.total_grading_fees) }}
+            {{ '' if item.total_grading_fees is none else item.total_grading_fees | yen }}
           </td>
           <td class="right-aligned {{ 'faint' if item.total_cost == 0 else '' }}">
-            {{ '' if item.total_cost is none else '¥' ~ '{:,.0f}'.format(item.total_cost) }}
+            {{ '' if item.total_cost is none else item.total_cost | yen }}
           </td>
           <td class="centre-aligned">{{ item.status }}</td>
           <td class="right-aligned {{ 'faint' if item.list_price is none else '' }}">
-            {{ '' if item.list_price is none else ('$' ~ '{:,.2f}'.format(item.list_price)) }}
+            {{ '' if item.list_price is none else item.list_price | dollar }}
           </td>
           <td class="{{ 'faint' if item.list_date is none else '' }}">
             {{ '' if item.list_date is none else item.list_date }}
           </td>
           <td class="right-aligned {{ 'faint' if item.sale_total is none else '' }}">
-            {{ '' if item.sale_total is none else ('$' ~ '{:,.2f}'.format(item.sale_total)) }}
+            {{ '' if item.sale_total is none else item.sale_total | dollar }}
           </td>
           <td class="{{ 'faint' if item.sale_date is none else '' }}">
             {{ '' if item.sale_date is none else item.sale_date }}
           </td>
           <td class="right-aligned {{ 'faint' if item.total_fees is none else '' }}">
-            {{ '' if item.total_fees is none else ('$' ~ '{:,.2f}'.format(item.total_fees)) }}
+            {{ '' if item.total_fees is none else item.total_fees | dollar }}
           </td>
           <td class="right-aligned {{ 'faint' if item.return_usd is none else '' }}">
-            {{ '' if item.return_usd is none else ('$' ~ '{:,.2f}'.format(item.return_usd)) }}
+            {{ '' if item.return_usd is none else item.return_usd | dollar }}
           </td>
           <td class="right-aligned {{ 'faint' if item.return_jpy is none else '' }}">
-            {{ '' if item.return_jpy is none else ('¥' ~ '{:,.0f}'.format(item.return_jpy)) }}
+            {{ '' if item.return_jpy is none else item.return_jpy | yen }}
           </td>
           <td class="right-aligned
                     {% if item.net_jpy is none %}
@@ -425,7 +425,7 @@
                     {% else %}
                       cyan
                     {% endif %}">
-            {{ '' if item.net_jpy is none else ('¥' ~ '{:,.0f}'.format(item.net_jpy)) }}
+            {{ '' if item.net_jpy is none else item.net_jpy | yen }}
           </td>
           <td class="right-aligned
                     {% if item.net_jpy is none %}

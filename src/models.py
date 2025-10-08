@@ -40,6 +40,7 @@ from .item_enums import (
 )
 from .schemas import (
     ItemDisplay,
+    ItemSubmissionDisplay,
     SubmissionDisplay,
 )
 
@@ -95,6 +96,7 @@ class Item(Base):
     submissions: Mapped[list['ItemSubmission']] = relationship(
         back_populates='original_item',
         cascade='all, delete-orphan',
+        passive_deletes=True,
     )
 
     @hybrid_property
@@ -119,7 +121,7 @@ class Item(Base):
         return cls.purchase_price + cls.total_grading_fees + cls.import_fee
 
     @hybrid_property
-    def grading_company(self) -> int | None:
+    def grading_company(self) -> int:
         latest_submission = max(
             self.submissions,
             key=lambda s: s.submission_number,
@@ -134,7 +136,7 @@ class Item(Base):
             if latest_submission.is_cracked:
                 return GradingCompany.RAW.value
             else:
-                return latest_submission.submission_company
+                return latest_submission.submission.submission_company
 
     @grading_company.expression  # type: ignore[no-redef]
     def grading_company(cls):
@@ -391,28 +393,165 @@ class Item(Base):
         )
 
 
+class Submission(Base):
+    __tablename__ = 'submission'
+
+    submission_number: Mapped[int] = mapped_column(Integer, primary_key=True)
+    submission_company: Mapped[int] = mapped_column(Integer)
+    submission_date: Mapped[date] = mapped_column(Date)
+    return_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    break_even_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+
+    submission_items: Mapped[list['ItemSubmission']] = relationship(
+        back_populates='submission',
+        cascade='all, delete-orphan',
+        passive_deletes=True,
+    )
+
+    @hybrid_property
+    def card_cost(self) -> int:
+        return sum(
+            [
+                item.original_item.purchase_price + item.original_item.import_fee
+                for item in self.submission_items
+            ]
+        )
+
+    @hybrid_property
+    def grading_cost(self) -> int:
+        grading_fees = [item.grading_fee for item in self.submission_items]
+        return sum(grading_fees)
+
+    @hybrid_property
+    def total_cost(self) -> int:
+        return self.card_cost + self.grading_cost
+
+    @hybrid_property
+    def total_return(self) -> int:
+        return_values = [
+            item.original_item.return_jpy
+            for item in self.submission_items if item.original_item.return_jpy is not None
+        ]
+        return sum(return_values)
+
+    @hybrid_property
+    def total_profit(self) -> int:
+        return self.total_return - self.total_cost
+
+    @hybrid_property
+    def profit_on_sold(self) -> int:
+        profits = [
+            item.original_item.return_jpy -
+            item.original_item.purchase_price -
+            item.original_item.import_fee -
+            item.grading_fee
+            for item in self.submission_items if item.original_item.return_jpy is not None
+        ]
+        return sum(profits)
+
+    @hybrid_property
+    def num_cards(self) -> int:
+        return len(self.submission_items)
+
+    @hybrid_property
+    def num_sold(self) -> int:
+        sold_items = [
+            item for item in self.submission_items if item.original_item.return_jpy is not None
+        ]
+        return len(sold_items)
+
+    @hybrid_property
+    def percent_sold(self) -> float:
+        return round(100 * self.num_sold / self.num_cards, 2)
+
+    @hybrid_property
+    def profit_per_sold(self) -> int:
+        if self.num_sold == 0:
+            return 0
+        return round(self.profit_on_sold / self.num_sold)
+
+    @hybrid_property
+    def num_closed(self) -> int:
+        sold_or_cracked_items = [
+            item for item in self.submission_items
+            if (item.original_item.return_jpy is not None) or item.is_cracked
+        ]
+        return len(sold_or_cracked_items)
+
+    @hybrid_property
+    def percent_closed(self) -> float:
+        return round(100 * self.num_closed / self.num_cards, 2)
+
+    @hybrid_property
+    def profit_per_closed(self) -> int:
+        if self.num_closed == 0:
+            return 0
+        return round(self.profit_on_sold / self.num_closed)
+
+    def to_display(self) -> SubmissionDisplay:
+        return SubmissionDisplay(
+            submission_number=self.submission_number,
+            submission_company=GradingCompany(self.submission_company).name,
+            submission_date=self.submission_date,
+            return_date=self.return_date,
+            break_even_date=self.break_even_date,
+            card_cost=self.card_cost,
+            grading_cost=self.grading_cost,
+            total_cost=self.total_cost,
+            total_return=self.total_return,
+            total_profit=self.total_profit,
+            profit_on_sold=self.profit_on_sold,
+            num_cards=self.num_cards,
+            num_sold=self.num_sold,
+            percent_sold=self.percent_sold,
+            profit_per_sold=self.profit_per_sold,
+            num_closed=self.num_closed,
+            percent_closed=self.percent_closed,
+            profit_per_closed=self.profit_per_closed,
+        )
+
+
 class ItemSubmission(Base):
     __tablename__ = 'item_submission'
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    item_id: Mapped[int] = mapped_column(ForeignKey('items.id'), index=True)
-    submission_number: Mapped[int] = mapped_column(Integer)
-    submission_company: Mapped[int] = mapped_column(Integer)
-    grading_fee: NullableInt = NullableIntColumn()
+    item_id: Mapped[int] = mapped_column(
+        ForeignKey('items.id', ondelete='CASCADE'),
+        index=True,
+        nullable=False,
+    )
+    submission_number: Mapped[int] = mapped_column(
+        ForeignKey('submission.submission_number', ondelete='CASCADE'),
+        index=True,
+        nullable=False,
+    )
+    grading_fee: Mapped[int] = mapped_column(Integer)
     grade: NullableInt = NullableIntColumn()
     cert: NullableInt = NullableIntColumn()
     is_cracked: Mapped[bool] = mapped_column(Boolean)
 
+    submission: Mapped[Submission] = relationship(back_populates='submission_items')
     original_item: Mapped[Item] = relationship(
         back_populates='submissions',
     )
 
-    def to_display(self) -> SubmissionDisplay:
-        return SubmissionDisplay(
+    @hybrid_property
+    def submission_company(self) -> int:
+        return self.submission.submission_company
+
+    @submission_company.expression  # type: ignore[no-redef]
+    def submission_company(cls):
+        return (
+            select(Submission.submission_company)
+            .where(Submission.submission_number == cls.submission_number)
+            .scalar_subquery()
+        )
+
+    def to_display(self) -> ItemSubmissionDisplay:
+        return ItemSubmissionDisplay(
             id=self.id,
             item_id=self.item_id,
             submission_number=self.submission_number,
-            submission_company=GradingCompany(self.submission_company).name,
             grading_fee=self.grading_fee,
             grade=self.grade,
             cert=self.cert,

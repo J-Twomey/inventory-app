@@ -15,18 +15,31 @@ from .item_enums import (
 from .models import (
     Item,
     ItemSubmission,
+    Submission,
 )
 from .schemas import (
     ItemCreate,
     ItemSearch,
     ItemUpdate,
+    ItemSubmissionCreate,
+    ItemSubmissionUpdate,
     SubmissionCreate,
-    SubmissionUpdate,
 )
 from .validators import (
     check_intent,
     check_status,
 )
+
+
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] %(message)s',
+    filename='log.log',
+    filemode='a'
+)
+logger = logging.getLogger(__name__)
 
 
 def create_item(
@@ -76,7 +89,7 @@ def delete_item_by_id(
     # Delete all submissions associated with this item (if any)
     submissions = get_all_submissions_for_item(db, item_id)
     for submission in submissions:
-        perform_delete_submission(db, submission)
+        perform_delete_submission_item(db, submission)
     db.delete(item)
     db.commit()
     return True
@@ -160,17 +173,21 @@ def build_search_filters(
 
 def create_submission(
         db: Session,
-        submissions: list[SubmissionCreate],
+        submission_summary: SubmissionCreate,
+        submission_items: list[ItemSubmissionCreate],
 ) -> None:
     try:
-        for submission_data in submissions:
-            submission = ItemSubmission(**submission_data.to_model_kwargs())
-            linked_item = get_item(db, submission.item_id)
+        submission_summary_data = submission_summary.to_model_kwargs()
+        db.add(Submission(**submission_summary_data))
+
+        for submission_data in submission_items:
+            submission_item = ItemSubmission(**submission_data.to_model_kwargs())
+            linked_item = get_item(db, submission_item.item_id)
             if linked_item is None:
-                raise ValueError(f'Item with id {submission.item_id} not found')
+                raise ValueError(f'Item with id {submission_item.item_id} not found')
             check_intent(linked_item, desired=Intent.GRADE)
             check_status(linked_item, desired=Status.STORAGE)
-            db.add(submission)
+            db.add(submission_item)
 
             # Update item to be SUBMITTED
             item_update = ItemUpdate(status=Status.SUBMITTED)
@@ -182,7 +199,18 @@ def create_submission(
         raise
 
 
-def get_submission(
+def get_newest_submissions(
+        db: Session,
+        skip: int = 0,
+        limit: int = 100,
+) -> Sequence[Submission]:
+    submissions = db.query(
+        Submission,
+    ).order_by(Submission.submission_number.desc()).offset(skip).limit(limit).all()
+    return list(reversed(submissions))
+
+
+def get_submission_item(
         db: Session,
         submission_id: int,
 ) -> ItemSubmission | None:
@@ -196,7 +224,7 @@ def get_all_submissions_for_item(
     return db.query(ItemSubmission).filter(ItemSubmission.item_id == item_id).all()
 
 
-def get_newest_submissions(
+def get_newest_submission_items(
         db: Session,
         skip: int = 0,
         limit: int = 100,
@@ -207,11 +235,11 @@ def get_newest_submissions(
     return list(reversed(items))
 
 
-def delete_submission_by_id(
+def delete_submission_item_by_id(
         db: Session,
         submission_id: int,
 ) -> bool:
-    submission = get_submission(db, submission_id)
+    submission = get_submission_item(db, submission_id)
     if submission is None:
         return False
 
@@ -222,24 +250,24 @@ def delete_submission_by_id(
     # Return item status to STORAGE
     item_update = ItemUpdate(status=Status.STORAGE)
     perform_item_update(linked_item, item_update)
-    perform_delete_submission(db, submission)
+    perform_delete_submission_item(db, submission)
     db.commit()
     return True
 
 
-def perform_delete_submission(
+def perform_delete_submission_item(
         db: Session,
         submission: ItemSubmission,
 ) -> None:
     db.delete(submission)
 
 
-def edit_submission(
+def edit_submission_item(
         db: Session,
         submission_id: int,
-        submission_update: SubmissionUpdate,
+        submission_update: ItemSubmissionUpdate,
 ) -> int:
-    submission = get_submission(db, submission_id)
+    submission = get_submission_item(db, submission_id)
     if submission is None:
         return 404
 

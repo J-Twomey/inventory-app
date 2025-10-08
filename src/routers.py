@@ -1,3 +1,5 @@
+from datetime import date
+
 from fastapi import (
     APIRouter,
     Depends,
@@ -17,13 +19,14 @@ from .crud import (
     create_item,
     create_submission,
     delete_item_by_id,
-    delete_submission_by_id,
+    delete_submission_item_by_id,
     edit_item,
-    edit_submission,
+    edit_submission_item,
     get_item,
     get_newest_items,
     get_newest_submissions,
-    get_submission,
+    get_newest_submission_items,
+    get_submission_item,
     search_for_items,
 )
 from .database import get_db
@@ -41,10 +44,21 @@ from .schemas import (
     ItemCreateForm,
     ItemDisplay,
     ItemSearchForm,
+    ItemSubmissionCreate,
+    ItemSubmissionUpdateForm,
     ItemUpdateForm,
     SubmissionCreate,
-    SubmissionUpdateForm,
 )
+
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] %(message)s',
+    filename='log.log',
+    filemode='a'
+)
+logger = logging.getLogger(__name__)
 
 
 templates = Jinja2Templates(directory='templates')
@@ -170,8 +184,8 @@ def submit_edit_item(
     return RedirectResponse('/view', status_code=edit_result)
 
 
-@router.get('/submissions_view', response_class=HTMLResponse)
-def view_submissions(
+@router.get('/submissions_summary_view', response_class=HTMLResponse)
+def view_submissions_summary(
         request: Request,
         db: Session = Depends(get_db),
         show_limit: int = 20,
@@ -179,10 +193,27 @@ def view_submissions(
     submissions = get_newest_submissions(db, skip=0, limit=show_limit)
     display_submissions = [sub.to_display() for sub in submissions]
     return templates.TemplateResponse(
+        'submissions_summary_view.html',
+        {
+            'request': request,
+            'submission_summaries': display_submissions,
+        },
+    )
+
+
+@router.get('/submissions_view', response_class=HTMLResponse)
+def view_submissions(
+        request: Request,
+        db: Session = Depends(get_db),
+        show_limit: int = 20,
+) -> Response:
+    submission_items = get_newest_submission_items(db, skip=0, limit=show_limit)
+    display_submissions = [item.to_display() for item in submission_items]
+    return templates.TemplateResponse(
         'submissions_view.html',
         {
             'request': request,
-            'submissions': display_submissions,
+            'submission_items': display_submissions,
         },
     )
 
@@ -203,19 +234,27 @@ def submit_add_submission_form(
         request: Request,
         submission_number: int = Form(...),
         submission_company: str = Form(...),
+        submission_date: date = Form(...),
         item_ids: list[int] = Form(...),
         db: Session = Depends(get_db),
 ) -> Response:
+    submission_summary = SubmissionCreate(
+        submission_number=submission_number,
+        submission_company=GradingCompany[submission_company],
+        submission_date=submission_date,
+        return_date=None,
+        break_even_date=None,
+    )
     submissions = [
-        SubmissionCreate(
+        ItemSubmissionCreate(
             item_id=i,
             submission_number=submission_number,
-            submission_company=GradingCompany[submission_company],
+            grading_fee=0,
         )
         for i in item_ids
     ]
     try:
-        create_submission(db, submissions)
+        create_submission(db, submission_summary, submissions)
     except ValueError as e:
         error_message = str(e)
         return templates.TemplateResponse(
@@ -244,24 +283,24 @@ def get_item_info_for_submission_form(
         return item.to_display()
 
 
-@router.get('/submissions_delete/{submission_id}')
-def delete_submission(
-        submission_id: int,
+@router.get('/submission_item_delete/{submission_item_id}')
+def delete_submission_item(
+        submission_item_id: int,
         db: Session = Depends(get_db),
 ) -> RedirectResponse:
-    success = delete_submission_by_id(db, submission_id)
+    success = delete_submission_item_by_id(db, submission_item_id)
     if not success:
         raise HTTPException(status_code=404, detail='Submission not found')
     return RedirectResponse(url='/submissions_view', status_code=303)
 
 
-@router.get('/submissions_edit/{submission_id}', response_class=HTMLResponse)
-def open_edit_submission_form(
-        submission_id: int,
+@router.get('/submission_item_edit/{submission_item_id}', response_class=HTMLResponse)
+def open_edit_submission_item_form(
+        submission_item_id: int,
         request: Request,
         db: Session = Depends(get_db),
 ) -> Response:
-    submission = get_submission(db, submission_id)
+    submission = get_submission_item(db, submission_item_id)
     if submission is None:
         raise HTTPException(status_code=404, detail='Submission not found')
     else:
@@ -276,12 +315,28 @@ def open_edit_submission_form(
     )
 
 
-@router.post('/submissions_edit/{submission_id}')
-def submit_edit_submission(
-        submission_id: int,
-        update_form: SubmissionUpdateForm = Depends(SubmissionUpdateForm.as_form),
+@router.post('/submission_item_edit/{submission_item_id}')
+def submit_edit_submission_item(
+        submission_item_id: int,
+        update_form: ItemSubmissionUpdateForm = Depends(ItemSubmissionUpdateForm.as_form),
         db: Session = Depends(get_db),
 ) -> RedirectResponse:
-    edit_params = update_form.to_submission_update()
-    edit_result = edit_submission(db, submission_id, edit_params)
+    edit_params = update_form.to_item_submission_update()
+    edit_result = edit_submission_item(db, submission_item_id, edit_params)
     return RedirectResponse('/submissions_view', status_code=edit_result)
+
+
+def format_dollar(value: float | None) -> str:
+    if value is None:
+        return ''
+    return f'${value:,.2f}'
+
+
+def format_yen(value: float | None) -> str:
+    if value is None:
+        return ''
+    return f'¥{value:,.0f}'
+
+
+templates.env.filters['dollar'] = format_dollar
+templates.env.filters['yen'] = format_yen

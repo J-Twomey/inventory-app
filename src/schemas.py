@@ -766,17 +766,15 @@ class ItemDisplay(BaseModel):
 
 
 class SubmissionBase(BaseModel):
-    item_id: int
     submission_number: int
     submission_company: GradingCompany
-    grading_fee: int | None = None
-    grade: float | None = None
-    cert: int | None = None
-    is_cracked: bool = False
+    submission_date: date
+    return_date: date | None = None
+    break_even_date: date | None = None
 
 
 class SubmissionCreate(SubmissionBase):
-    def to_model_kwargs(self) -> dict[str, int | float | bool]:
+    def to_model_kwargs(self) -> dict[str, int | date | None]:
         data = self.model_dump()
         data['submission_company'] = self.submission_company.value
         return data
@@ -785,13 +783,11 @@ class SubmissionCreate(SubmissionBase):
 class SubmissionUpdate(BaseModel):
     model_config = ConfigDict(extra='forbid')
 
-    item_id: int | None = None
     submission_number: int | None = None
     submission_company: GradingCompany | None = None
-    grading_fee: int | None = None
-    grade: float | None = None
-    cert: int | None = None
-    is_cracked: bool = False
+    submission_date: date | None = None
+    return_date: date | None = None
+    break_even_date: date | None = None
 
     def to_model_kwargs(self) -> dict[str, Any]:
         data = self.model_dump(exclude_unset=True)
@@ -802,9 +798,96 @@ class SubmissionUpdate(BaseModel):
 
 @dataclass
 class SubmissionUpdateForm:
-    item_id: str | None = None
     submission_number: str | None = None
     submission_company: str | None = None
+    submission_date: str | None = None
+    return_date: str | None = None
+    break_even_date: str | None = None
+
+    @classmethod
+    def as_form(
+        cls,
+        submission_number: Annotated[str | None, Form()] = None,
+        submission_company: Annotated[str | None, Form()] = None,
+        submission_date: Annotated[str | None, Form()] = None,
+        return_date: Annotated[str | None, Form()] = None,
+        break_even_date: Annotated[str | None, Form()] = None,
+    ) -> 'SubmissionUpdateForm':
+        return cls(
+            submission_number=submission_number,
+            submission_company=submission_company,
+            submission_date=submission_date,
+            return_date=return_date,
+            break_even_date=break_even_date,
+        )
+
+    def to_submission_update(self) -> SubmissionUpdate:
+        update_vals: dict[str, Any] = {}
+        set_if_value(update_vals, 'submission_number', parse_nullable(self.submission_number, int))
+        set_if_value(
+            update_vals,
+            'submission_company',
+            parse_nullable_enum(self.submission_company, GradingCompany),
+        )
+        set_if_value(update_vals, 'submission_date', parse_nullable_date(self.submission_date))
+        set_if_value(update_vals, 'return_date', parse_nullable_date(self.return_date))
+        set_if_value(update_vals, 'break_even_date', parse_nullable_date(self.break_even_date))
+        return SubmissionUpdate(**update_vals)
+
+
+class SubmissionDisplay(BaseModel):
+    submission_number: int
+    submission_company: str
+    submission_date: date
+    return_date: date | None
+    break_even_date: date | None
+    card_cost: int
+    grading_cost: int
+    total_cost: int
+    total_return: int
+    total_profit: int
+    profit_on_sold: int
+    num_cards: int
+    num_sold: int
+    percent_sold: float
+    profit_per_sold: int
+    num_closed: int
+    percent_closed: float
+    profit_per_closed: int
+
+
+class ItemSubmissionBase(BaseModel):
+    item_id: int
+    submission_number: int
+    grading_fee: int
+    grade: float | None = None
+    cert: int | None = None
+    is_cracked: bool = False
+
+
+class ItemSubmissionCreate(ItemSubmissionBase):
+    def to_model_kwargs(self) -> dict[str, int | float | bool | None]:
+        return self.model_dump()
+
+
+class ItemSubmissionUpdate(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+
+    item_id: int | None = None
+    submission_number: int | None = None
+    grading_fee: int | None = None
+    grade: float | None = None
+    cert: int | None = None
+    is_cracked: bool = False
+
+    def to_model_kwargs(self) -> dict[str, Any]:
+        return self.model_dump(exclude_unset=True)
+
+
+@dataclass
+class ItemSubmissionUpdateForm:
+    item_id: str | None = None
+    submission_number: str | None = None
     grading_fee: str | None = None
     grade: str | None = None
     cert: str | None = None
@@ -815,44 +898,36 @@ class SubmissionUpdateForm:
         cls,
         item_id: Annotated[str | None, Form()] = None,
         submission_number: Annotated[str | None, Form()] = None,
-        submission_company: Annotated[str | None, Form()] = None,
         grading_fee: Annotated[str | None, Form()] = None,
         grade: Annotated[str | None, Form()] = None,
         cert: Annotated[str | None, Form()] = None,
         is_cracked: Annotated[bool, Form()] = False,
-    ) -> 'SubmissionUpdateForm':
+    ) -> 'ItemSubmissionUpdateForm':
         return cls(
             item_id=item_id,
             submission_number=submission_number,
-            submission_company=submission_company,
             grading_fee=grading_fee,
             grade=grade,
             cert=cert,
             is_cracked=is_cracked,
         )
 
-    def to_submission_update(self) -> SubmissionUpdate:
+    def to_item_submission_update(self) -> ItemSubmissionUpdate:
         update_vals: dict[str, Any] = {}
         set_if_value(update_vals, 'item_id', parse_nullable(self.item_id, int))
         set_if_value(update_vals, 'submission_number', parse_nullable(self.submission_number, int))
-        set_if_value(
-            update_vals,
-            'submission_company',
-            parse_nullable_enum(self.submission_company, GradingCompany),
-        )
         set_if_value(update_vals, 'grading_fee', parse_nullable(self.grading_fee, int))
         set_if_value(update_vals, 'grade', parse_nullable(self.grade, float))
         set_if_value(update_vals, 'cert', parse_nullable(self.cert, int))
         set_if_value(update_vals, 'is_cracked', self.is_cracked)
-        return SubmissionUpdate(**update_vals)
+        return ItemSubmissionUpdate(**update_vals)
 
 
-class SubmissionDisplay(BaseModel):
+class ItemSubmissionDisplay(BaseModel):
     id: int
     item_id: int
     submission_number: int
-    submission_company: str
-    grading_fee: int | None = None
+    grading_fee: int
     grade: float | None = None
     cert: int | None = None
     is_cracked: bool = False

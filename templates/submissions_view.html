@@ -30,7 +30,7 @@
       </tr>
     </thead>
     <tbody>
-      {% for submission in submissions %}
+      {% for submission in submission_items %}
         {% set cost = submission.purchase_price + submission.import_fee %}
         {% set net = submission.return_jpy - cost - submission.grading_fee if submission.return_jpy is not none else none %}
         <tr class="{% if submission.is_cracked %}
@@ -55,12 +55,12 @@
                 {{ submission.grade }}
               {% endif %}
           </td>
-          <td class="right-aligned">{{ '¥' ~ '{:,.0f}'.format(cost) }}</td>
-          <td class="right-aligned {{ 'faint' if submission.grading_fee is none else '' }}">
-            {{ '' if submission.grading_fee is none else '¥' ~ '{:,.0f}'.format(submission.grading_fee) }}
+          <td class="right-aligned">{{ cost | yen }}</td>
+          <td class="right-aligned {{ 'faint' if submission.grade is none else '' }}">
+            {{ submission.grading_fee | yen }}
           </td>
           <td class="right-aligned {{ 'faint' if submission.return_jpy is none else '' }}">
-            {{ '' if submission.return_jpy is none else '¥' ~ '{:,.0f}'.format(submission.return_jpy) }}
+            {{ '' if submission.return_jpy is none else submission.return_jpy | yen }}
           </td>
           <td class="right-aligned
                     {% if net is none %}
@@ -68,15 +68,15 @@
                     {% elif net > 0 %}
                       green
                     {% endif %}">
-            {{ '' if submission.return_jpy is none else '¥' ~ '{:,.0f}'.format(net) }}
+            {{ '' if submission.return_jpy is none else net | yen }}
           </td>
           <td>
-            <a href="/submissions_delete/{{ submission.id }}"
+            <a href="/submission_item_delete/{{ submission.id }}"
                     onclick="return confirm('Are you sure you want to delete this submission?')"
                     style="color: red; margin-right: 10px;">
               Del
             </a>
-            <a href="/submissions_edit/{{ submission.id }}" style="color: purple;">
+            <a href="/submission_item_edit/{{ submission.id }}" style="color: purple;">
               Edit
             </a>
           </td>
@@ -86,8 +86,8 @@
   </table>
 </div>
 
-{% if not submissions %}
-  <p>No submissions found.</p>
+{% if not submission_items %}
+  <p>No submission items found.</p>
 {% endif %}
 
 <script type="module" src="{{ url_for('static', path='js/clear_submission_cache.js') }}"></script>

@@ -13,7 +13,7 @@
   <a href="/submissions_view" class="btn btn-blue btn-small margin-bottom-20 inline">Back To Submission View Page</a>
 </div>
 
-<form method="post" action="/submissions_edit/{{ submission.id }}">
+<form method="post" action="/submission_item_edit/{{ submission.id }}">
   <label>Item ID:</label>
   <input type="number" name="item_id" value="{{ submission.item_id }}"><br><br>
   <label>Submission Number:</label>
@@ -24,16 +24,6 @@
   <input type="number" name="grade" value="{{ submission.grade }}"><br><br>
   <label>Cert</label>
   <input type="number" name="cert" value="{{ submission.cert }}"><br><br>
-  <label>Company:</label>
-  <select name="submission_company">
-    {% for grading_company in grading_company_enum %}
-      {% if grading_company.name != 'RAW' %}
-        <option value="{{ grading_company.name }}" {% if submission.submission_company.name == grading_company.name %}selected{% endif %}>
-          {{ grading_company.name }}
-        </option>
-      {% endif %}
-    {% endfor %}
-  </select><br><br>
   <label>Cracked:</label>
   <input type="checkbox" name="is_cracked" {% if submission.is_cracked %}checked{% endif %}><br><br>
   <button type="submit">Save Changes</button>
