@@ -28,6 +28,7 @@ from .schemas import (
 from .validators import (
     check_intent,
     check_status,
+    check_valid_grading_record_update,
 )
 
 
@@ -266,9 +267,15 @@ def edit_grading_record(
     record = get_grading_record(db, record_id)
     if record is None:
         return 404
+    check_valid_grading_record_update(record, record_update)
+
+    # Item is returning from being submitted so update status
+    if record.grade is None and record_update.grade is not None:
+        linked_item = get_item(db, record.item_id)
+        item_update = ItemUpdate(status=Status.STORAGE)
+        perform_item_update(linked_item, item_update)
 
     update_data = record_update.to_model_kwargs()
-
     for key, value in update_data.items():
         setattr(record, key, value)
 
