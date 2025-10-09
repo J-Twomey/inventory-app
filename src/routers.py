@@ -70,7 +70,7 @@ def read_root(request: Request) -> Response:
     return templates.TemplateResponse('index.html', {'request': request})
 
 
-@router.get('/view', response_class=HTMLResponse)
+@router.get('/items_view', response_class=HTMLResponse)
 def view_items(
         request: Request,
         db: Session = Depends(get_db),
@@ -89,7 +89,7 @@ def view_items(
         items = items[:show_limit]
     display_items = [item.to_display() for item in items]
     return templates.TemplateResponse(
-        'view.html',
+        'items_view.html',
         {
             'request': request,
             'items': display_items,
@@ -106,7 +106,7 @@ def view_items(
     )
 
 
-@router.get('/add')
+@router.get('/add_item')
 def show_add_item_form(request: Request) -> Response:
     return templates.TemplateResponse(
         'add_item.html',
@@ -124,14 +124,14 @@ def show_add_item_form(request: Request) -> Response:
     )
 
 
-@router.post('/add')
+@router.post('/add_item')
 def submit_add_item_form(
         form: ItemCreateForm = Depends(ItemCreateForm.as_form),
         db: Session = Depends(get_db),
 ) -> RedirectResponse:
     item = form.to_item_create()
     create_item(db, item)
-    return RedirectResponse(url='/view', status_code=303)
+    return RedirectResponse(url='/items_view', status_code=303)
 
 
 @router.get('/delete/{item_id}')
@@ -142,7 +142,7 @@ def delete_item(
     success = delete_item_by_id(db, item_id)
     if not success:
         raise HTTPException(status_code=404, detail='Item not found')
-    return RedirectResponse(url='/view', status_code=303)
+    return RedirectResponse(url='/items_view', status_code=303)
 
 
 @router.get('/edit/{item_id}', response_class=HTMLResponse)
@@ -181,7 +181,7 @@ def submit_edit_item(
 ) -> RedirectResponse:
     edit_params = update_form.to_item_update()
     edit_result = edit_item(db, item_id, edit_params)
-    return RedirectResponse('/view', status_code=edit_result)
+    return RedirectResponse('/items_view', status_code=edit_result)
 
 
 @router.get('/submissions_summary_view', response_class=HTMLResponse)
