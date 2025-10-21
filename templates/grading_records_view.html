@@ -44,7 +44,7 @@
           <td>{{ record.set_name }}</td>
           <td>{{ record.language }}</td>
           <td>{{ record.category }}</td>
-          <td>{{ record.submission_company }}</td>
+          <td>{{ grading_company_enum(record.submission_company).name }}</td>
           <td class="centre-aligned {{ 'faint' if record.grade is none else '' }}">{{ record.cert }}</td>
           <td class="centre-aligned {{ 'faint' if record.grade is none else '' }}">
               {% if record.grade is none %}

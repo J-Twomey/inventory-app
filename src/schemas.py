@@ -927,6 +927,7 @@ class GradingRecordDisplay(BaseModel):
     id: int
     item_id: int
     submission_number: int
+    submission_company: int
     grading_fee: int | None = None
     grade: float | None = None
     cert: int | None = None
