@@ -249,7 +249,6 @@ def submit_add_submission_form(
         GradingRecordCreate(
             item_id=i,
             submission_number=submission_number,
-            grading_fee=0,
         )
         for i in item_ids
     ]
