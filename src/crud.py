@@ -33,17 +33,6 @@ from .validators import (
 )
 
 
-import logging
-
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s [%(levelname)s] %(message)s',
-    filename='log.log',
-    filemode='a'
-)
-logger = logging.getLogger(__name__)
-
-
 def create_item(
         db: Session,
         item: ItemCreate,
