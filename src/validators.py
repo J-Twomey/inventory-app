@@ -16,7 +16,7 @@ def check_intent(
     if item.intent != desired.value:
         raise ValueError(
             f'Item {item.id} intent field is required to be set to {desired.name}, but is '
-            f'currently set to {Intent(item.intent).name}'
+            f'currently set to {Intent(item.intent).name}',
         )
 
 
@@ -27,8 +27,36 @@ def check_status(
     if item.status != desired.value:
         raise ValueError(
             f'Item {item.id} status field is required to be set to {desired.name}, but is '
-            f'currently set to {Status(item.status).name}'
+            f'currently set to {Status(item.status).name}',
         )
+
+
+def check_valid_intent_or_status_update(
+    current_intent: Intent,
+    current_status: Status,
+    update_intent: Intent | None,
+    update_status: Status | None,
+) -> None:
+    if update_intent is None and update_status is None:
+        return
+    elif update_intent is not None and update_status is None:
+        if current_status not in update_intent.allowed_statuses:
+            raise ValueError(
+                f'Cannot update item with status of {current_status.name} to have intent of '
+                f'{update_intent.name}',
+            )
+    elif update_intent is None and update_status is not None:
+        if update_status not in current_intent.allowed_statuses:
+            raise ValueError(
+                f'Cannot update item with intent of {current_intent.name} to have status of '
+                f'{update_status.name}',
+            )
+    elif update_intent is not None and update_status is not None:
+        if update_status not in update_intent.allowed_statuses:
+            raise ValueError(
+                f'Cannot update item to have intent of {update_intent.name} and status of '
+                f'{update_status.name}',
+            )
 
 
 def check_valid_grading_record_update(
@@ -40,7 +68,7 @@ def check_valid_grading_record_update(
             record.grading_fee is None,
             record.grade is None,
             record.cert is None,
-        )
+        ),
     ):
         changes = (
             update.grading_fee is not None,

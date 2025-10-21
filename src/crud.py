@@ -29,6 +29,7 @@ from .validators import (
     check_intent,
     check_status,
     check_valid_grading_record_update,
+    check_valid_intent_or_status_update,
 )
 
 
@@ -122,6 +123,12 @@ def edit_item(
     item = get_item(db, item_id)
     if item is None:
         return 404
+    check_valid_intent_or_status_update(
+        Intent(item.intent),
+        Status(item.status),
+        item_update.intent,
+        item_update.status,
+    )
     perform_item_update(item, item_update)
     db.commit()
     db.refresh(item)

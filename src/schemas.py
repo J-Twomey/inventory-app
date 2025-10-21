@@ -227,6 +227,15 @@ class ItemCreate(ItemBase):
         data['object_variant'] = self.object_variant.value
         return data
 
+    @model_validator(mode='after')
+    def appropriate_status_based_on_intent(self) -> Self:
+        if self.status not in self.intent.allowed_statuses:
+            raise ValueError(
+                f'Item can not have status of {self.status.name} with intent of '
+                f'{self.intent.name}',
+            )
+        return self
+
 
 @dataclass
 class ItemCreateForm:

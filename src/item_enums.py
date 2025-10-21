@@ -85,6 +85,18 @@ class Intent(Enum):
     CRACK = 3
     TBD = 4
 
+    @property
+    def allowed_statuses(self) -> list[Status]:
+        all_ok = [Status.STORAGE, Status.VAULT, Status.ORDER]
+        mapping = {
+            Intent.KEEP: all_ok,
+            Intent.SELL: all_ok + [Status.CLOSED, Status.LISTED],
+            Intent.GRADE: all_ok + [Status.SUBMITTED],
+            Intent.CRACK: all_ok,
+            Intent.TBD: all_ok,
+        }
+        return mapping[self]
+
 
 class Qualifier(Enum):
     UNLIMITED = 0
