@@ -398,7 +398,7 @@ class Submission(Base):
 
     submission_number: Mapped[int] = mapped_column(Integer, primary_key=True)
     submission_company: Mapped[int] = mapped_column(Integer)
-    submission_date: Mapped[date] = mapped_column(Date)
+    submission_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     return_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     break_even_date: Mapped[date | None] = mapped_column(Date, nullable=True)
 

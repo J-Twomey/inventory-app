@@ -768,7 +768,7 @@ class ItemDisplay(BaseModel):
 class SubmissionBase(BaseModel):
     submission_number: int
     submission_company: GradingCompany
-    submission_date: date
+    submission_date: date | None = None
     return_date: date | None = None
     break_even_date: date | None = None
 
@@ -838,7 +838,7 @@ class SubmissionUpdateForm:
 class SubmissionDisplay(BaseModel):
     submission_number: int
     submission_company: str
-    submission_date: date
+    submission_date: date | None
     return_date: date | None
     break_even_date: date | None
     card_cost: int

@@ -234,14 +234,18 @@ def submit_add_submission_form(
         request: Request,
         submission_number: int = Form(...),
         submission_company: str = Form(...),
-        submission_date: date = Form(...),
+        submission_date: str = Form(...),
         item_ids: list[int] = Form(...),
         db: Session = Depends(get_db),
 ) -> Response:
+    if submission_date == '':
+        parsed_date = None
+    else:
+        parsed_date = date.fromisoformat(submission_date)
     submission_summary = SubmissionCreate(
         submission_number=submission_number,
         submission_company=GradingCompany[submission_company],
-        submission_date=submission_date,
+        submission_date=parsed_date,
         return_date=None,
         break_even_date=None,
     )
