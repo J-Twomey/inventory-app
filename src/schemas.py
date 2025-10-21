@@ -53,22 +53,22 @@ class ItemBase(BaseModel):
         from_attributes=True,
     )
 
-    name: str
-    set_name: str
-    category: Category
-    language: Language
-    qualifiers: list[Qualifier]
+    name: str | None = None
+    set_name: str | None = None
+    category: Category | None = None
+    language: Language | None = None
+    qualifiers: list[Qualifier] = field(default_factory=list)
     details: str | None = None
-    purchase_date: date
-    purchase_price: int
-    status: Status
-    intent: Intent
-    import_fee: int
-    purchase_grading_company: GradingCompany
-    purchase_cert: int | None = None
+    purchase_date: date | None = None
+    purchase_price: int | None = None
+    status: Status | None = None
+    intent: Intent | None = None
+    import_fee: int | None = None
+    purchase_grading_company: GradingCompany | None = None
     purchase_grade: float | None = None
+    purchase_cert: int | None = None
     list_price: float | None = None
-    list_type: ListingType
+    list_type: ListingType | None = None
     list_date: date | None = None
     sale_total: float | None = None
     sale_date: date | None = None
@@ -76,7 +76,7 @@ class ItemBase(BaseModel):
     sale_fee: float | None = None
     usd_to_jpy_rate: float | None = None
     group_discount: bool = False
-    object_variant: ObjectVariant
+    object_variant: ObjectVariant | None = None
     audit_target: bool = False
     cracked_from_purchase: bool = False
 
@@ -110,7 +110,11 @@ class ItemBase(BaseModel):
 
     @model_validator(mode='after')
     def list_date_not_before_purchase_date(self) -> Self:
-        if self.list_date is not None and self.list_date < self.purchase_date:
+        if (
+            self.list_date is not None and
+            self.purchase_date is not None and
+            self.list_date < self.purchase_date
+        ):
             raise ValueError(
                 f'Listing date cannot be before purchase date '
                 f'(got listing date: {self.list_date}, purchase date: {self.purchase_date})',
@@ -132,26 +136,29 @@ class ItemBase(BaseModel):
 
     @model_validator(mode='after')
     def check_required_fields_based_on_status(self) -> Self:
-        missing = [
-            f for f in self.status.required_fields
-            if getattr(self, f) is None
-        ]
-        if len(missing) > 0:
-            raise ValueError(
-                f'Status {self.status.name} requires the following missing fields: {missing}',
-            )
+        if self.status is not None:
+            missing = [
+                f for f in self.status.required_fields
+                if getattr(self, f) is None
+            ]
+            if len(missing) > 0:
+                raise ValueError(
+                    f'Status {self.status.name} requires the following missing fields: {missing}',
+                )
         return self
 
     @model_validator(mode='after')
     def check_required_null_fields_based_on_status(self) -> Self:
-        not_null = [
-            f for f in self.status.required_to_be_null
-            if getattr(self, f) is not None
-        ]
-        if len(not_null) > 0:
-            raise ValueError(
-                f'Status {self.status.name} requires the following fields to be null: {not_null}',
-            )
+        if self.status is not None:
+            not_null = [
+                f for f in self.status.required_to_be_null
+                if getattr(self, f) is not None
+            ]
+            if len(not_null) > 0:
+                raise ValueError(
+                    f'Status {self.status.name} requires the following fields to be null: '
+                    f'{not_null}',
+                )
         return self
 
     @model_validator(mode='after')
@@ -192,6 +199,20 @@ class ItemBase(BaseModel):
 
 
 class ItemCreate(ItemBase):
+    name: str
+    set_name: str
+    category: Category
+    language: Language
+    qualifiers: list[Qualifier]
+    purchase_date: date
+    purchase_price: int
+    status: Status
+    intent: Intent
+    import_fee: int
+    purchase_grading_company: GradingCompany
+    list_type: ListingType
+    object_variant: ObjectVariant
+
     def to_model_kwargs(
             self,
             exclude: set[str] = set(),
@@ -335,36 +356,7 @@ class ItemCreateForm:
         )
 
 
-class ItemUpdate(BaseModel):
-    model_config = ConfigDict(extra='forbid')
-
-    name: str | None = None
-    set_name: str | None = None
-    category: Category | None = None
-    language: Language | None = None
-    qualifiers: list[Qualifier] = field(default_factory=list)
-    details: str | None = None
-    purchase_date: date | None = None
-    purchase_price: int | None = None
-    status: Status | None = None
-    intent: Intent | None = None
-    import_fee: int | None = None
-    purchase_grading_company: GradingCompany | None = None
-    purchase_grade: float | None = None
-    purchase_cert: int | None = None
-    list_price: float | None = None
-    list_type: ListingType | None = None
-    list_date: date | None = None
-    sale_total: float | None = None
-    sale_date: date | None = None
-    shipping: float | None = None
-    sale_fee: float | None = None
-    usd_to_jpy_rate: float | None = None
-    group_discount: bool = False
-    object_variant: ObjectVariant | None = None
-    audit_target: bool = False
-    cracked_from_purchase: bool = False
-
+class ItemUpdate(ItemBase):
     def to_model_kwargs(self) -> dict[str, Any]:
         data = self.model_dump(exclude_unset=True)
         if self.category is not None:
