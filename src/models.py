@@ -552,7 +552,7 @@ class GradingRecord(Base):
             id=self.id,
             item_id=self.item_id,
             submission_number=self.submission_number,
-            submission_company=self.submission_company,
+            submission_company=GradingCompany(self.submission_company).name,
             grading_fee=self.grading_fee,
             grade=self.grade,
             cert=self.cert,

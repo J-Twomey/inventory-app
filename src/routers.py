@@ -214,7 +214,6 @@ def view_grading_records(
         {
             'request': request,
             'records': display_records,
-            'grading_company_enum': GradingCompany,
         },
     )
 
