@@ -14,11 +14,11 @@
     <thead>
       <tr>
         <th>Item ID</th>
+        <th>Sub #</th>
         <th>Item</th>
         <th>Set</th>
         <th>Language</th>
         <th>Type</th>
-        <th>Sub #</th>
         <th>Company</th>
         <th>Cert</th>
         <th>Grade</th>
@@ -39,11 +39,11 @@
                     gray
                   {% endif %}">
           <td>{{ record.item_id }}</td>
+          <td class="centre-aligned">{{ record.submission_number }}</td>
           <td>{{ record.name }}</td>
           <td>{{ record.set_name }}</td>
           <td>{{ record.language }}</td>
           <td>{{ record.category }}</td>
-          <td class="centre-aligned">{{ record.submission_number }}</td>
           <td>{{ record.submission_company }}</td>
           <td class="centre-aligned {{ 'faint' if record.grade is none else '' }}">{{ record.cert }}</td>
           <td class="centre-aligned {{ 'faint' if record.grade is none else '' }}">
