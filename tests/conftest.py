@@ -16,7 +16,10 @@ from src.database import (
     Base,
     get_db,
 )
-from src.models import Item
+from src.models import (
+    GradingRecord,
+    Item,
+)
 from src.schemas import (
     ItemBase,
     ItemCreate,
@@ -258,3 +261,30 @@ class ItemCreateFactory:
 @pytest.fixture(scope='function')
 def item_create_factory() -> ItemCreateFactory:
     return ItemCreateFactory()
+
+
+class GradingRecordFactory:
+    def get(
+        self,
+        id: int = 1,
+        item_id: int = 100,
+        submission_number: int = 1,
+        grading_fee: int | None = None,
+        grade: float | None = None,
+        cert: int | None = None,
+        is_cracked: bool = False,
+    ) -> GradingRecord:
+        return GradingRecord(
+            id=id,
+            item_id=item_id,
+            submission_number=submission_number,
+            grading_fee=grading_fee,
+            grade=grade,
+            cert=cert,
+            is_cracked=is_cracked,
+        )
+
+
+@pytest.fixture(scope='function')
+def grading_record_factory() -> GradingRecord:
+    return GradingRecordFactory()

@@ -525,8 +525,8 @@ class GradingRecord(Base):
         index=True,
         nullable=False,
     )
-    grading_fee: Mapped[int] = mapped_column(Integer)
-    grade: NullableInt = NullableIntColumn()
+    grading_fee: NullableInt = NullableIntColumn()
+    grade: NullableFloat = NullableFloatColumn()
     cert: NullableInt = NullableIntColumn()
     is_cracked: Mapped[bool] = mapped_column(Boolean)
 

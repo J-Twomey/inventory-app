@@ -859,7 +859,7 @@ class SubmissionDisplay(BaseModel):
 class GradingRecordBase(BaseModel):
     item_id: int
     submission_number: int
-    grading_fee: int
+    grading_fee: int | None = None
     grade: float | None = None
     cert: int | None = None
     is_cracked: bool = False
@@ -927,7 +927,7 @@ class GradingRecordDisplay(BaseModel):
     id: int
     item_id: int
     submission_number: int
-    grading_fee: int
+    grading_fee: int | None = None
     grade: float | None = None
     cert: int | None = None
     is_cracked: bool = False
