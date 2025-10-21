@@ -286,5 +286,5 @@ class GradingRecordFactory:
 
 
 @pytest.fixture(scope='function')
-def grading_record_factory() -> GradingRecord:
+def grading_record_factory() -> GradingRecordFactory:
     return GradingRecordFactory()

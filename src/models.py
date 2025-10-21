@@ -419,7 +419,7 @@ class Submission(Base):
 
     @hybrid_property
     def grading_cost(self) -> int:
-        grading_fees = [item.grading_fee for item in self.submission_items]
+        grading_fees = [item.grading_fee or 0 for item in self.submission_items]
         return sum(grading_fees)
 
     @hybrid_property

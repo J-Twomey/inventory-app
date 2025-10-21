@@ -272,8 +272,11 @@ def edit_grading_record(
     # Item is returning from being submitted so update status
     if record.grade is None and record_update.grade is not None:
         linked_item = get_item(db, record.item_id)
-        item_update = ItemUpdate(status=Status.STORAGE)
-        perform_item_update(linked_item, item_update)
+        if linked_item is not None:
+            item_update = ItemUpdate(status=Status.STORAGE)
+            perform_item_update(linked_item, item_update)
+        else:
+            raise ValueError(f'Linked item not found for item #{record.item_id}')
 
     update_data = record_update.to_model_kwargs()
     for key, value in update_data.items():
