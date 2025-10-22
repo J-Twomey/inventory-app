@@ -1,62 +1,141 @@
 import pytest
+from typing import Callable
+
 from sqlalchemy.orm import Session
 
 import src.crud as crud
+from src.models import Item
 from .conftest import ItemFactory
 
 
-# @pytest.mark.parametrize(
-#     ('purchase_price', 'grading_fees', 'import_fee', 'expected_total'),
-#     (
-#         pytest.param(10, {}, 0, 10, id='no_grading_fees'),
-#         pytest.param(10, {1: 100}, 0, 110, id='single_grading_fee'),
-#         pytest.param(10, {1: 100, 2: 200}, 0, 310, id='multiple_grading_fees'),
-#         pytest.param(10, {}, 11, 21, id='with_import_fee'),
-#     ),
-# )
-# def test_total_cost_python(
-#         item_factory: ItemFactory,
-#         purchase_price: int,
-#         grading_fees: dict[int, int],
-#         import_fee: int,
-#         expected_total: int,
-# ) -> None:
-#     item = item_factory.get(
-#         purchase_price=purchase_price,
-#         import_fee=import_fee,
-#         grading_fee=grading_fees,
-#     )
-#     assert item.total_cost == expected_total
+def test_total_grading_fees(
+        db_session: Session,
+        item_with_submissions_factory: Callable[..., Item],
+) -> None:
+    item_with_submissions = item_with_submissions_factory(
+        grading_record_ids=[1, 2, 3],
+        submission_numbers=[1, 2, 3],
+        grading_fees=[10, 20, 30],
+        grades=[1, 1, 1],
+        certs=[1, 2, 3],
+        is_cracked_flags=[True, True, False],
+    )
+    expected_total = 60
+    # Python side
+    assert item_with_submissions.total_grading_fees == expected_total
+    # DB side
+    db_item = crud.get_item(db=db_session, item_id=item_with_submissions.id)
+    assert db_item is not None
+    assert db_item.total_grading_fees == expected_total
 
 
-# @pytest.mark.parametrize(
-#     ('purchase_price', 'grading_fees', 'import_fee', 'expected_total'),
-#     (
-#         pytest.param(10, {}, 0, 10, id='no_grading_fees'),
-#         pytest.param(10, {1: 100}, 0, 110, id='single_grading_fee'),
-#         pytest.param(10, {1: 100, 2: 200}, 0, 310, id='multiple_grading_fees'),
-#         pytest.param(10, {}, 11, 21, id='with_import_fee'),
-#     ),
-# )
-# def test_total_cost_sql(
-#         db_session: Session,
-#         item_factory: ItemFactory,
-#         purchase_price: int,
-#         grading_fees: dict[int, int],
-#         import_fee: int,
-#         expected_total: int,
-# ) -> None:
-#     item = item_factory.get(
-#         purchase_price=purchase_price,
-#         import_fee=import_fee,
-#         grading_fee=grading_fees,
-#     )
-#     db_session.add(item)
-#     db_session.commit()
+def test_total_cost(
+        db_session: Session,
+        item_with_submissions_factory: Callable[..., Item],
+) -> None:
+    item_with_submissions = item_with_submissions_factory(
+        grading_record_ids=[1, 2],
+        submission_numbers=[1, 2],
+        grading_fees=[10, 20],
+        grades=[1, 1],
+        certs=[1, 2],
+        is_cracked_flags=[True, False],
+        purchase_price=1000,
+        import_fee=100,
+    )
+    expected_total = 1130
+    # Python side
+    assert item_with_submissions.total_cost == expected_total
+    # DB side
+    db_item = crud.get_item(db=db_session, item_id=item_with_submissions.id)
+    assert db_item is not None
+    assert db_item.total_cost == expected_total
 
-#     result = crud.get_item(db=db_session, item_id=item.id)
-#     assert result is not None
-#     assert result.total_cost == expected_total
+
+def test_grading_company_no_submission_no_crack(
+        db_session: Session,
+        item_factory: ItemFactory,
+) -> None:
+    item = item_factory.get(
+        purchase_grading_company=3,
+        purchase_grade=1,
+        purchase_cert=1,
+        cracked_from_purchase=False,
+    )
+    expected_grading_company = 3
+    # Python side
+    assert item.grading_company == expected_grading_company
+    # DB side
+    db_session.add(item)
+    db_session.commit()
+    db_item = crud.get_item(db=db_session, item_id=item.id)
+    assert db_item is not None
+    assert db_item.grading_company == expected_grading_company
+
+
+def test_grading_company_no_submission_cracked_from_purchase(
+        db_session: Session,
+        item_factory: ItemFactory,
+) -> None:
+    item = item_factory.get(
+        purchase_grading_company=3,
+        purchase_grade=1,
+        purchase_cert=1,
+        cracked_from_purchase=True,
+    )
+    expected_grading_company = 0
+    # Python side
+    assert item.grading_company == expected_grading_company
+    # DB side
+    db_session.add(item)
+    db_session.commit()
+    db_item = crud.get_item(db=db_session, item_id=item.id)
+    assert db_item is not None
+    assert db_item.grading_company == expected_grading_company
+
+
+def test_grading_company_latest_sub_cracked(
+        db_session: Session,
+        item_with_submissions_factory: Callable[..., Item],
+) -> None:
+    item_with_submissions = item_with_submissions_factory(
+        grading_record_ids=[1],
+        submission_numbers=[1],
+        grading_fees=[10],
+        grades=[1],
+        certs=[1],
+        is_cracked_flags=[True],
+        submission_companies=[3],
+    )
+    expected_grading_company = 0
+    # Python side
+    assert item_with_submissions.grading_company == expected_grading_company
+    # DB side
+    db_item = crud.get_item(db=db_session, item_id=item_with_submissions.id)
+    assert db_item is not None
+    assert db_item.grading_company == expected_grading_company
+
+
+def test_grading_company_latest_sub_not_cracked(
+        db_session: Session,
+        item_with_submissions_factory: Callable[..., Item],
+) -> None:
+    item_with_submissions = item_with_submissions_factory(
+        grading_record_ids=[1],
+        submission_numbers=[1],
+        grading_fees=[10],
+        grades=[1],
+        certs=[1],
+        is_cracked_flags=[False],
+        submission_companies=[3],
+    )
+    expected_grading_company = 3
+    # Python side
+    assert item_with_submissions.grading_company == expected_grading_company
+    # DB side
+    db_item = crud.get_item(db=db_session, item_id=item_with_submissions.id)
+    assert db_item is not None
+    assert db_item.grading_company == expected_grading_company
 
 
 @pytest.mark.parametrize(

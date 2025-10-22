@@ -1,5 +1,9 @@
 from datetime import date
-from typing import Generator
+from typing import (
+    Any,
+    Callable,
+    Generator,
+)
 
 import pytest
 from fastapi.testclient import TestClient
@@ -19,6 +23,7 @@ from src.database import (
 from src.models import (
     GradingRecord,
     Item,
+    Submission,
 )
 from src.schemas import (
     ItemBase,
@@ -288,3 +293,121 @@ class GradingRecordFactory:
 @pytest.fixture(scope='function')
 def grading_record_factory() -> GradingRecordFactory:
     return GradingRecordFactory()
+
+
+class SubmissionFactory:
+    def get(
+        self,
+        submission_number: int = 1,
+        submission_company: int = 1,
+        submission_date: date | None = None,
+        return_date: date | None = None,
+        break_even_date: date | None = None,
+    ) -> Submission:
+        return Submission(
+            submission_number=submission_number,
+            submission_company=submission_company,
+            submission_date=submission_date,
+            return_date=return_date,
+            break_even_date=break_even_date,
+        )
+
+
+@pytest.fixture(scope='function')
+def submission_factory() -> SubmissionFactory:
+    return SubmissionFactory()
+
+
+@pytest.fixture(scope='function')
+def item_with_submissions_factory(
+        db_session: Session,
+        item_factory: ItemFactory,
+        grading_record_factory: GradingRecordFactory,
+        submission_factory: SubmissionFactory,
+) -> Callable[[Any], Item]:
+    def get(
+        grading_record_ids: list[int] | None = None,
+        submission_numbers: list[int] | None = None,
+        submission_companies: list[int] | None = None,
+        submission_dates: list[date | None] | None = None,
+        grading_fees: list[int] | None = None,
+        grades: list[float] | None = None,
+        certs: list[int] | None = None,
+        is_cracked_flags: list[bool] | None = None,
+        return_dates: list[date | None] | None = None,
+        break_even_dates: list[date | None] | None = None,
+        **item_kwargs: Any,
+    ) -> Item:
+        grading_record_ids_ = grading_record_ids or [1]
+        submission_numbers_ = submission_numbers or [1]
+        submission_companies_ = submission_companies or len(grading_record_ids_) * [1]
+        submission_dates_ = submission_dates or len(grading_record_ids_) * [None]
+        grading_fees_ = grading_fees or len(grading_record_ids_) * [None]
+        grades_ = grades or len(grading_record_ids_) * [None]
+        certs_ = certs or len(grading_record_ids_) * [None]
+        is_cracked_flags_ = is_cracked_flags or len(grading_record_ids_) * [False]
+        return_dates_ = return_dates or len(grading_record_ids_) * [None]
+        break_even_dates_ = break_even_dates or len(grading_record_ids_) * [None]
+
+        # input validation
+        input_lists = [
+            grading_record_ids_,
+            submission_numbers_,
+            submission_companies_,
+            submission_dates_,
+            grading_fees_,
+            grades_,
+            certs_,
+            is_cracked_flags_,
+            return_dates_,
+            break_even_dates_,
+        ]
+        assert len({len(lst) for lst in input_lists}) == 1
+
+        sub_nums_indices_map: dict[int, list[int]] = {}
+        for i, sub_num in enumerate(submission_numbers_):
+            if sub_num not in sub_nums_indices_map:
+                sub_nums_indices_map[sub_num] = []
+            sub_nums_indices_map[sub_num].append(i)
+
+        for sub_num, sub_indices in sub_nums_indices_map.items():
+            # input validation
+            sub_companies = [submission_companies_[i] for i in sub_indices]
+            assert len(set(sub_companies)) == 1
+            sub_submit_dates = [submission_dates_[i] for i in sub_indices]
+            assert len(set(sub_submit_dates)) == 1
+            sub_return_dates = [return_dates_[i] for i in sub_indices]
+            assert len(set(sub_return_dates)) == 1
+            sub_break_even_dates = [break_even_dates_[i] for i in sub_indices]
+            assert len(set(sub_break_even_dates)) == 1
+            submission = submission_factory.get(
+                submission_number=sub_num,
+                submission_company=sub_companies[0],
+                submission_date=sub_submit_dates[0],
+                return_date=sub_return_dates[0],
+                break_even_date=sub_break_even_dates[0],
+            )
+            db_session.add(submission)
+
+        item = item_factory.get(**item_kwargs)
+        db_session.add(item)
+        db_session.flush()
+        records = [
+            grading_record_factory.get(
+                id=grading_record_ids_[i],
+                item_id=item.id,
+                submission_number=submission_numbers_[i],
+                grading_fee=grading_fees_[i],
+                grade=grades_[i],
+                cert=certs_[i],
+                is_cracked=is_cracked_flags_[i],
+            )
+            for i in range(len(grading_record_ids_))
+        ]
+        if len(records) > 0:
+            db_session.add_all(records)
+
+        db_session.commit()
+        db_session.refresh(item)
+        return item
+    return get
