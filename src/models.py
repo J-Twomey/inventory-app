@@ -169,54 +169,6 @@ class Item(Base):
         )
 
     @hybrid_property
-    def cert(self) -> int | None:
-        latest_submission = max(
-            self.submissions,
-            key=lambda s: s.submission_number,
-            default=None,
-        )
-        if latest_submission is None:
-            if self.cracked_from_purchase:
-                return None
-            else:
-                return self.purchase_cert
-        else:
-            if latest_submission.is_cracked:
-                return None
-            else:
-                return latest_submission.cert
-
-    @cert.expression  # type: ignore[no-redef]
-    def cert(cls) -> ColumnElement[int | None]:
-        latest_cert = (
-            select(GradingRecord.cert)
-            .where(GradingRecord.item_id == cls.id)
-            .order_by(GradingRecord.submission_number.desc())
-            .limit(1)
-            .scalar_subquery()
-        )
-        latest_cracked = (
-            select(GradingRecord.is_cracked)
-            .where(GradingRecord.item_id == cls.id)
-            .order_by(GradingRecord.submission_number.desc())
-            .limit(1)
-            .scalar_subquery()
-        )
-        return case(
-            (
-                latest_cert.is_(None),
-                case(
-                    (cls.cracked_from_purchase.is_(true()), literal(None, type_=Integer())),
-                    else_=cls.purchase_cert,
-                ),
-            ),
-            else_=case(
-                (latest_cracked.is_(true()), literal(None, type_=Integer())),
-                else_=latest_cert,
-            ),
-        )
-
-    @hybrid_property
     def grade(self) -> float | None:
         latest_submission = max(
             self.submissions,
@@ -261,6 +213,54 @@ class Item(Base):
             else_=case(
                 (latest_cracked.is_(true()), literal(None, type_=Float())),
                 else_=latest_grade,
+            ),
+        )
+
+    @hybrid_property
+    def cert(self) -> int | None:
+        latest_submission = max(
+            self.submissions,
+            key=lambda s: s.submission_number,
+            default=None,
+        )
+        if latest_submission is None:
+            if self.cracked_from_purchase:
+                return None
+            else:
+                return self.purchase_cert
+        else:
+            if latest_submission.is_cracked:
+                return None
+            else:
+                return latest_submission.cert
+
+    @cert.expression  # type: ignore[no-redef]
+    def cert(cls) -> ColumnElement[int | None]:
+        latest_cert = (
+            select(GradingRecord.cert)
+            .where(GradingRecord.item_id == cls.id)
+            .order_by(GradingRecord.submission_number.desc())
+            .limit(1)
+            .scalar_subquery()
+        )
+        latest_cracked = (
+            select(GradingRecord.is_cracked)
+            .where(GradingRecord.item_id == cls.id)
+            .order_by(GradingRecord.submission_number.desc())
+            .limit(1)
+            .scalar_subquery()
+        )
+        return case(
+            (
+                latest_cert.is_(None),
+                case(
+                    (cls.cracked_from_purchase.is_(true()), literal(None, type_=Integer())),
+                    else_=cls.purchase_cert,
+                ),
+            ),
+            else_=case(
+                (latest_cracked.is_(true()), literal(None, type_=Integer())),
+                else_=latest_cert,
             ),
         )
 
@@ -414,7 +414,7 @@ class Submission(Base):
             [
                 item.original_item.purchase_price + item.original_item.import_fee
                 for item in self.submission_items
-            ]
+            ],
         )
 
     @hybrid_property
