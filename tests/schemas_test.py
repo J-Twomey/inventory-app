@@ -6,7 +6,10 @@ from pydantic import ValidationError
 
 import src.item_enums as item_enums
 import src.schemas as schemas
-from .conftest import ItemBaseFactory
+from .conftest import (
+    ItemBaseFactory,
+    ItemCreateFactory,
+)
 
 
 @pytest.mark.parametrize(
@@ -293,7 +296,7 @@ def test_appropriate_group_discount_error(item_base_factory: ItemBaseFactory) ->
     assert 'Group discount cannot be assigned to an unsold item' in error_msg
 
 
-def test_appropriate_audit_target(item_base_factory: ItemBaseFactory) -> None:
+def test_appropriate_audit_target_no_error(item_base_factory: ItemBaseFactory) -> None:
     item_base_factory.get(
         status=item_enums.Status.VAULT,
         audit_target=True,
@@ -333,6 +336,27 @@ def test_appropriate_audit_target_closed_error(item_base_factory: ItemBaseFactor
         )
     error_msg = e.value.errors()[0]['msg']
     assert 'Item assigned as an audit target can not be listed or closed' in error_msg
+
+
+def test_appropriate_status_based_on_intent_no_error(
+        item_create_factory: ItemCreateFactory,
+) -> None:
+    item_create_factory.get(
+        status=item_enums.Status.SUBMITTED,
+        intent=item_enums.Intent.GRADE,
+    )
+
+
+def test_appropriate_status_based_on_intent_error_case(
+        item_create_factory: ItemCreateFactory,
+) -> None:
+    with pytest.raises(ValidationError) as e:
+        item_create_factory.get(
+            status=item_enums.Status.SUBMITTED,
+            intent=item_enums.Intent.SELL,
+        )
+    error_msg = e.value.errors()[0]['msg']
+    assert 'Item can not have status of SUBMITTED with intent of SELL' in error_msg
 
 
 def test_parse_enum() -> None:
@@ -493,24 +517,6 @@ def test_set_if_value_no_set(value: Any) -> None:
     key = 'a'
     schemas.set_if_value(input_dict, key, value)
     assert len(input_dict) == 0
-
-
-def test_parse_nullable_list_of_str_to_list_of_int() -> None:
-    input_list = ['1', '2']
-    result = schemas.parse_nullable_list_of_str_to_list_of_int(input_list)
-    assert result == [1, 2]
-
-
-def test_parse_nullable_list_of_str_to_list_of_int_none_case() -> None:
-    input_list = None
-    result = schemas.parse_nullable_list_of_str_to_list_of_int(input_list)
-    assert result == []
-
-
-def test_parse_nullable_list_of_str_to_list_of_int_with_empty_string() -> None:
-    input_list = ['1', '', '2']
-    result = schemas.parse_nullable_list_of_str_to_list_of_int(input_list)
-    assert result == [1, 2]
 
 
 @pytest.mark.parametrize(

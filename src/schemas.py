@@ -727,33 +727,6 @@ class ItemDisplay(BaseModel):
     return_jpy: int | None = None
     net_jpy: int | None = None
     net_percent: float | None = None
-    # @model_validator(mode='after')
-    # def appropriate_intent(self) -> Self:
-    #     if self.status == Status.LISTED or self.status == Status.CLOSED:
-    #         if self.intent != Intent.SELL:
-    #             raise ValueError('Item cannot be listed or closed without intent of SELL')
-    #     elif self.intent == Intent.CRACK:
-    #         if any(
-    #             (
-    #                 (self.grade is None),
-    #                 (self.grading_company == GradingCompany.RAW),
-    #                 (self.cert is None),
-    #             ),
-    #         ):
-    #             raise ValueError('Item cannot have intent of CRACK without being graded')
-    #     return self
-
-    # @model_validator(mode='after')
-    # def check_required_null_fields_based_on_grading_company(self) -> Self:
-    #     not_null = [
-    #         f for f in self.grading_company.required_to_be_null
-    #         if getattr(self, f) is not None
-    #     ]
-    #     if len(not_null) > 0:
-    #         raise ValueError(
-    #             f'Raw card can not have the following non null fields: {not_null}',
-    #         )
-    #     return self
 
 
 class SubmissionBase(BaseModel):
@@ -1017,15 +990,6 @@ def set_if_value(
 ) -> None:
     if value is not None and value != '' and value != [] and value != {}:
         d[key] = value
-
-
-def parse_nullable_list_of_str_to_list_of_int(input_list: list[str] | None) -> list[int]:
-    if input_list is None:
-        return []
-    else:
-        # Remove empty string that gets sent if no value set
-        input_list = [v for v in input_list if v != '']
-        return [int(v) for v in input_list]
 
 
 def parse_nullable_percent(value: str | None) -> float | None:
