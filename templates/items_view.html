@@ -435,7 +435,7 @@
                     {% else %}
                       cyan
                     {% endif %}">
-            {{ '' if item.net_percent is none else ( item.net_percent ~ '%') }}
+            {{ '' if item.net_percent is none else item.net_percent | percent }}
           </td>
           <td>
             <a href="/delete/{{ item.id }}" onclick="return confirm('Are you sure you want to delete this item?')" style="color: red; margin-right: 10px;">

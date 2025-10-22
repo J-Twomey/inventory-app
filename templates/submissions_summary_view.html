@@ -36,24 +36,77 @@
     <tbody>
       {% for summary in submission_summaries %}
         <tr>
-          <td>{{ summary.submission_number }}</td>
-          <td>{{ summary.submission_company }}</td>
-          <td>{{ summary.submission_date }}</td>
-          <td>{{ summary.return_date }}</td>
-          <td>{{ summary.card_cost | yen }}</td>
-          <td>{{ summary.grading_cost | yen }}</td>
-          <td>{{ summary.total_cost | yen }}</td>
-          <td>{{ summary.total_return | yen }}</td>
-          <td>{{ summary.total_profit | yen }}</td>
-          <td>{{ summary.profit_on_sold | yen }}</td>
-          <td>{{ summary.break_even_date }}</td>
-          <td>{{ summary.num_cards }}</td>
-          <td>{{ summary.num_sold }}</td>
-          <td>{{ summary.percent_sold }}</td>
-          <td>{{ summary.profit_per_sold | yen }}</td>
-          <td>{{ summary.num_closed }}</td>
-          <td>{{ summary.percent_closed }}</td>
-          <td>{{ summary.profit_per_closed | yen }}</td>
+          <td class="centre-aligned">{{ summary.submission_number }}</td>
+          <td class="centre-aligned">{{ summary.submission_company }}</td>
+          <td class="right-aligned
+                    {% if summary.submission_date is none %}
+                      gray
+                    {% endif %}">
+            {{ summary.submission_date if summary.submission_date else '' }}
+          </td>
+          <td class="right-aligned
+                    {% if summary.return_date is none %}
+                      gray
+                    {% endif %}">
+            {{ summary.return_date if summary.return_date else '' }}
+          </td>
+          <td class="right-aligned">{{ summary.card_cost | yen }}</td>
+          <td class="right-aligned">{{ summary.grading_cost | yen }}</td>
+          <td class="right-aligned">{{ summary.total_cost | yen }}</td>
+          <td class="right-aligned">{{ summary.total_return | yen }}</td>
+          <td class="right-aligned
+                    {% if summary.total_profit is none %}
+                      faint
+                    {% elif summary.total_profit > 0 %}
+                      green
+                    {% else %}
+                      cyan
+                    {% endif %}">
+            {{ summary.total_profit | yen }}
+          </td>
+          <td class="right-aligned
+                    {% if summary.profit_on_sold is none %}
+                      faint
+                    {% elif summary.profit_on_sold > 0 %}
+                      green
+                    {% else %}
+                      cyan
+                    {% endif %}">
+            {{ summary.profit_on_sold | yen }}
+          </td>
+          <td class="right-aligned
+                    {% if summary.break_even_date is none %}
+                      gray
+                    {% else %}
+                      green
+                    {% endif %}">
+            {{ summary.break_even_date if summary.break_even_date else '' }}
+          </td>
+          <td class="centre-aligned">{{ summary.num_cards }}</td>
+          <td class="centre-aligned">{{ summary.num_sold }}</td>
+          <td>{{ summary.percent_sold | percent }}</td>
+          <td class="right-aligned
+                    {% if summary.profit_per_sold is none %}
+                      faint
+                    {% elif summary.profit_per_sold > 0 %}
+                      green
+                    {% else %}
+                      cyan
+                    {% endif %}">
+            {{ summary.profit_per_sold | yen }}
+          </td>
+          <td class="centre-aligned">{{ summary.num_closed }}</td>
+          <td>{{ summary.percent_closed | percent }}</td>
+          <td class="right-aligned
+                    {% if summary.profit_per_closed is none %}
+                      faint
+                    {% elif summary.profit_per_closed > 0 %}
+                      green
+                    {% else %}
+                      cyan
+                    {% endif %}">
+            {{ summary.profit_per_closed | yen }}
+          </td>
         </tr>
       {% endfor %}
     </tbody>

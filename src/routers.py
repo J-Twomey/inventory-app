@@ -331,5 +331,12 @@ def format_yen(value: float | None) -> str:
     return f'¥{value:,.0f}'
 
 
+def format_percent(value: float | None) -> str:
+    if value is None:
+        return ''
+    return f'{value:,.2f}%'
+
+
 templates.env.filters['dollar'] = format_dollar
 templates.env.filters['yen'] = format_yen
+templates.env.filters['percent'] = format_percent
