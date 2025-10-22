@@ -84,7 +84,7 @@ def test_get_item_no_item(
     assert result is None
 
 
-def test_get_items_return_all_items(
+def test_get_newest_items_return_all_items(
         db_session: Session,
         item_create_factory: ItemCreateFactory,
 ) -> None:
@@ -103,7 +103,7 @@ def test_get_items_return_all_items(
     assert result_names == item_names
 
 
-def test_get_items_skip_newest_item(
+def test_get_newest_items_skip_newest_item(
         db_session: Session,
         item_create_factory: ItemCreateFactory,
 ) -> None:
@@ -122,7 +122,7 @@ def test_get_items_skip_newest_item(
     assert result_names == item_names[:-1]
 
 
-def test_get_items_take_two_items(
+def test_get_newest_items_take_two_items(
         db_session: Session,
         item_create_factory: ItemCreateFactory,
 ) -> None:
@@ -141,7 +141,7 @@ def test_get_items_take_two_items(
     assert result_names == item_names[1:]
 
 
-def test_get_items_skip_all_items(
+def test_get_newest_items_skip_all_items(
         db_session: Session,
         item_create_factory: ItemCreateFactory,
 ) -> None:
@@ -154,7 +154,7 @@ def test_get_items_skip_all_items(
     assert len(result) == 0
 
 
-def test_get_items_no_items(db_session: Session) -> None:
+def test_get_newest_items_no_items(db_session: Session) -> None:
     result = crud.get_newest_items(db_session, skip=0, limit=100)
     assert len(result) == 0
 
@@ -293,64 +293,6 @@ def test_search_for_items_multiple_qualifiers(
     assert result[0].qualifiers == [item_enums.Qualifier.NON_HOLO, item_enums.Qualifier.CRYSTAL]
 
 
-def test_build_search_filters_no_special_case() -> None:
-    params = {'name': 'Unown', 'set_name': 'Base Set'}
-    filters, post_filters = crud.build_search_filters(params)
-
-    assert filters[0].left.key == 'name'
-    assert filters[0].right.value == 'Unown'
-    assert filters[0].operator is eq
-    assert filters[1].left.key == 'set_name'
-    assert filters[1].right.value == 'Base Set'
-    assert filters[1].operator is eq
-    assert post_filters == []
-
-
-# def test_build_search_filters_with_min_value() -> None:
-#     params = {'name': 'Unown', 'total_cost_min': 100}
-#     filters, post_filters = crud.build_search_filters(params)
-
-#     assert filters[0].left.key == 'name'
-#     assert filters[0].right.value == 'Unown'
-#     assert filters[0].operator is eq
-#     # total_cost is a hybrid property: purchase_price + grading_fee_total + import_fee
-#     lhs_filters: list[str] = [col.key for col in list(filters[1].left)]
-#     assert lhs_filters[0] == 'purchase_price'
-#     assert lhs_filters[1] == 'grading_fee_total'
-#     assert lhs_filters[2] == 'import_fee'
-#     assert filters[1].right.value == 100
-#     assert filters[1].operator is ge
-#     assert post_filters == []
-
-
-# def test_build_search_filters_with_max_value() -> None:
-#     params = {'name': 'Unown', 'total_cost_max': 100}
-#     filters, post_filters = crud.build_search_filters(params)
-
-#     assert filters[0].left.key == 'name'
-#     assert filters[0].right.value == 'Unown'
-#     assert filters[0].operator is eq
-#     # total_cost is a hybrid property: purchase_price + grading_fee_total + import_fee
-#     lhs_filters: list[str] = [col.key for col in list(filters[1].left)]
-#     assert lhs_filters[0] == 'purchase_price'
-#     assert lhs_filters[1] == 'grading_fee_total'
-#     assert lhs_filters[2] == 'import_fee'
-#     assert filters[1].right.value == 100
-#     assert filters[1].operator is le
-#     assert post_filters == []
-
-
-def test_build_search_features_with_post_filter() -> None:
-    params = {'name': 'Unown', 'cracked_from': 1}
-    expected_post_filters = [('cracked_from', 1)]
-    filters, post_filters = crud.build_search_filters(params)
-
-    assert filters[0].left.key == 'name'
-    assert filters[0].right.value == 'Unown'
-    assert filters[0].operator is eq
-    assert post_filters == expected_post_filters
-
-
 def test_edit_item_no_item_found(
         db_session: Session,
         item_create_factory: ItemCreateFactory,
@@ -460,48 +402,59 @@ def test_edit_item_add_extra_qualifier_to_existing(
     ]
 
 
-# def test_edit_item_change_existing_grading_fee(
-#         db_session: Session,
-#         item_create_factory: ItemCreateFactory,
-# ) -> None:
-#     item = crud.create_item(
-#         db_session,
-#         item_create_factory.get(grading_fee={1: 100}),
-#     )
-#     # New grading fees should be combined with the existing before being passed through
-#     new_grading_fee = item.grading_fee | {2: 200}
-#     item_changes = schemas.ItemUpdate(grading_fee=new_grading_fee)
+def test_build_search_filters_no_special_case() -> None:
+    params = {'name': 'Unown', 'set_name': 'Base Set'}
+    filters, post_filters = crud.build_search_filters(params)
 
-#     result = crud.edit_item(db_session, item.id, item_changes)
-#     assert result == 303
-
-#     changed_item = crud.get_item(db_session, item.id)
-#     assert changed_item is not None
-
-#     # Use to_display() to convert the dict key values to expected int type
-#     display_item = changed_item.to_display()
-#     assert display_item.grading_fee == {1: 100, 2: 200}
-
-#     # Check the total grading_fee_total has been correctly updated
-#     assert display_item.grading_fee_total == 300
+    assert filters[0].left.key == 'name'
+    assert filters[0].right.value == 'Unown'
+    assert filters[0].operator is eq
+    assert filters[1].left.key == 'set_name'
+    assert filters[1].right.value == 'Base Set'
+    assert filters[1].operator is eq
+    assert post_filters == []
 
 
-# def test_edit_item_add_new_grading_fee(
-#         db_session: Session,
-#         item_create_factory: ItemCreateFactory,
-# ) -> None:
-#     item = crud.create_item(db_session, item_create_factory.get())
-#     item_changes = schemas.ItemUpdate(grading_fee={1: 100})
+def test_build_search_features_with_post_filter() -> None:
+    params = {'name': 'Unown', 'cracked_from': 1}
+    expected_post_filters = [('cracked_from', 1)]
+    filters, post_filters = crud.build_search_filters(params)
 
-#     result = crud.edit_item(db_session, item.id, item_changes)
-#     assert result == 303
+    assert filters[0].left.key == 'name'
+    assert filters[0].right.value == 'Unown'
+    assert filters[0].operator is eq
+    assert post_filters == expected_post_filters
 
-#     changed_item = crud.get_item(db_session, item.id)
-#     assert changed_item is not None
 
-#     # Use to_display() to convert the dict key values to expected int type
-#     display_item = changed_item.to_display()
-#     assert display_item.grading_fee == {1: 100}
+# def test_build_search_filters_with_min_value() -> None:
+#     params = {'name': 'Unown', 'total_cost_min': 100}
+#     filters, post_filters = crud.build_search_filters(params)
 
-#     # Check the total grading_fee_total has been correctly updated
-#     assert display_item.grading_fee_total == 100
+#     assert filters[0].left.key == 'name'
+#     assert filters[0].right.value == 'Unown'
+#     assert filters[0].operator is eq
+#     # total_cost is a hybrid property: purchase_price + grading_fee_total + import_fee
+#     lhs_filters: list[str] = [col.key for col in list(filters[1].left)]
+#     assert lhs_filters[0] == 'purchase_price'
+#     assert lhs_filters[1] == 'grading_fee_total'
+#     assert lhs_filters[2] == 'import_fee'
+#     assert filters[1].right.value == 100
+#     assert filters[1].operator is ge
+#     assert post_filters == []
+
+
+# def test_build_search_filters_with_max_value() -> None:
+#     params = {'name': 'Unown', 'total_cost_max': 100}
+#     filters, post_filters = crud.build_search_filters(params)
+
+#     assert filters[0].left.key == 'name'
+#     assert filters[0].right.value == 'Unown'
+#     assert filters[0].operator is eq
+#     # total_cost is a hybrid property: purchase_price + grading_fee_total + import_fee
+#     lhs_filters: list[str] = [col.key for col in list(filters[1].left)]
+#     assert lhs_filters[0] == 'purchase_price'
+#     assert lhs_filters[1] == 'grading_fee_total'
+#     assert lhs_filters[2] == 'import_fee'
+#     assert filters[1].right.value == 100
+#     assert filters[1].operator is le
+#     assert post_filters == []

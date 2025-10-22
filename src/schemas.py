@@ -163,7 +163,9 @@ class ItemBase(BaseModel):
 
     @model_validator(mode='after')
     def appropriate_listing_type(self) -> Self:
-        if self.status == Status.LISTED or self.status == Status.CLOSED:
+        if self.list_type is None:
+            return self
+        elif self.status == Status.LISTED or self.status == Status.CLOSED:
             if self.list_type == ListingType.NO_LIST:
                 raise ValueError('Item cannot have list_type of NO_LIST if listed or sold')
         else:
@@ -184,18 +186,6 @@ class ItemBase(BaseModel):
         if self.audit_target and (self.status == Status.CLOSED or self.status == Status.LISTED):
             raise ValueError('Item assigned as an audit target can not be listed or closed')
         return self
-
-    # @model_validator(mode='after')
-    # def check_required_fields_based_on_grading_company(self) -> Self:
-    #     missing = [
-    #         f for f in self.grading_company.required_fields
-    #         if getattr(self, f) is None
-    #     ]
-    #     if len(missing) > 0:
-    #         raise ValueError(
-    #             f'Graded card requires the following missing fields: {missing}',
-    #         )
-    #     return self
 
 
 class ItemCreate(ItemBase):
