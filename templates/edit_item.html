@@ -81,10 +81,7 @@
     {% endfor %}
   </select><br><br>
 
-  <label>Purchase Grade:</label>
-  <input type="number" name="grade" step="any" value="{{ item.purchase_grade }}"><br><br>
-
-  <label>Grading Company:</label>
+  <label>Purchase Grading Company:</label>
   <select name="grading_company">
     {% for grading_company in grading_company_enum %}
       <option value="{{ grading_company.name }}" {% if item.grading_company == grading_company.name %}selected{% endif %}>
@@ -92,6 +89,9 @@
       </option>
     {% endfor %}
   </select><br><br>
+
+  <label>Purchase Grade:</label>
+  <input type="number" name="grade" step="any" value="{{ item.purchase_grade }}"><br><br>
 
   <label>Purchase Cert #:</label>
   <input type="number" name="cert" value="{{ item.purchase_cert }}"><br><br>
