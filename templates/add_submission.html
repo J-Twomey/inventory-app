@@ -84,7 +84,9 @@
   </table>
 
   <button type="button" id="add-row">Add Row</button><br><br>
-  <button type="submit">Submit Submissions</button>
+  <button type="submit" onclick="return confirm('Confirm Submission');"
+    >Submit Submissions
+  </button>
 </form>
 
 {% if error_message %}
