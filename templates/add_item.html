@@ -46,7 +46,12 @@
   <input type="text" name="details"><br><br>
 
   <label>Purchase Date:</label>
-  <input type="date" name="purchase_date" required><br><br>
+  <div class="date-control">
+    <button type="button" id="date-decrease">−</button>
+    <input type="date" name="purchase_date" id="purchase_date" required>
+    <button type="button" id="date-increase">+</button>
+  </div>
+  <br>
 
   <label>Purchase Price:</label>
   <input type="number" name="purchase_price" required><br><br>
@@ -144,7 +149,7 @@
   <button type="submit">Add Item</button>
 </form>
 
-<script type="module" src="{{ url_for('static', path='js/add_item.js') }}"></script>
+<script src="/static/js/add_item.js"></script>
 
 </body>
 </html>
