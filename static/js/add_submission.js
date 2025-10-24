@@ -1,8 +1,3 @@
-let rowCount = 1;
-
-const addRowBtn = document.getElementById('add-row');
-const tableBody = document.querySelector('#submissions-table tbody');
-
 // Function to fetch item info via AJAX
 async function fetchItemInfo(itemId) {
   const response = await fetch(`/item_info_for_submission_form/${itemId}`);
@@ -35,31 +30,40 @@ function attachItemIdListener(input) {
   });
 }
 
-// Repopulate rows with data if the form is reloaded
-document.addEventListener('DOMContentLoaded', () => {
-  const itemInputs = document.querySelectorAll('.item-id-input');
+function setupRow(row) {
+  // Attach item-id listener
+  const input = row.querySelector('.item-id-input');
+  attachItemIdListener(input);
 
-  itemInputs.forEach(input => {
-    attachItemIdListener(input);
-
-    if (input.value) {
-      updateRowFromItemId(input);
-    }
+  // Attach delete button
+  const deleteBtn = row.querySelector('.delete-row-btn');
+  deleteBtn.addEventListener('click', () => {
+    row.remove();
+    saveFormState();
   });
-});
 
-// Attach listeners to the initial row
-document.querySelectorAll('.item-id-input').forEach(attachItemIdListener);
-document.querySelectorAll('.delete-row-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    btn.closest('tr').remove();
+  // Attach insert button
+  const insertBtn = row.querySelector('.insert-row-btn');
+  insertBtn.addEventListener('click', () => {
+    const newRow = createRow();
+    row.parentNode.insertBefore(newRow, row);
+    saveFormState();
   });
-});
+}
 
-// Add new row dynamically
-addRowBtn.addEventListener('click', () => {
-  rowCount += 1;
+// Function to initialise existing rows
+function initExistingRows() {
+  document.querySelectorAll('tr').forEach(row => {
+    // Populate cached data
+    const input = row.querySelector('.item-id-input');
+    if (input.value) updateRowFromItemId(input);
 
+    setupRow(row);
+  });
+};
+
+// Function to create a new table row
+function createRow() {
   const newRow = document.createElement('tr');
   newRow.innerHTML = `
     <td><input type="number" name="item_ids" class="item-id-input" required></td>
@@ -73,21 +77,14 @@ addRowBtn.addEventListener('click', () => {
     <td class="item-status"></td>
     <td class="item-qualifiers"></td>
     <td class="item-details"></td>
-    <td class="del-col"><button type="button" class="delete-row-btn">Del</button></td>
+    <td class="functions-col">
+      <button type="button" class="insert-row-btn">↑</button>
+      <button type="button" class="delete-row-btn">Del</button>
+    </td>
   `;
-
-  tableBody.appendChild(newRow);
-
-  // Attach listener to the new input
-  const newInput = newRow.querySelector('.item-id-input');
-  attachItemIdListener(newInput);
-
-  // Attach delete button handler
-  const deleteBtn = newRow.querySelector('.delete-row-btn');
-  deleteBtn.addEventListener('click', () => {
-    newRow.remove();
-  });
-});
+  setupRow(newRow);
+  return newRow;
+}
 
 // Save form state into localStorage
 function saveFormState() {
@@ -99,7 +96,6 @@ function saveFormState() {
   localStorage.setItem('submissionForm', JSON.stringify(formState));
 }
 
-// Restore form state from localStorage
 function restoreFormState() {
   const saved = localStorage.getItem('submissionForm');
   if (!saved) return;
@@ -112,12 +108,16 @@ function restoreFormState() {
   if (numInput) numInput.value = formState.submission_number || '';
   if (companySelect) companySelect.value = formState.submission_company || '';
 
-  // Restore rows (rebuild if more than one was saved)
-  for (let i = 1; i < formState.item_ids.length; i++) {
-    document.getElementById('add-row').click();
-  }
+  // Clear existing rows
+  tableBody.innerHTML = '';
 
-  // Fill in values and fetch details
+  // Rebuild rows and attach listeners immediately
+  formState.item_ids.forEach(() => {
+    const row = createRow(true); // true = attach listeners immediately
+    tableBody.appendChild(row);
+  });
+
+  // Fill in input values and update rows
   const itemInputs = document.querySelectorAll('.item-id-input');
   itemInputs.forEach((input, idx) => {
     input.value = formState.item_ids[idx] || '';
@@ -125,7 +125,22 @@ function restoreFormState() {
       updateRowFromItemId(input);
     }
   });
+
+  // Ensure at least one empty row exists
+  if (tableBody.children.length === 0) {
+    tableBody.appendChild(createRow(true));
+  }
 }
+
+const addRowBtn = document.getElementById('add-row');
+const tableBody = document.querySelector('#submissions-table tbody');
+
+// Add new row dynamically
+addRowBtn.addEventListener('click', () => {
+  const newRow = createRow();
+  tableBody.appendChild(newRow);
+  saveFormState();
+});
 
 document.addEventListener('DOMContentLoaded', () => {
   // Restore state on load

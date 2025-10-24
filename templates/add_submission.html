@@ -43,7 +43,7 @@
         <th>Status</th>
         <th>Qualifiers</th>
         <th>Details</th>
-        <th class="del-col">Del</th>
+        <th class="functions-col"></th>
       </tr>
     </thead>
     <tbody id="submissions-tbody">
@@ -61,7 +61,10 @@
             <td class="item-status"></td>
             <td class="item-qualifiers"></td>
             <td class="item-details"></td>
-            <td class="del-col"><button type="button" class="delete-row-btn">Del</button></td>
+            <td class="functions-col">
+              <button type="button" class="insert-row-btn">↑</button>
+              <button type="button" class="delete-row-btn">Del</button>
+            </td>
           </tr>
         {% endfor %}
       {% else %}
@@ -77,7 +80,10 @@
           <td class="item-status"></td>
           <td class="item-qualifiers"></td>
           <td class="item-details"></td>
-          <td class="del-col"><button type="button" class="delete-row-btn">Del</button></td>
+          <td class="functions-col">
+            <button type="button" class="insert-row-btn">↑</button>
+            <button type="button" class="delete-row-btn">Del</button>
+          </td>
         </tr>
       {% endif %}
     </tbody>
