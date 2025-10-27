@@ -821,8 +821,10 @@ class SubmissionDisplay(BaseModel):
 
 
 class GradingRecordBase(BaseModel):
-    item_id: int
-    submission_number: int
+    model_config = ConfigDict(extra='forbid')
+
+    item_id: int | None
+    submission_number: int | None
     grading_fee: int | None = None
     grade: float | None = None
     cert: int | None = None
@@ -830,20 +832,14 @@ class GradingRecordBase(BaseModel):
 
 
 class GradingRecordCreate(GradingRecordBase):
+    item_id: int
+    submission_number: int
+
     def to_model_kwargs(self) -> dict[str, int | float | bool | None]:
         return self.model_dump()
 
 
-class GradingRecordUpdate(BaseModel):
-    model_config = ConfigDict(extra='forbid')
-
-    item_id: int | None = None
-    submission_number: int | None = None
-    grading_fee: int | None = None
-    grade: float | None = None
-    cert: int | None = None
-    is_cracked: bool = False
-
+class GradingRecordUpdate(GradingRecordBase):
     def to_model_kwargs(self) -> dict[str, Any]:
         return self.model_dump(exclude_unset=True)
 

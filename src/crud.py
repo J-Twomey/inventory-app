@@ -196,7 +196,7 @@ def get_newest_submissions(
         db: Session,
         skip: int = 0,
         limit: int = 100,
-) -> Sequence[Submission]:
+) -> list[Submission]:
     submissions = db.query(
         Submission,
     ).order_by(Submission.submission_number.desc()).offset(skip).limit(limit).all()
