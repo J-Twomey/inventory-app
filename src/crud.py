@@ -192,6 +192,13 @@ def create_submission(
         raise
 
 
+def get_submission(
+        db: Session,
+        submission_number: int,
+) -> Submission | None:
+    return db.query(Submission).filter(Submission.submission_number == submission_number).first()
+
+
 def get_newest_submissions(
         db: Session,
         skip: int = 0,

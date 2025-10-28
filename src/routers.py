@@ -1,7 +1,10 @@
 from datetime import date
 
+from typing import TypedDict
+
 from fastapi import (
     APIRouter,
+    Body,
     Depends,
     Form,
     HTTPException,
@@ -9,6 +12,7 @@ from fastapi import (
 )
 from fastapi.responses import (
     HTMLResponse,
+    JSONResponse,
     RedirectResponse,
 )
 from fastapi.templating import Jinja2Templates
@@ -27,6 +31,7 @@ from .crud import (
     get_newest_items,
     get_newest_submissions,
     get_newest_grading_records,
+    get_submission,
     search_for_items,
 )
 from .database import get_db
@@ -47,8 +52,20 @@ from .schemas import (
     ItemDisplay,
     ItemSearchForm,
     ItemUpdateForm,
+    parse_nullable_date,
     SubmissionCreate,
 )
+
+
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] %(message)s',
+    filename='log.log',
+    filemode='a'
+)
+logger = logging.getLogger(__name__)
 
 
 templates = Jinja2Templates(directory='templates')
@@ -189,6 +206,31 @@ def view_submissions_summary(
             'submission_summaries': display_submissions,
         },
     )
+
+
+class SubmissionTableUpdatePayload(TypedDict, total=False):
+    submission_number: int
+    field: str
+    value: str
+
+
+@router.post('/submissions_summary_edit')
+def update_field(
+        payload: SubmissionTableUpdatePayload = Body(...),
+        db: Session = Depends(get_db),
+) -> JSONResponse:
+    submission_number = payload['submission_number']
+    field = payload['field']
+    update_value = parse_nullable_date(payload['value'])
+
+    submission = get_submission(db, submission_number)
+    if submission is None:
+        raise HTTPException(status_code=404, detail='Submission not found')
+
+    setattr(submission, field, update_value)
+    db.commit()
+    db.refresh(submission)
+    return JSONResponse({'status': 'success'})
 
 
 @router.get('/grading_records_view', response_class=HTMLResponse)

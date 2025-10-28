@@ -38,16 +38,20 @@
         <tr>
           <td class="centre-aligned">{{ summary.submission_number }}</td>
           <td class="centre-aligned">{{ summary.submission_company }}</td>
-          <td class="right-aligned
+          <td class="editable-date right-aligned
                     {% if summary.submission_date is none %}
                       gray
-                    {% endif %}">
+                    {% endif %}"
+              data-id="{{ summary.submission_number }}"
+              data-field="submission_date">
             {{ summary.submission_date if summary.submission_date else '' }}
           </td>
-          <td class="right-aligned
+          <td class="editable-date right-aligned
                     {% if summary.return_date is none %}
                       gray
-                    {% endif %}">
+                    {% endif %}"
+              data-id="{{ summary.submission_number }}"
+              data-field="return_date">
             {{ summary.return_date if summary.return_date else '' }}
           </td>
           <td class="right-aligned">{{ summary.card_cost | yen }}</td>
@@ -74,12 +78,14 @@
                     {% endif %}">
             {{ summary.profit_on_sold | yen }}
           </td>
-          <td class="right-aligned
+          <td class="editable-date right-aligned
                     {% if summary.break_even_date is none %}
                       gray
                     {% else %}
                       green
-                    {% endif %}">
+                    {% endif %}"
+              data-id="{{ summary.submission_number }}"
+              data-field="break_even_date">
             {{ summary.break_even_date if summary.break_even_date else '' }}
           </td>
           <td class="centre-aligned">{{ summary.num_cards }}</td>
@@ -112,6 +118,8 @@
     </tbody>
   </table>
 </div>
+
+<script src="/static/js/submissions_summary_view.js"></script>
 
 </body>
 </html>

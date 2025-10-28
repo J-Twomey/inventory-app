@@ -730,21 +730,6 @@ class ItemDisplay(BaseModel):
 
 
 class SubmissionBase(BaseModel):
-    submission_number: int
-    submission_company: GradingCompany
-    submission_date: date | None = None
-    return_date: date | None = None
-    break_even_date: date | None = None
-
-
-class SubmissionCreate(SubmissionBase):
-    def to_model_kwargs(self) -> dict[str, int | date | None]:
-        data = self.model_dump()
-        data['submission_company'] = self.submission_company.value
-        return data
-
-
-class SubmissionUpdate(BaseModel):
     model_config = ConfigDict(extra='forbid')
 
     submission_number: int | None = None
@@ -753,6 +738,18 @@ class SubmissionUpdate(BaseModel):
     return_date: date | None = None
     break_even_date: date | None = None
 
+
+class SubmissionCreate(SubmissionBase):
+    submission_number: int
+    submission_company: GradingCompany
+
+    def to_model_kwargs(self) -> dict[str, int | date | None]:
+        data = self.model_dump()
+        data['submission_company'] = self.submission_company.value
+        return data
+
+
+class SubmissionUpdate(SubmissionBase):
     def to_model_kwargs(self) -> dict[str, Any]:
         data = self.model_dump(exclude_unset=True)
         if self.submission_company is not None:
