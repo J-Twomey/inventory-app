@@ -26,12 +26,12 @@ from .crud import (
     delete_grading_record_by_id,
     edit_grading_record,
     edit_item,
+    edit_submission_single_field,
     get_grading_record,
     get_item,
     get_newest_items,
     get_newest_submissions,
     get_newest_grading_records,
-    get_submission,
     search_for_items,
 )
 from .database import get_db
@@ -223,14 +223,8 @@ def update_field(
     field = payload['field']
     update_value = parse_nullable_date(payload['value'])
 
-    submission = get_submission(db, submission_number)
-    if submission is None:
-        raise HTTPException(status_code=404, detail='Submission not found')
-
-    setattr(submission, field, update_value)
-    db.commit()
-    db.refresh(submission)
-    return JSONResponse({'status': 'success'})
+    edit_result = edit_submission_single_field(db, submission_number, field, update_value)
+    return JSONResponse({'status_code': edit_result})
 
 
 @router.get('/grading_records_view', response_class=HTMLResponse)

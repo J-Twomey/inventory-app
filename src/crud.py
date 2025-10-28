@@ -1,4 +1,5 @@
 from collections.abc import Sequence
+from datetime import date
 from typing import Any
 
 from sqlalchemy import (
@@ -208,6 +209,21 @@ def get_newest_submissions(
         Submission,
     ).order_by(Submission.submission_number.desc()).offset(skip).limit(limit).all()
     return list(reversed(submissions))
+
+
+def edit_submission_single_field(
+        db: Session,
+        submission_number: int,
+        field: str,
+        update_value: date | None,
+) -> int:
+    submission = get_submission(db, submission_number)
+    if submission is None:
+        return 404
+    setattr(submission, field, update_value)
+    db.commit()
+    db.refresh(submission)
+    return 303
 
 
 def get_grading_record(
