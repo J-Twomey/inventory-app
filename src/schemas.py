@@ -820,8 +820,8 @@ class SubmissionDisplay(BaseModel):
 class GradingRecordBase(BaseModel):
     model_config = ConfigDict(extra='forbid')
 
-    item_id: int | None
-    submission_number: int | None
+    item_id: int | None = None
+    submission_number: int | None = None
     grading_fee: int | None = None
     grade: float | None = None
     cert: int | None = None
