@@ -215,7 +215,7 @@ class SubmissionTableUpdatePayload(TypedDict, total=False):
 
 
 @router.post('/submissions_summary_edit')
-def update_field(
+def update_submission_summary_field(
         payload: SubmissionTableUpdatePayload = Body(...),
         db: Session = Depends(get_db),
 ) -> JSONResponse:
