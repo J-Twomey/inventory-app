@@ -705,6 +705,9 @@ class ItemDisplay(BaseModel):
     status: str | None = None
     intent: str | None = None
     import_fee: int | None = None
+    purchase_grading_company: int | None = None
+    purchase_cert: int | None = None
+    purchase_grade: float | None = None
     list_price: float | None = None
     list_type: str | None = None
     list_date: date | None = None
