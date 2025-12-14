@@ -57,17 +57,6 @@ from .schemas import (
 )
 
 
-import logging
-
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s [%(levelname)s] %(message)s',
-    filename='log.log',
-    filemode='a'
-)
-logger = logging.getLogger(__name__)
-
-
 templates = Jinja2Templates(directory='templates')
 router = APIRouter()
 

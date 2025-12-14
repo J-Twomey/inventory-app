@@ -120,26 +120,6 @@ class GradingCompany(Enum):
     CGC = 2
     BGS = 3
 
-    # @property
-    # def required_fields(self) -> list[str]:
-    #     mapping = {
-    #         GradingCompany.RAW: [],
-    #         GradingCompany.PSA: ['grade', 'cert'],
-    #         GradingCompany.CGC: ['grade', 'cert'],
-    #         GradingCompany.BGS: ['grade', 'cert'],
-    #     }
-    #     return mapping[self]
-
-    # @property
-    # def required_to_be_null(self) -> list[str]:
-    #     mapping = {
-    #         GradingCompany.RAW: ['grade', 'cert'],
-    #         GradingCompany.PSA: [],
-    #         GradingCompany.CGC: [],
-    #         GradingCompany.BGS: [],
-    #     }
-    #     return mapping[self]
-
 
 class ListingType(Enum):
     NO_LIST = 0
