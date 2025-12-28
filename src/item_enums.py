@@ -1,5 +1,5 @@
 import json
-from enum import Enum
+from enum import Enum, IntEnum
 from typing import (
     Type,
     TypeVar,
@@ -7,6 +7,7 @@ from typing import (
 
 from sqlalchemy.engine.interfaces import Dialect
 from sqlalchemy.types import (
+    Integer,
     TypeDecorator,
     TEXT,
 )
@@ -127,7 +128,7 @@ class ListingType(Enum):
     AUCTION = 2
 
 
-E = TypeVar('E', bound=Enum)
+E = TypeVar('E', bound=IntEnum)
 
 
 class EnumList(TypeDecorator[list[E]]):
@@ -167,3 +168,33 @@ class EnumList(TypeDecorator[list[E]]):
             return None
         raw: list[int] = json.loads(value)
         return [self.enum_class(v) for v in raw]
+
+
+class EnumInt(TypeDecorator[E]):
+    impl = Integer
+    cache_ok = True
+
+    def __init__(
+            self,
+            enum_cls: Type[E],
+    ) -> None:
+        self.enum_cls = enum_cls
+        super().__init__()
+
+    def process_bind_param(
+            self,
+            value: E | None,
+            dialect: Dialect,
+    ) -> int | None:
+        if value is None:
+            return None
+        return value.value
+
+    def process_result_value(
+            self,
+            value: int | None,
+            dialect: Dialect,
+    ) -> E | None:
+        if value is None:
+            return None
+        return self.enum_cls(value)

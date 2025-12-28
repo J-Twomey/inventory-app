@@ -46,10 +46,11 @@ from .item_enums import (
     Status,
 )
 from .schemas import (
+    E,
     GradingRecordCreate,
     GradingRecordUpdateForm,
     ItemCreateForm,
-    ItemDisplay,
+    ItemRead,
     ItemSearchForm,
     ItemUpdateForm,
     parse_nullable_date,
@@ -83,12 +84,11 @@ def view_items(
     else:
         items = search_for_items(db, search_data)
         items = items[:show_limit]
-    display_items = [item.to_display() for item in items]
     return templates.TemplateResponse(
         'items_view.html',
         {
             'request': request,
-            'items': display_items,
+            'items': items,
             'form_data': search_form,
             'qualifier_enum': Qualifier,
             'category_enum': Category,
@@ -150,13 +150,11 @@ def open_edit_item_form(
     item = get_item(db, item_id)
     if item is None:
         raise HTTPException(status_code=404, detail='Item not found')
-    else:
-        display_item = item.to_display()
     return templates.TemplateResponse(
         'edit_item.html',
         {
             'request': request,
-            'item': display_item,
+            'item': item,
             'qualifier_enum': Qualifier,
             'category_enum': Category,
             'language_enum': Language,
@@ -187,12 +185,11 @@ def view_submissions_summary(
         show_limit: int = 20,
 ) -> Response:
     submissions = get_newest_submissions(db, skip=0, limit=show_limit)
-    display_submissions = [sub.to_display() for sub in submissions]
     return templates.TemplateResponse(
         'submissions_summary_view.html',
         {
             'request': request,
-            'submission_summaries': display_submissions,
+            'submission_summaries': submissions,
         },
     )
 
@@ -223,12 +220,11 @@ def view_grading_records(
         show_limit: int = 20,
 ) -> Response:
     grading_records = get_newest_grading_records(db, skip=0, limit=show_limit)
-    display_records = [record.to_display() for record in grading_records]
     return templates.TemplateResponse(
         'grading_records_view.html',
         {
             'request': request,
-            'records': display_records,
+            'records': grading_records,
         },
     )
 
@@ -293,12 +289,12 @@ def submit_add_submission_form(
 def get_item_info_for_submission_form(
         item_id: int,
         db: Session = Depends(get_db),
-) -> ItemDisplay:
+) -> ItemRead:
     item = get_item(db, item_id)
     if item is None:
-        return ItemDisplay(id=item_id, name='N/A')
+        raise HTTPException(status_code=404, detail='Item not found')
     else:
-        return item.to_display()
+        return ItemRead.model_validate(item)
 
 
 @router.get('/grading_record_delete/{grading_record_id}')
@@ -321,13 +317,11 @@ def open_edit_grading_record_form(
     record = get_grading_record(db, grading_record_id)
     if record is None:
         raise HTTPException(status_code=404, detail='Grading_record not found')
-    else:
-        display_record = record.to_display()
     return templates.TemplateResponse(
         'edit_grading_record.html',
         {
             'request': request,
-            'record': display_record,
+            'record': record,
             'grading_company_enum': GradingCompany,
         },
     )
@@ -362,6 +356,11 @@ def format_percent(value: float | None) -> str:
     return f'{value:,.2f}%'
 
 
+def format_enum(e: E) -> str:
+    return e.name.title() if e else ''
+
+
 templates.env.filters['dollar'] = format_dollar
 templates.env.filters['yen'] = format_yen
 templates.env.filters['percent'] = format_percent
+templates.env.filters['enum'] = format_enum

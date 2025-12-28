@@ -377,8 +377,8 @@
           <td>{{ item.id }}</td>
           <td>{{ item.name }}</td>
           <td>{{ item.set_name }}</td>
-          <td>{{ item.category }}</td>
-          <td>{{ item.language }}</td>
+          <td>{{ item.category | enum }}</td>
+          <td>{{ item.language | enum }}</td>
           <td class=" centre-aligned {{ 'faint' if item.grade is none else '' }}">
             {% if item.grade is not none %}
               {{ item.grade|int if item.grade == item.grade|int else item.grade }}
@@ -386,7 +386,7 @@
               ''
             {% endif %}
           </td>
-          <td class="centre-aligned">{{ item.intent }}</td>
+          <td class="centre-aligned">{{ item.intent | enum }}</td>
           <td>{{ item.purchase_date }}</td>
           <td class="right-aligned">{{ item.purchase_price | yen }}</td>
           <td class="right-aligned {{ 'faint' if item.total_grading_fees == 0 else '' }}">
@@ -395,7 +395,7 @@
           <td class="right-aligned {{ 'faint' if item.total_cost == 0 else '' }}">
             {{ '' if item.total_cost is none else item.total_cost | yen }}
           </td>
-          <td class="centre-aligned">{{ item.status }}</td>
+          <td class="centre-aligned">{{ item.status | enum }}</td>
           <td class="right-aligned {{ 'faint' if item.list_price is none else '' }}">
             {{ '' if item.list_price is none else item.list_price | dollar }}
           </td>

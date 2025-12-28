@@ -373,14 +373,8 @@ def test_parse_enum_invalid_input() -> None:
 
 def test_parse_nullable_enum_do_parse_to_enum() -> None:
     input_str = 'pack'
-    result = schemas.parse_nullable_enum(input_str, item_enums.Category, as_int=False)
+    result = schemas.parse_nullable_enum(input_str, item_enums.Category)
     assert result == item_enums.Category.PACK
-
-
-def test_parse_nullable_enum_do_parse_to_int() -> None:
-    input_str = 'pack'
-    result = schemas.parse_nullable_enum(input_str, item_enums.Category, as_int=True)
-    assert result == item_enums.Category.PACK.value
 
 
 @pytest.mark.parametrize(
