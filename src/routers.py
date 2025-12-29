@@ -50,7 +50,7 @@ from .schemas import (
     GradingRecordCreate,
     GradingRecordUpdateForm,
     ItemCreateForm,
-    ItemRead,
+    ItemForSubmissionForm,
     ItemSearchForm,
     ItemUpdateForm,
     parse_nullable_date,
@@ -285,16 +285,27 @@ def submit_add_submission_form(
     return RedirectResponse(url='/grading_records_view?submitted=1', status_code=303)
 
 
-@router.get('/item_info_for_submission_form/{item_id}')
+@router.get('/item_info_for_submission_form/{item_id}', response_model=ItemForSubmissionForm)
 def get_item_info_for_submission_form(
         item_id: int,
         db: Session = Depends(get_db),
-) -> ItemRead:
+) -> ItemForSubmissionForm:
     item = get_item(db, item_id)
     if item is None:
         raise HTTPException(status_code=404, detail='Item not found')
     else:
-        return ItemRead.model_validate(item)
+        return ItemForSubmissionForm(
+            name=item.name,
+            set_name=item.set_name,
+            category=item.category.name.replace('_', ' ').title(),
+            language=item.language.name.replace('_', ' ').title(),
+            intent=item.intent.name.replace('_', ' ').title(),
+            purchase_date=item.purchase_date,
+            purchase_price=item.purchase_price,
+            status=item.status.name.replace('_', ' ').title(),
+            qualifiers=[q.name.replace('_', ' ').title() for q in item.qualifiers],
+            details=item.details,
+        )
 
 
 @router.get('/grading_record_delete/{grading_record_id}')
@@ -360,7 +371,12 @@ def format_enum(e: E) -> str:
     return e.name.title() if e else ''
 
 
+def format_grading_company_enum(e: GradingCompany) -> str:
+    return e.name if e else ''
+
+
 templates.env.filters['dollar'] = format_dollar
 templates.env.filters['yen'] = format_yen
 templates.env.filters['percent'] = format_percent
 templates.env.filters['enum'] = format_enum
+templates.env.filters['grading_company_enum'] = format_grading_company_enum

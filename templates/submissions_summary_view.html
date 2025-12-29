@@ -37,7 +37,7 @@
       {% for summary in submission_summaries %}
         <tr>
           <td class="centre-aligned">{{ summary.submission_number }}</td>
-          <td class="centre-aligned">{{ summary.submission_company }}</td>
+          <td class="centre-aligned">{{ summary.submission_company | grading_company_enum }}</td>
           <td class="editable-date right-aligned
                     {% if summary.submission_date is none %}
                       gray

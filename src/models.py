@@ -474,9 +474,7 @@ class GradingRecord(Base):
     is_cracked: Mapped[bool] = mapped_column(Boolean)
 
     submission: Mapped[Submission] = relationship(back_populates='submission_items')
-    original_item: Mapped[Item] = relationship(
-        back_populates='submissions',
-    )
+    original_item: Mapped[Item] = relationship(back_populates='submissions')
 
     @hybrid_property
     def submission_company(self) -> GradingCompany:

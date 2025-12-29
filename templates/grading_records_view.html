@@ -13,6 +13,7 @@
   <table border="1" cellpadding="6" cellspacing="0">
     <thead>
       <tr>
+        <th>Record ID</th>
         <th>Item ID</th>
         <th>Sub #</th>
         <th>Item</th>
@@ -31,26 +32,27 @@
     </thead>
     <tbody>
       {% for record in records %}
-        {% set cost = record.purchase_price + record.import_fee %}
-        {% set net = record.return_jpy - cost - record.grading_fee if record.return_jpy is not none else none %}
+        {% set cost = record.original_item.purchase_price + record.original_item.import_fee %}
+        {% set net = record.original_item.return_jpy - cost - record.grading_fee if record.original_item.return_jpy is not none else none %}
         <tr class="{% if record.is_cracked %}
                     yellow
-                  {% elif record.return_jpy is not none %}
+                  {% elif record.original_item.return_jpy is not none %}
                     gray
                   {% endif %}">
+          <td>{{ record.id }}</td>
           <td>{{ record.item_id }}</td>
           <td class="centre-aligned">{{ record.submission_number }}</td>
-          <td>{{ record.name }}</td>
-          <td>{{ record.set_name }}</td>
-          <td>{{ record.language }}</td>
-          <td>{{ record.category }}</td>
-          <td>{{ record.submission_company }}</td>
+          <td>{{ record.original_item.name }}</td>
+          <td>{{ record.original_item.set_name }}</td>
+          <td>{{ record.original_item.language | enum }}</td>
+          <td>{{ record.original_item.category | enum }}</td>
+          <td>{{ record.submission_company | grading_company_enum }}</td>
           <td class="centre-aligned {{ 'faint' if record.grade is none else '' }}">{{ record.cert }}</td>
           <td class="centre-aligned {{ 'faint' if record.grade is none else '' }}">
               {% if record.grade is none %}
                 ''
               {% elif record.grade == record.grade | int %}
-                {{ record.grade|int }}
+                {{ record.grade | int }}
               {% else %}
                 {{ record.grade }}
               {% endif %}
@@ -59,8 +61,8 @@
           <td class="right-aligned {{ 'faint' if record.grade is none else '' }}">
             {{ record.grading_fee | yen }}
           </td>
-          <td class="right-aligned {{ 'faint' if record.return_jpy is none else '' }}">
-            {{ '' if record.return_jpy is none else record.return_jpy | yen }}
+          <td class="right-aligned {{ 'faint' if record.original_item.return_jpy is none else '' }}">
+            {{ '' if record.original_item.return_jpy is none else record.original_item.return_jpy | yen }}
           </td>
           <td class="right-aligned
                     {% if net is none %}
@@ -68,7 +70,7 @@
                     {% elif net > 0 %}
                       green
                     {% endif %}">
-            {{ '' if record.return_jpy is none else net | yen }}
+            {{ '' if record.original_item.return_jpy is none else net | yen }}
           </td>
           <td>
             <a href="/grading_record_delete/{{ record.id }}"

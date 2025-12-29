@@ -17,7 +17,12 @@ async function updateRowFromItemId(inputRow) {
   row.querySelector('.item-language').textContent = data.language || '';
   row.querySelector('.item-intent').textContent = data.intent || '';
   row.querySelector('.item-purchase-date').textContent = data.purchase_date || '';
-  row.querySelector('.item-purchase-price').textContent = data.purchase_price || '';
+  row.querySelector('.item-purchase-price').textContent = data.purchase_price != null
+    ? Number(data.purchase_price).toLocaleString('ja-JP', {
+        style: 'currency',
+        currency: 'JPY',
+      })
+    : '';
   row.querySelector('.item-status').textContent = data.status || '';
   row.querySelector('.item-qualifiers').textContent = (data.qualifiers || []).join(', ');
   row.querySelector('.item-details').textContent = data.details || '';

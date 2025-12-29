@@ -667,20 +667,27 @@ class ItemSearchForm:
         )
 
 
-class ItemRead(ItemBase):
+class ItemForSubmissionForm(BaseModel):
+    '''
+    This is necessary for usage with javascript to provide nicely formatted strings that can be
+    used as is in the display. If further information about an item is required it can be added
+    here.
+    '''
+    model_config = ConfigDict(
+        extra='forbid',
+        from_attributes=True,
+    )
+
     name: str
     set_name: str
-    category: Category
-    language: Language
-    qualifiers: list[Qualifier]
+    category: str
+    language: str
+    intent: str
     purchase_date: date
     purchase_price: int
-    status: Status
-    intent: Intent
-    import_fee: int
-    purchase_grading_company: GradingCompany
-    list_type: ListingType
-    object_variant: ObjectVariant
+    status: str
+    qualifiers: list[str]
+    details: str | None
 
 
 class SubmissionBase(BaseModel):
