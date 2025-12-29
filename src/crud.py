@@ -94,7 +94,7 @@ def search_for_items(
         statement = statement.where(and_(*filters))
     results = db.execute(statement).scalars().all()
 
-    # Post filtering (for qualifiers)
+    # Post filtering (for qualifiers and grading_company)
     for field, value in post_filters:
         if field == 'qualifiers':
             qualifier_values = [q for q in value]
@@ -102,7 +102,37 @@ def search_for_items(
                 item for item in results
                 if all(q in item.qualifiers for q in qualifier_values)
             ]
+        elif field == 'grading_company':
+            results = [item for item in results if item.grading_company == value]
     return results
+
+
+def build_search_filters(
+        search_params: dict[str, Any],
+) -> tuple[list[BinaryExpression[Any]], list[tuple[str, Any]]]:
+    filters: list[BinaryExpression[Any]] = []
+    post_filters: list[tuple[str, Any]] = []
+    for field, value in search_params.items():
+        if value is None or value == []:
+            continue
+
+        # Filter qualifiers and cracked_from after the sql search
+        if field in ['qualifiers', 'cracked_from', 'grading_company']:
+            post_filters.append((field, value))
+        elif field == 'submission_number':
+            raise NotImplementedError
+        elif field.endswith('_min'):
+            base_field = field.removesuffix('_min')
+            column = getattr(Item, base_field)
+            filters.append(column >= value)
+        elif field.endswith('_max'):
+            base_field = field.removesuffix('_max')
+            column = getattr(Item, base_field)
+            filters.append(column <= value)
+        else:
+            column = getattr(Item, field)
+            filters.append(column == value)
+    return filters, post_filters
 
 
 def edit_item(
@@ -135,34 +165,6 @@ def perform_item_update(
 
     for key, value in update_data.items():
         setattr(item, key, value)
-
-
-def build_search_filters(
-        search_params: dict[str, Any],
-) -> tuple[list[BinaryExpression[Any]], list[tuple[str, Any]]]:
-    filters: list[BinaryExpression[Any]] = []
-    post_filters: list[tuple[str, Any]] = []
-    for field, value in search_params.items():
-        if value is None or value == []:
-            continue
-
-        # Filter qualifiers and cracked_from after the sql search
-        if field in ['qualifiers', 'cracked_from']:
-            post_filters.append((field, value))
-        elif field == 'submission_number':
-            raise NotImplementedError
-        elif field.endswith('_min'):
-            base_field = field.removesuffix('_min')
-            column = getattr(Item, base_field)
-            filters.append(column >= value)
-        elif field.endswith('_max'):
-            base_field = field.removesuffix('_max')
-            column = getattr(Item, base_field)
-            filters.append(column <= value)
-        else:
-            column = getattr(Item, field)
-            filters.append(column == value)
-    return filters, post_filters
 
 
 def create_submission(

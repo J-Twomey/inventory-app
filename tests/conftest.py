@@ -1,3 +1,4 @@
+from collections.abc import Sized
 from datetime import date
 from typing import (
     Any,
@@ -71,20 +72,20 @@ class ItemFactory:
         id: int = 1,
         name: str = 'TESTER',
         set_name: str = 'Base Set',
-        category: int = item_enums.Category.CARD.value,
-        language: int = item_enums.Language.KOREAN.value,
+        category: item_enums.Category = item_enums.Category.CARD,
+        language: item_enums.Language = item_enums.Language.KOREAN,
         qualifiers: list[item_enums.Qualifier] | None = None,
         details: str | None = None,
         purchase_date: date = date(2025, 5, 5),
         purchase_price: int = 1000,
-        status: int = item_enums.Status.STORAGE.value,
-        intent: int = item_enums.Intent.SELL.value,
+        status: item_enums.Status = item_enums.Status.STORAGE,
+        intent: item_enums.Intent = item_enums.Intent.SELL,
         import_fee: int = 0,
-        purchase_grading_company: int = item_enums.GradingCompany.RAW.value,
+        purchase_grading_company: item_enums.GradingCompany = item_enums.GradingCompany.RAW,
         purchase_grade: float | None = None,
         purchase_cert: float | None = None,
         list_price: float | None = None,
-        list_type: int = item_enums.ListingType.NO_LIST.value,
+        list_type: item_enums.ListingType = item_enums.ListingType.NO_LIST,
         list_date: date | None = None,
         sale_total: float | None = None,
         sale_date: date | None = None,
@@ -92,7 +93,7 @@ class ItemFactory:
         sale_fee: float | None = None,
         usd_to_jpy_rate: float | None = None,
         group_discount: bool = False,
-        object_variant: int = item_enums.ObjectVariant.STANDARD.value,
+        object_variant: item_enums.ObjectVariant = item_enums.ObjectVariant.STANDARD,
         audit_target: bool = False,
         cracked_from_purchase: bool = False,
     ) -> Item:
@@ -299,7 +300,7 @@ class SubmissionFactory:
     def get(
         self,
         submission_number: int = 1,
-        submission_company: int = 1,
+        submission_company: item_enums.GradingCompany = item_enums.GradingCompany.PSA,
         submission_date: date | None = None,
         return_date: date | None = None,
         break_even_date: date | None = None,
@@ -328,7 +329,7 @@ def item_with_submissions_factory(
     def get(
         grading_record_ids: list[int] | None = None,
         submission_numbers: list[int] | None = None,
-        submission_companies: list[int] | None = None,
+        submission_companies: list[item_enums.GradingCompany] | None = None,
         submission_dates: list[date | None] | None = None,
         grading_fees: list[int] | None = None,
         grades: list[float] | None = None,
@@ -340,7 +341,9 @@ def item_with_submissions_factory(
     ) -> Item:
         grading_record_ids_ = grading_record_ids or [1]
         submission_numbers_ = submission_numbers or [1]
-        submission_companies_ = submission_companies or len(grading_record_ids_) * [1]
+        submission_companies_ = submission_companies or len(grading_record_ids_) * [
+            item_enums.GradingCompany.PSA
+        ]
         submission_dates_ = submission_dates or len(grading_record_ids_) * [None]
         grading_fees_ = grading_fees or len(grading_record_ids_) * [None]
         grades_ = grades or len(grading_record_ids_) * [None]
@@ -350,7 +353,7 @@ def item_with_submissions_factory(
         break_even_dates_ = break_even_dates or len(grading_record_ids_) * [None]
 
         # input validation
-        input_lists = [
+        input_lists: list[Sized] = [
             grading_record_ids_,
             submission_numbers_,
             submission_companies_,

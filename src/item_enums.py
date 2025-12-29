@@ -188,7 +188,9 @@ class EnumInt(TypeDecorator[E]):
     ) -> int | None:
         if value is None:
             return None
+        # elif isinstance(value, Enum):
         return value.value
+        # return value
 
     def process_result_value(
             self,

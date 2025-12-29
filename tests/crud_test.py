@@ -267,7 +267,7 @@ def test_search_for_items_multiple_search_criteria(
         getattr(r, field_name) == fv for r, field_name, fv in zip(
             result,
             ('language', 'grading_company'),
-            (item_enums.Language.KOREAN.value, item_enums.GradingCompany.PSA.value),
+            (item_enums.Language.KOREAN, item_enums.GradingCompany.PSA),
         )
     )
 
@@ -342,7 +342,7 @@ def test_edit_item_enum_field(
 
     changed_item = crud.get_item(db_session, item.id)
     assert changed_item is not None
-    assert changed_item.language == item_enums.Language.INDONESIAN.value
+    assert changed_item.language == item_enums.Language.INDONESIAN
 
 
 def test_edit_item_multiple_changes(
@@ -360,7 +360,7 @@ def test_edit_item_multiple_changes(
 
     changed_item = crud.get_item(db_session, item.id)
     assert changed_item is not None
-    assert changed_item.grading_company == item_enums.GradingCompany.BGS.value
+    assert changed_item.grading_company == item_enums.GradingCompany.BGS
     assert changed_item.grade == 10.
 
 

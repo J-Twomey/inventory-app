@@ -4,6 +4,7 @@ from typing import Callable
 from sqlalchemy.orm import Session
 
 import src.crud as crud
+import src.item_enums as item_enums
 from src.models import Item
 from .conftest import ItemFactory
 
@@ -57,12 +58,12 @@ def test_grading_company_no_submission_no_crack(
         item_factory: ItemFactory,
 ) -> None:
     item = item_factory.get(
-        purchase_grading_company=3,
+        purchase_grading_company=item_enums.GradingCompany.BGS,
         purchase_grade=1,
         purchase_cert=1,
         cracked_from_purchase=False,
     )
-    expected_grading_company = 3
+    expected_grading_company = item_enums.GradingCompany.BGS
     # Python side
     assert item.grading_company == expected_grading_company
     # DB side
@@ -78,12 +79,12 @@ def test_grading_company_no_submission_cracked_from_purchase(
         item_factory: ItemFactory,
 ) -> None:
     item = item_factory.get(
-        purchase_grading_company=3,
+        purchase_grading_company=item_enums.GradingCompany.BGS,
         purchase_grade=1,
         purchase_cert=1,
         cracked_from_purchase=True,
     )
-    expected_grading_company = 0
+    expected_grading_company = item_enums.GradingCompany.RAW
     # Python side
     assert item.grading_company == expected_grading_company
     # DB side
@@ -105,9 +106,9 @@ def test_grading_company_latest_sub_cracked(
         grades=[1],
         certs=[1],
         is_cracked_flags=[True],
-        submission_companies=[3],
+        submission_companies=[item_enums.GradingCompany.BGS],
     )
-    expected_grading_company = 0
+    expected_grading_company = item_enums.GradingCompany.RAW
     # Python side
     assert item_with_submissions.grading_company == expected_grading_company
     # DB side
@@ -127,9 +128,9 @@ def test_grading_company_latest_sub_not_cracked(
         grades=[1],
         certs=[1],
         is_cracked_flags=[False],
-        submission_companies=[3],
+        submission_companies=[item_enums.GradingCompany.BGS],
     )
-    expected_grading_company = 3
+    expected_grading_company = item_enums.GradingCompany.BGS
     # Python side
     assert item_with_submissions.grading_company == expected_grading_company
     # DB side
@@ -143,7 +144,7 @@ def test_grade_no_submission_no_crack(
         item_factory: ItemFactory,
 ) -> None:
     item = item_factory.get(
-        purchase_grading_company=1,
+        purchase_grading_company=item_enums.GradingCompany.PSA,
         purchase_grade=5,
         purchase_cert=1,
         cracked_from_purchase=False,
@@ -164,7 +165,7 @@ def test_grade_no_submission_cracked_from_purchase(
         item_factory: ItemFactory,
 ) -> None:
     item = item_factory.get(
-        purchase_grading_company=1,
+        purchase_grading_company=item_enums.GradingCompany.PSA,
         purchase_grade=5,
         purchase_cert=1,
         cracked_from_purchase=True,
@@ -191,7 +192,7 @@ def test_grade_latest_sub_cracked(
         grades=[5],
         certs=[1],
         is_cracked_flags=[True],
-        submission_companies=[3],
+        submission_companies=[item_enums.GradingCompany.BGS],
     )
     expected_grade = None
     # Python side
@@ -213,7 +214,7 @@ def test_grade_latest_sub_not_cracked(
         grades=[5],
         certs=[1],
         is_cracked_flags=[False],
-        submission_companies=[3],
+        submission_companies=[item_enums.GradingCompany.BGS],
     )
     expected_grade = 5
     # Python side
@@ -229,7 +230,7 @@ def test_cert_no_submission_no_crack(
         item_factory: ItemFactory,
 ) -> None:
     item = item_factory.get(
-        purchase_grading_company=1,
+        purchase_grading_company=item_enums.GradingCompany.PSA,
         purchase_grade=1,
         purchase_cert=123,
         cracked_from_purchase=False,
@@ -250,7 +251,7 @@ def test_cert_no_submission_cracked_from_purchase(
         item_factory: ItemFactory,
 ) -> None:
     item = item_factory.get(
-        purchase_grading_company=1,
+        purchase_grading_company=item_enums.GradingCompany.PSA,
         purchase_grade=1,
         purchase_cert=123,
         cracked_from_purchase=True,
@@ -277,7 +278,7 @@ def test_cert_latest_sub_cracked(
         grades=[1],
         certs=[123],
         is_cracked_flags=[True],
-        submission_companies=[3],
+        submission_companies=[item_enums.GradingCompany.BGS],
     )
     expected_cert = None
     # Python side
@@ -299,7 +300,7 @@ def test_cert_latest_sub_not_cracked(
         grades=[1],
         certs=[123],
         is_cracked_flags=[False],
-        submission_companies=[3],
+        submission_companies=[item_enums.GradingCompany.BGS],
     )
     expected_cert = 123
     # Python side
