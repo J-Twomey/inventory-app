@@ -1,4 +1,4 @@
-import { getOriginalFormValues, disableUnchangedFields } from './form_utils.js';
+import { getOriginalFormValues, disableUnchangedFields } from '../helpers/form_utils.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.querySelector('form');
