@@ -452,12 +452,12 @@
         <tr id="details-{{ item.id }}" style="display: none;">
           <td colspan="5">
             <strong>GD:</strong> {{ item.group_discount }}<br>
-            <strong>Import Fee:</strong> {{ item.import_fee }}<br>
+            <strong>Import Fee:</strong> {{ item.import_fee | yen }}<br>
             <strong>Audit:</strong> {{ item.audit_target }}<br>
             <strong>Exchange Rate:</strong> {{ item.usd_to_jpy_rate }}<br>
             <strong>Qualifiers:</strong>
                 {% for q in item.qualifiers %}
-                    {{ q }}{% if not loop.last %}, {% endif %}
+                    {{ q | enum }}{% if not loop.last %}, {% endif %}
                 {% endfor %}<br>
             <strong>Details:</strong> {{ item.details }}<br>
           </td>
