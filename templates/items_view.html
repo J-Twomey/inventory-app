@@ -442,7 +442,13 @@
             </a>
           </td>
           <td>
-            <button onclick="toggleDetails('{{ item.id }}')">Details</button>
+            <button
+              type="button"
+              class="details-btn"
+              data-item-id="{{ item.id }}"
+            >
+              Details
+            </button>
           </td>
         </tr>
         <tr id="details-{{ item.id }}" style="display: none;">

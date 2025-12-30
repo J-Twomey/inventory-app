@@ -1,7 +1,12 @@
-function toggleDetails(id) {
-  const row = document.getElementById(`details-${id}`);
-  row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
-}
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.details-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.itemId;
+      const row = document.getElementById(`details-${id}`);
+      row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
+    });
+  });
+});
 
 document.addEventListener('DOMContentLoaded', () => {
   const toggleBtn = document.getElementById('toggle-search');
