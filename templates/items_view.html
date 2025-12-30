@@ -1,12 +1,8 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Item List</title>
-  <link href="/static/css/styles.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
-</head>
-<body>
+{% extends 'base.html' %}
 
+{% block title %}Items List{% endblock %}
+
+{% block content %}
 <a href="/" class="btn btn-purple btn-small margin-bottom-20 inline">Back To Landing Page</a>
 <a href="/items_view" class="btn btn-orange btn-small margin-bottom-20 inline">Reset Search Conditions</a>
 
@@ -472,6 +468,4 @@
 {% endif %}
 
 <script src="{{ url_for('static', path='js/items_view.js') }}"></script>
-
-</body>
-</html>
+{% endblock %}

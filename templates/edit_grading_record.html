@@ -1,12 +1,8 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Edit Grading Record</title>
-  <link href="/static/css/styles.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
-</head>
-<body>
+{% extends 'base.html' %}
 
+{% block title %}Edit Grading Record{% endblock %}
+
+{% block content %}
 <h1>Grading Record Edit</h1>
 <div>
   <a href="/" class="btn btn-purple btn-small margin-bottom-20 inline">Back To Landing Page</a>
@@ -28,6 +24,4 @@
   <input type="checkbox" name="is_cracked" {% if record.is_cracked %}checked{% endif %}><br><br>
   <button type="submit">Save Changes</button>
 </form>
-
-</body>
-</html>
+{% endblock %}

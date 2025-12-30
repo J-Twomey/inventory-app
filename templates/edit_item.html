@@ -7,6 +7,16 @@
 </head>
 <body>
 
+
+</body>
+</html>
+
+
+{% extends 'base.html' %}
+
+{% block title %}Edit Item{% endblock %}
+
+{% block content %}
 <h1>Item Edit</h1>
 <div>
   <a href="/" class="btn btn-purple btn-small margin-bottom-20 inline">Back To Landing Page</a>
@@ -161,8 +171,5 @@
     <p>No matching items found.</p>
 {% endif %}
 
-<script type="module" src="{{ url_for('static', path='js/add_item.js') }}"></script>
 <script type="module" src="{{ url_for('static', path='js/edit_item.js') }}"></script>
-
-</body>
-</html>
+{% endblock %}

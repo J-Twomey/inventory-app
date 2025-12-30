@@ -1,14 +1,11 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Add Item</title>
-  <link href="/static/css/styles.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
-</head>
-<body>
+{% extends 'base.html' %}
+
+{% block title %}Add Item{% endblock %}
+
+{% block content %}
   <h1>Add New Item</h1>
   <a href="/" class="btn btn-purple btn-small margin-bottom-20 inline">Back To Landing Page</a>
-<form method="post" action="/add_item" enctype="application/x-www-form-urlencoded">
+  <form method="post" action="/add_item" enctype="application/x-www-form-urlencoded">
   <label>Name:</label>
   <input type="text" name="name" required><br><br>
 
@@ -150,6 +147,4 @@
 </form>
 
 <script src="/static/js/add_item.js"></script>
-
-</body>
-</html>
+{% endblock %}

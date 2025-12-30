@@ -1,11 +1,8 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Add Item</title>
-  <link href="/static/css/styles.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
-</head>
-<body>
+{% extends 'base.html' %}
+
+{% block title %}Add Submission{% endblock %}
+
+{% block content %}
   <h1>Add New Submission</h1>
   <a href="/" class="btn btn-purple btn-small margin-bottom-20 inline">Back To Landing Page</a>
 
@@ -102,6 +99,4 @@
 {% endif %}
 
 <script type="module" src="{{ url_for('static', path='js/add_submission.js') }}"></script>
-
-</body>
-</html>
+{% endblock %}

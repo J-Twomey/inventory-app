@@ -1,12 +1,8 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Grading Records List</title>
-  <link href="/static/css/styles.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
-</head>
-<body>
+{% extends 'base.html' %}
 
+{% block title %}Grading Records List{% endblock %}
+
+{% block content %}
 <a href="/" class="btn btn-purple btn-small margin-bottom-20 inline">Back To Landing Page</a>
 
 <div style="margin-top: 25px; font-size: 14px;">
@@ -93,6 +89,4 @@
 {% endif %}
 
 <script type="module" src="{{ url_for('static', path='js/clear_submission_cache.js') }}"></script>
-
-</body>
-</html>
+{% endblock %}

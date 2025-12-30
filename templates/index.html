@@ -1,18 +1,13 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Item List</title>
-  <link href="/static/css/styles.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
-</head>
-  <body>
-    <h1>Landing Page</h1>
-      <div>
-        <a href="/items_view" class="btn btn-blue btn-large">View Page</a>
-        <a href="/add_item" class="btn btn-green btn-large">Add Entry</a>
-        <a href="/grading_records_view" class="btn btn-yellow btn-large">Grading Records</a>
-        <a href="/add_submission" class="btn btn-green btn-large">Add Submission</a>
-        <a href="/submissions_summary_view" class="btn btn-red btn-large">Submissions Summary</a>
-      </div>
-  </body>
-</html>
+{% extends 'base.html' %}
+
+{% block title %}Index{% endblock %}
+
+{% block content %}
+  <div>
+    <a href="/items_view" class="btn btn-blue btn-large">View Page</a>
+    <a href="/add_item" class="btn btn-green btn-large">Add Entry</a>
+    <a href="/grading_records_view" class="btn btn-yellow btn-large">Grading Records</a>
+    <a href="/add_submission" class="btn btn-green btn-large">Add Submission</a>
+    <a href="/submissions_summary_view" class="btn btn-red btn-large">Submissions Summary</a>
+  </div>
+{% endblock %}
