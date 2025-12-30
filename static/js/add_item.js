@@ -4,9 +4,10 @@ document.addEventListener('DOMContentLoaded', () => {
   purchaseDateInput.value = today;
 
   const changeDateBy = (days) => {
-    const currentDate = new Date(dateInput.value);
+    if (!purchaseDateInput.value) return;
+    const currentDate = new Date(purchaseDateInput.value);
     currentDate.setDate(currentDate.getDate() + days);
-    dateInput.value = currentDate.toISOString().split('T')[0];
+    purchaseDateInput.value = currentDate.toISOString().split('T')[0];
   };
 
   document.getElementById('date-decrease').addEventListener('click', () => changeDateBy(-1));
