@@ -356,7 +356,7 @@ class Item(Base):
 
 
 class Submission(Base):
-    __tablename__ = 'submission'
+    __tablename__ = 'submissions'
 
     submission_number: Mapped[int] = mapped_column(Integer, primary_key=True)
     submission_company: Mapped[GradingCompany] = mapped_column(
@@ -455,7 +455,7 @@ class Submission(Base):
 
 
 class GradingRecord(Base):
-    __tablename__ = 'grading_record'
+    __tablename__ = 'grading_records'
 
     id: Mapped[int] = mapped_column(primary_key=True)
     item_id: Mapped[int] = mapped_column(
@@ -464,7 +464,7 @@ class GradingRecord(Base):
         nullable=False,
     )
     submission_number: Mapped[int] = mapped_column(
-        ForeignKey('submission.submission_number', ondelete='CASCADE'),
+        ForeignKey('submissions.submission_number', ondelete='CASCADE'),
         index=True,
         nullable=False,
     )
