@@ -255,9 +255,9 @@ def get_newest_grading_records(
 
 def delete_grading_record_by_id(
         db: Session,
-        submission_id: int,
+        record_id: int,
 ) -> bool:
-    record = get_grading_record(db, submission_id)
+    record = get_grading_record(db, record_id)
     if record is None:
         return False
 
