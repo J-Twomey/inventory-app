@@ -44,13 +44,11 @@ def delete_empty_submissions(
 ) -> None:
     affected_submissions: set[Submission] = set()
 
-    # Find submissions touched by grading-record deletions
     for obj in session.deleted:
         if isinstance(obj, GradingRecord):
             if obj.submission is not None:
                 affected_submissions.add(obj.submission)
 
-    # If a submission will have no remaining grading records, delete it
     for submission in affected_submissions:
         remaining = [
             gr
