@@ -1,19 +1,12 @@
-from typing import (
-    Generator,
-    Protocol,
-)
+from typing import Generator
 
-from sqlalchemy import (
-    create_engine,
-    event,
-)
-from sqlalchemy.engine import Engine
+from sqlalchemy import create_engine
+
 from sqlalchemy.orm import (
     DeclarativeBase,
     Session,
     sessionmaker,
 )
-from sqlalchemy.pool import ConnectionPoolEntry
 
 
 SQLALCHEMY_DATABASE_URL = 'sqlite:///./db/test6.db'
@@ -35,22 +28,3 @@ def get_db() -> Generator[Session, None, None]:
         yield db
     finally:
         db.close()
-
-
-class SQLiteCursor(Protocol):
-    def execute(self, sql: str) -> None: ...
-    def close(self) -> None: ...
-
-
-class SQLiteDBAPIConnection(Protocol):
-    def cursor(self) -> SQLiteCursor: ...
-
-
-@event.listens_for(Engine, 'connect')
-def enable_sqlite_foreign_keys(
-        dbapi_connection: SQLiteDBAPIConnection,
-        connection_record: ConnectionPoolEntry,
-) -> None:
-    cursor = dbapi_connection.cursor()
-    cursor.execute('PRAGMA foreign_keys=ON')
-    cursor.close()

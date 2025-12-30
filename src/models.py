@@ -370,7 +370,6 @@ class Submission(Base):
     submission_items: Mapped[list['GradingRecord']] = relationship(
         back_populates='submission',
         cascade='all, delete-orphan',
-        passive_deletes=True,
     )
 
     @hybrid_property
@@ -465,7 +464,6 @@ class GradingRecord(Base):
     )
     submission_number: Mapped[int] = mapped_column(
         ForeignKey('submissions.submission_number', ondelete='CASCADE'),
-        index=True,
         nullable=False,
     )
     grading_fee: NullableInt = NullableIntColumn()
