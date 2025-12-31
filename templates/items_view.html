@@ -6,6 +6,21 @@
 <a href="/" class="btn btn-purple btn-small margin-bottom-20 inline">Back To Landing Page</a>
 <a href="/items_view" class="btn btn-orange btn-small margin-bottom-20 inline">Reset Search Conditions</a>
 
+<form method="get" style="float: right;">
+  <label>
+    Max Rows:
+    <input
+      type="number"
+      name="show_limit"
+      value="{{ show_limit }}"
+      min="1"
+      step="1"
+      style="width: 5em;"
+      onchange="this.form.submit()"
+    >
+  </label>
+</form>
+
 <button type="button" id="toggle-search" class="btn btn-purple btn-small margin-bottom-20 inline">
   Show Search Options
 </button>

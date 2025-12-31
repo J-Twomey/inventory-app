@@ -27,10 +27,10 @@ document.addEventListener('DOMContentLoaded', () => {
     setSearchVisible(!isVisible);
   });
 
-  // Auto-show if there are query parameters in the URL
   const params = new URLSearchParams(window.location.search);
-  if ([...params.values()].some(v => v.trim() !== '')) {
+  params.delete('show_limit');
+
+  if (params.size > 0) {
     setSearchVisible(true);
   }
 });
-

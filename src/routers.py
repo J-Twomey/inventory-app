@@ -74,6 +74,7 @@ def view_items(
         search_form: ItemSearchForm = Depends(ItemSearchForm.as_query),
         show_limit: int = 20,
 ) -> Response:
+    show_limit = max(1, min(show_limit, 500))
     search_data = search_form.to_item_search()
     search_values = {
         k: v for k, v in search_data.model_dump(exclude_none=True).items()
@@ -98,6 +99,7 @@ def view_items(
             'grading_company_enum': GradingCompany,
             'list_type_enum': ListingType,
             'object_variant_enum': ObjectVariant,
+            'show_limit': show_limit,
         },
     )
 
@@ -184,12 +186,14 @@ def view_submissions_summary(
         db: Session = Depends(get_db),
         show_limit: int = 20,
 ) -> Response:
+    show_limit = max(1, min(show_limit, 500))
     submissions = get_newest_submissions(db, skip=0, limit=show_limit)
     return templates.TemplateResponse(
         'submissions_summary_view.html',
         {
             'request': request,
             'submission_summaries': submissions,
+            'show_limit': show_limit,
         },
     )
 
@@ -219,12 +223,14 @@ def view_grading_records(
         db: Session = Depends(get_db),
         show_limit: int = 20,
 ) -> Response:
+    show_limit = max(1, min(show_limit, 500))
     grading_records = get_newest_grading_records(db, skip=0, limit=show_limit)
     return templates.TemplateResponse(
         'grading_records_view.html',
         {
             'request': request,
             'records': grading_records,
+            'show_limit': show_limit,
         },
     )
 
