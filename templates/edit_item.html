@@ -34,7 +34,7 @@
   <label>Category:</label>
   <select name="category">
     {% for category in category_enum %}
-      <option value="{{ category.name }}" {% if item.category == category.name.title() %}selected{% endif %}>
+      <option value="{{ category.name }}" {% if item.category == category %}selected{% endif %}>
         {{ category.name.title() }}
       </option>
     {% endfor %}
@@ -43,8 +43,8 @@
   <label>Language:</label>
   <select name="language">
     {% for language in language_enum %}
-      <option value="{{ language.name }}" {% if item.language == language.name.title().replace('_', ' ') %}selected{% endif %}>
-        {{ language.name.title() }}
+      <option value="{{ language.name }}" {% if item.language == language %}selected{% endif %}>
+        {{ language.name.replace('_', '').title() }}
       </option>
     {% endfor %}
   </select><br><br>
@@ -58,7 +58,7 @@
 
   {% for qualifier in qualifier_enum %}
     <label>
-      <input type="checkbox" name="qualifiers" value="{{ qualifier.name }}" {% if item and qualifier.name.title().replace('_', ' ') in selected_qualifiers %}checked{% endif %}>
+      <input type="checkbox" name="qualifiers" value="{{ qualifier.name }}" {% if item and qualifier in selected_qualifiers %}checked{% endif %}>
       {{ qualifier.name.replace('_', ' ').title() }}
     </label><br>
   {% endfor %}
@@ -76,7 +76,7 @@
   <label>Status:</label>
   <select name="status">
     {% for status in status_enum %}
-      <option value="{{ status.name }}" {% if item.status == status.name.title() %}selected{% endif %}>
+      <option value="{{ status.name }}" {% if item.status == status %}selected{% endif %}>
         {{ status.name.title() }}
       </option>
     {% endfor %}
@@ -85,7 +85,7 @@
   <label>Intent:</label>
   <select name="intent">
     {% for intent in intent_enum %}
-      <option value="{{ intent.name }}" {% if item.intent == intent.name.title() %}selected{% endif %}>
+      <option value="{{ intent.name }}" {% if item.intent == intent %}selected{% endif %}>
         {{ intent.name.title() }}
       </option>
     {% endfor %}
@@ -94,8 +94,8 @@
   <label>Purchase Grading Company:</label>
   <select name="grading_company">
     {% for grading_company in grading_company_enum %}
-      <option value="{{ grading_company.name }}" {% if item.grading_company == grading_company.name %}selected{% endif %}>
-        {{ grading_company.name.title() }}
+      <option value="{{ grading_company.name }}" {% if item.grading_company == grading_company %}selected{% endif %}>
+        {{ grading_company.name }}
       </option>
     {% endfor %}
   </select><br><br>
@@ -112,8 +112,8 @@
   <label>List Type:</label>
   <select name="list_type">
     {% for list_type in list_type_enum %}
-      <option value="{{ list_type.name }}" {% if item.list_type == list_type.name.title().replace('_', ' ') %}selected{% endif %}>
-        {{ list_type.name.title() }}
+      <option value="{{ list_type.name }}" {% if item.list_type == list_type %}selected{% endif %}>
+        {{ list_type.name.replace('_', ' ').title() }}
       </option>
     {% endfor %}
   </select><br><br>
@@ -142,8 +142,8 @@
   <label>Object Variant:</label>
   <select name="object_variant">
     {% for object_variant in object_variant_enum %}
-      <option value="{{ object_variant.name }}" {% if item.object_variant == object_variant.name.title().replace('_', ' ') %}selected{% endif %}>
-        {{ object_variant.name.title() }}
+      <option value="{{ object_variant.name }}" {% if item.object_variant == object_variant %}selected{% endif %}>
+        {{ object_variant.name.replace('_', ' ').title() }}
       </option>
     {% endfor %}
   </select><br><br>
