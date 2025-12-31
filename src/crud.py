@@ -71,6 +71,10 @@ def get_newest_items(
     return list(reversed(items))
 
 
+def get_total_number_of_items(db: Session) -> int:
+    return db.query(Item).count()
+
+
 def delete_item_by_id(
         db: Session,
         item_id: int,

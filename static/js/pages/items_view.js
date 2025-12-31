@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const params = new URLSearchParams(window.location.search);
   params.delete('show_limit');
+  params.delete('skip');
 
   if (params.size > 0) {
     setSearchVisible(true);

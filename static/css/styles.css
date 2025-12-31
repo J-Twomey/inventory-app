@@ -64,6 +64,25 @@
   background-color: #CC5500;
 }
 
+.btn-black {
+    background-color: #000000;
+    color: #ffffff;
+    width: 100px;
+    display: flex;
+    justify-content: center;
+    vertical-align: middle;
+}
+
+.btn-black-disabled {
+    background-color: #737272;
+    color: #e3dede;
+    cursor: not-allowed;
+    width: 100px;
+    display: flex;
+    justify-content: center;
+    vertical-align: middle;
+}
+
 /* Size variants */
 .btn-small {
   font-size: 0.8rem;
@@ -199,4 +218,10 @@
 #search-section.visible {
   max-height: 800px; /* Has to be larger than the expected size */
   padding: 1rem;
+}
+
+.pagination {
+  display: flex;
+  gap: 10px;
+  flex-wrap: nowrap;
 }

@@ -349,6 +349,7 @@
         </div>
       </div>
 
+      <input type="hidden" name="show_limit" value="{{ show_limit }}">
       <button type="submit" class="btn-green">Search</button>
     </div>
   </form>
@@ -482,6 +483,21 @@
       {% endfor %}
     </tbody>
   </table>
+</div>
+<br>
+
+<div class="pagination">
+  {% if prev_url != "none" %}
+    <a href="{{ prev_url }}" class="btn btn-black btn-small"><span>Previous</span></a>
+  {% else %}
+    <span class="btn btn-black-disabled btn-small"><span><<< End</span></span>
+  {% endif %}
+
+  {% if next_url != "none" %}
+    <a href="{{ next_url }}" class="btn btn-black btn-small"><span>Next</span></a>
+  {% else %}
+    <span class="btn btn-black-disabled btn-small"><span>End >>></span></span>
+  {% endif %}
 </div>
 
 {% if not items %}

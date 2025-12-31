@@ -32,6 +32,7 @@ from .crud import (
     get_newest_items,
     get_newest_submissions,
     get_newest_grading_records,
+    get_total_number_of_items,
     search_for_items,
 )
 from .database import get_db
@@ -73,18 +74,29 @@ def view_items(
         db: Session = Depends(get_db),
         search_form: ItemSearchForm = Depends(ItemSearchForm.as_query),
         show_limit: int = 20,
+        skip: int = 0,
 ) -> Response:
     show_limit = max(1, min(show_limit, 500))
+    skip = max(0, skip)
     search_data = search_form.to_item_search()
     search_values = {
         k: v for k, v in search_data.model_dump(exclude_none=True).items()
         if not (isinstance(v, list) and not v)
     }
     if not search_values:
-        items = get_newest_items(db, skip=0, limit=show_limit)
+        num_results = get_total_number_of_items(db)
+        items = get_newest_items(db, skip=skip, limit=show_limit)
     else:
         items = search_for_items(db, search_data)
-        items = items[:show_limit]
+        num_results = len(items)
+        items = items[skip:skip + show_limit]
+
+    prev_url, next_url = generate_page_urls(
+        request=request,
+        skip=skip,
+        show_limit=show_limit,
+        num_results=num_results,
+    )
     return templates.TemplateResponse(
         'items_view.html',
         {
@@ -100,6 +112,9 @@ def view_items(
             'list_type_enum': ListingType,
             'object_variant_enum': ObjectVariant,
             'show_limit': show_limit,
+            'skip': skip,
+            'prev_url': prev_url,
+            'next_url': next_url,
         },
     )
 
@@ -353,6 +368,24 @@ def submit_edit_grading_record(
     edit_params = update_form.to_grading_record_update()
     edit_result = edit_grading_record(db, grading_record_id, edit_params)
     return RedirectResponse('/grading_records_view', status_code=edit_result)
+
+
+def generate_page_urls(
+        request: Request,
+        skip: int,
+        show_limit: int,
+        num_results: int,
+) -> tuple[str, str]:
+    if skip + show_limit < num_results:
+        prev_url = str(request.url.include_query_params(skip=skip + show_limit))
+    else:
+        prev_url = 'none'
+
+    if skip > 0:
+        next_url = str(request.url.include_query_params(skip=max(0, skip - show_limit)))
+    else:
+        next_url = 'none'
+    return prev_url, next_url
 
 
 def format_dollar(value: float | None) -> str:
