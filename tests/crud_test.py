@@ -7,7 +7,10 @@ import src.crud as crud
 import src.item_enums as item_enums
 import src.models as models
 import src.schemas as schemas
-from .conftest import ItemCreateFactory
+from .conftest import (
+    GradingRecordFactory,
+    ItemCreateFactory,
+)
 
 
 def test_create_item_all_nullables_none(
@@ -157,6 +160,19 @@ def test_get_newest_items_skip_all_items(
 def test_get_newest_items_no_items(db_session: Session) -> None:
     result = crud.get_newest_items(db_session, skip=0, limit=100)
     assert len(result) == 0
+
+
+def test_get_total_number_of_items(
+        db_session: Session,
+        item_create_factory: ItemCreateFactory,
+) -> None:
+    item_names = ['one', 'two', 'three']
+    items = [item_create_factory.get(name=n) for n in item_names]
+    for item in items:
+        crud.create_item(db_session, item)
+
+    result = crud.get_total_number_of_items(db_session)
+    assert result == len(items)
 
 
 def test_delete_item_by_id_success(
