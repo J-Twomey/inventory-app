@@ -89,7 +89,7 @@ def view_items(
     else:
         items = search_for_items(db, search_data)
         num_results = len(items)
-        items = items[skip:skip + show_limit]
+        items = items[-(skip + show_limit): -skip if skip != 0 else None]
 
     prev_url, next_url = generate_page_urls(
         request=request,
