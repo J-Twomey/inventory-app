@@ -32,7 +32,9 @@ from .crud import (
     get_newest_items,
     get_newest_submissions,
     get_newest_grading_records,
+    get_total_number_of_grading_records,
     get_total_number_of_items,
+    get_total_number_of_submissions,
     search_for_items,
 )
 from .database import get_db
@@ -112,7 +114,6 @@ def view_items(
             'list_type_enum': ListingType,
             'object_variant_enum': ObjectVariant,
             'show_limit': show_limit,
-            'skip': skip,
             'prev_url': prev_url,
             'next_url': next_url,
         },
@@ -200,15 +201,25 @@ def view_submissions_summary(
         request: Request,
         db: Session = Depends(get_db),
         show_limit: int = 20,
+        skip: int = 0,
 ) -> Response:
     show_limit = max(1, min(show_limit, 500))
-    submissions = get_newest_submissions(db, skip=0, limit=show_limit)
+    num_results = get_total_number_of_submissions(db)
+    submissions = get_newest_submissions(db, skip=skip, limit=show_limit)
+    prev_url, next_url = generate_page_urls(
+        request=request,
+        skip=skip,
+        show_limit=show_limit,
+        num_results=num_results,
+    )
     return templates.TemplateResponse(
         'submissions_summary_view.html',
         {
             'request': request,
             'submission_summaries': submissions,
             'show_limit': show_limit,
+            'prev_url': prev_url,
+            'next_url': next_url,
         },
     )
 
@@ -237,15 +248,25 @@ def view_grading_records(
         request: Request,
         db: Session = Depends(get_db),
         show_limit: int = 20,
+        skip: int = 0,
 ) -> Response:
     show_limit = max(1, min(show_limit, 500))
-    grading_records = get_newest_grading_records(db, skip=0, limit=show_limit)
+    num_results = get_total_number_of_grading_records(db)
+    grading_records = get_newest_grading_records(db, skip=skip, limit=show_limit)
+    prev_url, next_url = generate_page_urls(
+        request=request,
+        skip=skip,
+        show_limit=show_limit,
+        num_results=num_results,
+    )
     return templates.TemplateResponse(
         'grading_records_view.html',
         {
             'request': request,
             'records': grading_records,
             'show_limit': show_limit,
+            'prev_url': prev_url,
+            'next_url': next_url,
         },
     )
 

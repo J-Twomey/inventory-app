@@ -217,6 +217,10 @@ def get_newest_submissions(
     return list(reversed(submissions))
 
 
+def get_total_number_of_submissions(db: Session) -> int:
+    return db.query(Submission).count()
+
+
 def edit_submission_single_field(
         db: Session,
         submission_number: int,
@@ -255,6 +259,10 @@ def get_newest_grading_records(
         GradingRecord,
     ).order_by(GradingRecord.id.desc()).offset(skip).limit(limit).all()
     return list(reversed(items))
+
+
+def get_total_number_of_grading_records(db: Session) -> int:
+    return db.query(GradingRecord).count()
 
 
 def delete_grading_record_by_id(
