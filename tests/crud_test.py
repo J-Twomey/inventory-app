@@ -8,8 +8,12 @@ import src.item_enums as item_enums
 import src.models as models
 import src.schemas as schemas
 from .conftest import (
+    # GradingRecordCreateFactory,
     GradingRecordFactory,
     ItemCreateFactory,
+    ItemFactory,
+    # SubmissionCreateFactory,
+    SubmissionFactory,
 )
 
 
@@ -440,3 +444,26 @@ def test_build_search_features_with_post_filter() -> None:
     assert filters[0].right.value == 'Unown'
     assert filters[0].operator is eq
     assert post_filters == expected_post_filters
+
+
+def test_get_total_number_of_grading_records(
+        db_session: Session,
+        item_factory: ItemFactory,
+        submission_factory: SubmissionFactory,
+        grading_record_factory: GradingRecordFactory,
+) -> None:
+    item = item_factory.get()
+    submission = submission_factory.get()
+
+    db_session.add_all([item, submission])
+    db_session.flush()
+
+    grading_record = grading_record_factory.get(
+        item_id=item.id,
+        submission_number=submission.submission_number,
+    )
+    db_session.add(grading_record)
+    db_session.flush()
+
+    result = crud.get_total_number_of_grading_records(db_session)
+    assert result == 1
