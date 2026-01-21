@@ -392,15 +392,15 @@
           <td>{{ item.category | enum }}</td>
           <td>{{ item.language | enum }}</td>
           <td class="
-              centre-aligned
-              {{ 'faint' if item.grade is none else '' }}
-              {% if item.grading_company == grading_company_enum.PSA and item.status != status_enum.SUBMITTED %}
-                grade-psa
-              {% elif item.grading_company == grading_company_enum.CGC and item.status != status_enum.SUBMITTED %}
-                grade-cgc
-              {% elif item.grading_company == grading_company_enum.BGS and item.status != status_enum.SUBMITTED %}
-                grade-bgs
-              {% endif %}
+            centre-aligned
+            {{ 'faint' if item.grade is none else '' }}
+            {% if item.grading_company == grading_company_enum.PSA and item.status != status_enum.SUBMITTED %}
+              grade-psa
+            {% elif item.grading_company == grading_company_enum.CGC and item.status != status_enum.SUBMITTED %}
+              grade-cgc
+            {% elif item.grading_company == grading_company_enum.BGS and item.status != status_enum.SUBMITTED %}
+              grade-bgs
+            {% endif %}
           ">
             {% if item.grade is not none %}
               {{ item.grade | int if item.grade == item.grade | int else item.grade }}
@@ -417,7 +417,20 @@
           <td class="right-aligned {{ 'faint' if item.total_cost == 0 else '' }}">
             {{ '' if item.total_cost is none else item.total_cost | yen }}
           </td>
-          <td class="centre-aligned">{{ item.status | enum }}</td>
+          <td class="
+            centre-aligned
+            {% if item.status == status_enum.CLOSED %}
+              status-closed
+            {% elif item.status == status_enum.LISTED %}
+              status-listed
+            {% elif item.status == status_enum.VAULT %}
+              status-vault
+            {% elif item.status == status_enum.SUBMITTED %}
+              status-submitted
+            {% endif %}
+          ">
+            {{ item.status | enum }}
+          </td>
           <td class="right-aligned {{ 'faint' if item.list_price is none else '' }}">
             {{ '' if item.list_price is none else item.list_price | dollar }}
           </td>
@@ -439,24 +452,28 @@
           <td class="right-aligned {{ 'faint' if item.return_jpy is none else '' }}">
             {{ '' if item.return_jpy is none else item.return_jpy | yen }}
           </td>
-          <td class="right-aligned
-                    {% if item.net_jpy is none %}
-                      faint
-                    {% elif item.net_jpy > 0 %}
-                      green
-                    {% else %}
-                      cyan
-                    {% endif %}">
+          <td class="
+            right-aligned
+            {% if item.net_jpy is none %}
+              faint
+            {% elif item.net_jpy > 0 %}
+              green
+            {% else %}
+              cyan
+            {% endif %}
+          ">
             {{ '' if item.net_jpy is none else item.net_jpy | yen }}
           </td>
-          <td class="right-aligned
-                    {% if item.net_jpy is none %}
-                      faint
-                    {% elif item.net_jpy > 0 %}
-                      green
-                    {% else %}
-                      cyan
-                    {% endif %}">
+          <td class="
+            right-aligned
+            {% if item.net_jpy is none %}
+              faint
+            {% elif item.net_jpy > 0 %}
+              green
+            {% else %}
+              cyan
+            {% endif %}
+          ">
             {{ '' if item.net_percent is none else item.net_percent | percent }}
           </td>
           <td>
@@ -484,9 +501,9 @@
             <strong>Audit:</strong> {{ item.audit_target }}<br>
             <strong>Exchange Rate:</strong> {{ item.usd_to_jpy_rate }}<br>
             <strong>Qualifiers:</strong>
-                {% for q in item.qualifiers %}
-                    {{ q | enum }}{% if not loop.last %}, {% endif %}
-                {% endfor %}<br>
+              {% for q in item.qualifiers %}
+                {{ q | enum }}{% if not loop.last %}, {% endif %}
+              {% endfor %}<br>
             <strong>Details:</strong> {{ item.details }}<br>
           </td>
         </tr>

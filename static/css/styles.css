@@ -227,13 +227,30 @@
 }
 
 .grade-psa {
-  background-color: #ffcccc;
+  background-color: #ef0302;
 }
 
 .grade-cgc {
-  background-color: #ccffff;
+  background-color: #67ebeb;
 }
 
 .grade-bgs {
   background-color: #c5b985;
 }
+
+.status-closed {
+  background-color: #ff0000;
+}
+
+.status-listed {
+  background-color: #02ff00;
+}
+
+.status-submitted {
+  background-color: #f1c231;
+}
+
+.status-vault {
+  background-color: #a0c5e8;
+}
+

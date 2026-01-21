@@ -49,79 +49,93 @@
         <tr>
           <td class="centre-aligned">{{ summary.submission_number }}</td>
           <td class="centre-aligned">{{ summary.submission_company | grading_company_enum }}</td>
-          <td class="editable-date right-aligned
-                    {% if summary.submission_date is none %}
-                      gray
-                    {% endif %}"
-              data-id="{{ summary.submission_number }}"
-              data-field="submission_date">
+          <td class="
+            editable-date right-aligned
+            {% if summary.submission_date is none %}
+              gray
+            {% endif %}
+          "
+            data-id="{{ summary.submission_number }}"
+            data-field="submission_date">
             {{ summary.submission_date if summary.submission_date else '' }}
           </td>
-          <td class="editable-date right-aligned
-                    {% if summary.return_date is none %}
-                      gray
-                    {% endif %}"
-              data-id="{{ summary.submission_number }}"
-              data-field="return_date">
+          <td class="
+            editable-date right-aligned
+            {% if summary.return_date is none %}
+              gray
+            {% endif %}
+          "
+            data-id="{{ summary.submission_number }}"
+            data-field="return_date">
             {{ summary.return_date if summary.return_date else '' }}
           </td>
           <td class="right-aligned">{{ summary.card_cost | yen }}</td>
           <td class="right-aligned">{{ summary.grading_cost | yen }}</td>
           <td class="right-aligned">{{ summary.total_cost | yen }}</td>
           <td class="right-aligned">{{ summary.total_return | yen }}</td>
-          <td class="right-aligned
-                    {% if summary.total_profit is none %}
-                      faint
-                    {% elif summary.total_profit > 0 %}
-                      green
-                    {% else %}
-                      cyan
-                    {% endif %}">
+          <td class="
+            right-aligned
+            {% if summary.total_profit is none %}
+              faint
+            {% elif summary.total_profit > 0 %}
+              green
+            {% else %}
+              cyan
+            {% endif %}
+          ">
             {{ summary.total_profit | yen }}
           </td>
-          <td class="right-aligned
-                    {% if summary.profit_on_sold is none %}
-                      faint
-                    {% elif summary.profit_on_sold > 0 %}
-                      green
-                    {% else %}
-                      cyan
-                    {% endif %}">
+          <td class="
+            right-aligned
+            {% if summary.profit_on_sold is none %}
+              faint
+            {% elif summary.profit_on_sold > 0 %}
+              green
+            {% else %}
+              cyan
+            {% endif %}
+          ">
             {{ summary.profit_on_sold | yen }}
           </td>
-          <td class="editable-date right-aligned
-                    {% if summary.break_even_date is none %}
-                      gray
-                    {% else %}
-                      green
-                    {% endif %}"
-              data-id="{{ summary.submission_number }}"
-              data-field="break_even_date">
+          <td class="
+            editable-date right-aligned
+            {% if summary.break_even_date is none %}
+              gray
+            {% else %}
+              green
+            {% endif %}
+          "
+            data-id="{{ summary.submission_number }}"
+            data-field="break_even_date">
             {{ summary.break_even_date if summary.break_even_date else '' }}
           </td>
           <td class="centre-aligned">{{ summary.num_cards }}</td>
           <td class="centre-aligned">{{ summary.num_sold }}</td>
           <td>{{ summary.percent_sold | percent }}</td>
-          <td class="right-aligned
-                    {% if summary.profit_per_sold is none %}
-                      faint
-                    {% elif summary.profit_per_sold > 0 %}
-                      green
-                    {% else %}
-                      cyan
-                    {% endif %}">
+          <td class="
+            right-aligned
+            {% if summary.profit_per_sold is none %}
+              faint
+            {% elif summary.profit_per_sold > 0 %}
+              green
+            {% else %}
+              cyan
+            {% endif %}
+          ">
             {{ summary.profit_per_sold | yen }}
           </td>
           <td class="centre-aligned">{{ summary.num_closed }}</td>
           <td>{{ summary.percent_closed | percent }}</td>
-          <td class="right-aligned
-                    {% if summary.profit_per_closed is none %}
-                      faint
-                    {% elif summary.profit_per_closed > 0 %}
-                      green
-                    {% else %}
-                      cyan
-                    {% endif %}">
+          <td class="
+            right-aligned
+            {% if summary.profit_per_closed is none %}
+              faint
+            {% elif summary.profit_per_closed > 0 %}
+              green
+            {% else %}
+              cyan
+            {% endif %}
+          ">
             {{ summary.profit_per_closed | yen }}
           </td>
         </tr>

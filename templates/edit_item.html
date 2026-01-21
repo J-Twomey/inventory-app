@@ -158,17 +158,17 @@
 </form>
 
 {% if items %}
-    <h2>Matching Items</h2>
-    <ul>
+  <h2>Matching Items</h2>
+  <ul>
     {% for item in items %}
-        <li>
-            {{ item.name }} ({{ item.category }}, {{ item.price }}, {{ item.purchase_date }})
-            <a href="/edit/{{ item.id }}">Edit</a>
-        </li>
+      <li>
+        {{ item.name }} ({{ item.category }}, {{ item.price }}, {{ item.purchase_date }})
+        <a href="/edit/{{ item.id }}">Edit</a>
+      </li>
     {% endfor %}
-    </ul>
+  </ul>
 {% elif request.method == 'POST' %}
-    <p>No matching items found.</p>
+  <p>No matching items found.</p>
 {% endif %}
 
 <script type="module" src="/static/js/pages/edit_item.js"></script>
