@@ -91,6 +91,9 @@
     {% endfor %}
   </select><br><br>
 
+  <label>Import Fee:</label>
+  <input type="number" name="import_fee" value="{{ item.import_fee }}"><br><br>
+
   <label>Purchase Grading Company:</label>
   <select name="grading_company">
     {% for grading_company in grading_company_enum %}
