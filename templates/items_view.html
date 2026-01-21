@@ -391,9 +391,19 @@
           <td>{{ item.set_name }}</td>
           <td>{{ item.category | enum }}</td>
           <td>{{ item.language | enum }}</td>
-          <td class=" centre-aligned {{ 'faint' if item.grade is none else '' }}">
+          <td class="
+              centre-aligned
+              {{ 'faint' if item.grade is none else '' }}
+              {% if item.grading_company == grading_company_enum.PSA and item.status != status_enum.SUBMITTED %}
+                grade-psa
+              {% elif item.grading_company == grading_company_enum.CGC and item.status != status_enum.SUBMITTED %}
+                grade-cgc
+              {% elif item.grading_company == grading_company_enum.BGS and item.status != status_enum.SUBMITTED %}
+                grade-bgs
+              {% endif %}
+          ">
             {% if item.grade is not none %}
-              {{ item.grade|int if item.grade == item.grade|int else item.grade }}
+              {{ item.grade | int if item.grade == item.grade | int else item.grade }}
             {% else %}
               ''
             {% endif %}

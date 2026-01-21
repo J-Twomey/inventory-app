@@ -225,3 +225,15 @@
   gap: 10px;
   flex-wrap: nowrap;
 }
+
+.grade-psa {
+  background-color: #ffcccc;
+}
+
+.grade-cgc {
+  background-color: #ccffff;
+}
+
+.grade-bgs {
+  background-color: #c5b985;
+}
