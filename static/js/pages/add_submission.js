@@ -108,10 +108,15 @@ function restoreFormState() {
   const formState = JSON.parse(saved);
 
   // Restore top-level fields
-  const numInput = document.querySelector('[name="submission_number"]');
+//   const numInput = document.querySelector('[name="submission_number"]');
   const companySelect = document.querySelector('[name="submission_company"]');
-  if (numInput) numInput.value = formState.submission_number || '';
+//   if (numInput) numInput.value = formState.submission_number || '';
   if (companySelect) companySelect.value = formState.submission_company || '';
+
+if (numInput && formState?.submission_number !== undefined) {
+  numInput.value = formState.submission_number;
+}
+
 
   // Clear existing rows
   tableBody.innerHTML = '';

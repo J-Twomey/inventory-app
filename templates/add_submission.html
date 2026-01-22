@@ -9,7 +9,7 @@
 <form method="post" action="/add_submission" enctype="application/x-www-form-urlencoded">
   <label for="submission_number">Submission Number:</label>
   <input type="number" id="submission_number" name="submission_number"
-        value="{{ submission_number }}" required><br><br>
+        value="{{ submission_number if submission_number is defined else next_new_sub_num }}" required><br><br>
 
   <label>Submission Company:</label>
   <select name="submission_company">

@@ -29,6 +29,7 @@ from .crud import (
     edit_submission_single_field,
     get_grading_record,
     get_item,
+    get_max_sub_number,
     get_newest_items,
     get_newest_submissions,
     get_newest_grading_records,
@@ -272,11 +273,16 @@ def view_grading_records(
 
 
 @router.get('/add_submission')
-def show_add_submission_form(request: Request) -> Response:
+def show_add_submission_form(
+        request: Request,
+        db: Session = Depends(get_db),
+) -> Response:
+    current_max_sub_number = get_max_sub_number(db)
     return templates.TemplateResponse(
         'add_submission.html',
         {
             'request': request,
+            'next_new_sub_num': current_max_sub_number + 1,
             'grading_company_enum': GradingCompany,
         },
     )

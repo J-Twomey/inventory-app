@@ -447,6 +447,28 @@ def test_build_search_features_with_post_filter() -> None:
     assert post_filters == expected_post_filters
 
 
+def test_get_total_number_of_submissions_no_subs(db_session: Session) -> None:
+    result = crud.get_total_number_of_submissions(db_session)
+    assert result == 0
+
+
+def test_get_total_number_of_submissions(
+        db_session: Session,
+        submission_factory: SubmissionFactory,
+) -> None:
+    submission = submission_factory.get()
+    db_session.add(submission)
+    db_session.flush()
+
+    result = crud.get_total_number_of_submissions(db_session)
+    assert result == 1
+
+
+def get_total_number_of_grading_records_no_records(db_session: Session) -> None:
+    result = crud.get_total_number_of_grading_records(db_session)
+    assert result == 0
+
+
 def test_get_total_number_of_grading_records(
         db_session: Session,
         item_factory: ItemFactory,
@@ -468,3 +490,33 @@ def test_get_total_number_of_grading_records(
 
     result = crud.get_total_number_of_grading_records(db_session)
     assert result == 1
+
+
+def test_get_max_sub_number_no_subs(db_session: Session) -> None:
+    result = crud.get_max_sub_number(db_session)
+    assert result == 0
+
+
+def test_get_max_sub_number(
+        db_session: Session,
+        submission_factory: SubmissionFactory,
+) -> None:
+    submission = submission_factory.get()
+    db_session.add(submission)
+    db_session.flush()
+
+    result = crud.get_max_sub_number(db_session)
+    assert result == 1
+
+
+def test_get_max_sub_number_with_skipped_number(
+        db_session: Session,
+        submission_factory: SubmissionFactory,
+) -> None:
+    sub_nums = [1, 3]
+    submissions = [submission_factory.get(submission_number=s) for s in sub_nums]
+    db_session.add_all(submissions)
+    db_session.flush()
+
+    result = crud.get_max_sub_number(db_session)
+    assert result == max(sub_nums)

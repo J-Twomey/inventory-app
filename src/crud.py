@@ -4,6 +4,7 @@ from typing import Any
 
 from sqlalchemy import (
     and_,
+    func,
     select,
 )
 from sqlalchemy.orm import Session
@@ -318,3 +319,7 @@ def edit_grading_record(
     db.commit()
     db.refresh(record)
     return 303
+
+
+def get_max_sub_number(db: Session) -> int:
+    return db.scalar(select(func.max(Submission.submission_number))) or 0
