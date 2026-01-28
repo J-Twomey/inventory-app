@@ -358,7 +358,8 @@ class Item(Base):
 class Submission(Base):
     __tablename__ = 'submissions'
 
-    submission_number: Mapped[int] = mapped_column(Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    submission_number: Mapped[int] = mapped_column(Integer)
     submission_company: Mapped[GradingCompany] = mapped_column(
         EnumInt(GradingCompany),
         nullable=False,
@@ -463,7 +464,7 @@ class GradingRecord(Base):
         nullable=False,
     )
     submission_number: Mapped[int] = mapped_column(
-        ForeignKey('submissions.submission_number', ondelete='CASCADE'),
+        ForeignKey('submissions.id', ondelete='CASCADE'),
         nullable=False,
     )
     grading_fee: NullableInt = NullableIntColumn()
