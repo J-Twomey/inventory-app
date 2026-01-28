@@ -96,6 +96,7 @@ function saveFormState() {
   const formState = {
     submission_number: document.querySelector('[name="submission_number"]').value,
     submission_company: document.querySelector('[name="submission_company"]').value,
+    submission_date: document.querySelector('[name="submission_date"]').value,
     item_ids: Array.from(document.querySelectorAll('.item-id-input')).map(input => input.value)
   };
   localStorage.setItem('submissionForm', JSON.stringify(formState));
@@ -108,22 +109,23 @@ function restoreFormState() {
   const formState = JSON.parse(saved);
 
   // Restore top-level fields
-//   const numInput = document.querySelector('[name="submission_number"]');
   const companySelect = document.querySelector('[name="submission_company"]');
-//   if (numInput) numInput.value = formState.submission_number || '';
   if (companySelect) companySelect.value = formState.submission_company || '';
 
-if (numInput && formState?.submission_number !== undefined) {
-  numInput.value = formState.submission_number;
-}
+  const numInput = document.querySelector('[name="submission_number"]');
+  if (numInput && formState?.submission_number !== undefined) {
+    numInput.value = formState.submission_number;
+  }
 
+  const subDate = document.querySelector('[name="submission_date"]')
+  if (subDate) subDate.value = formState.submission_date || '';
 
   // Clear existing rows
   tableBody.innerHTML = '';
 
-  // Rebuild rows and attach listeners immediately
+  // Rebuild rows and attach listeners
   formState.item_ids.forEach(() => {
-    const row = createRow(true); // true = attach listeners immediately
+    const row = createRow(true);
     tableBody.appendChild(row);
   });
 
@@ -140,6 +142,7 @@ if (numInput && formState?.submission_number !== undefined) {
   if (tableBody.children.length === 0) {
     tableBody.appendChild(createRow(true));
   }
+  return true;
 }
 
 const addRowBtn = document.getElementById('add-row');
@@ -154,7 +157,14 @@ addRowBtn.addEventListener('click', () => {
 
 document.addEventListener('DOMContentLoaded', () => {
   // Restore state on load
-  restoreFormState();
+  const restored = restoreFormState();
+
+  // If no restored state then set-up existing rows
+  if (!restored) {
+    document.querySelectorAll('#submissions-table tbody tr').forEach(row => {
+      setupRow(row);
+    });
+  }
 
   // Save whenever inputs change
   document.addEventListener('input', saveFormState);
