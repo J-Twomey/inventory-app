@@ -36,6 +36,7 @@
         <th>Grade</th>
         <th>Cost</th>
         <th>Grade Fee</th>
+        <th>Total Cost</th>
         <th>Received</th>
         <th>Net</th>
         <th>Actions</th>
@@ -44,7 +45,8 @@
     <tbody>
       {% for record in records %}
         {% set cost = record.original_item.purchase_price + record.original_item.import_fee %}
-        {% set net = record.original_item.return_jpy - cost - record.grading_fee if record.original_item.return_jpy is not none else none %}
+        {% set total_cost = cost + record.grading_fee if record.grading_fee is not none else cost %}
+        {% set net = record.original_item.return_jpy - total_cost if record.original_item.return_jpy is not none else none %}
         <tr class="
           {% if record.is_cracked %}
             yellow
@@ -74,6 +76,7 @@
           <td class="right-aligned {{ 'faint' if record.grade is none else '' }}">
             {{ record.grading_fee | yen }}
           </td>
+          <td class="right-aligned">{{ total_cost | yen }}</td>
           <td class="right-aligned {{ 'faint' if record.original_item.return_jpy is none else '' }}">
             {{ '' if record.original_item.return_jpy is none else record.original_item.return_jpy | yen }}
           </td>
