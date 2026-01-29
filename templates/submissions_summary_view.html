@@ -47,25 +47,42 @@
     <tbody>
       {% for summary in submission_summaries %}
         <tr>
-          <td class="centre-aligned">{{ summary.submission_number }}</td>
-          <td class="centre-aligned">{{ summary.submission_company | grading_company_enum }}</td>
+          <td
+            class="editable centre-aligned"
+            data-type="int"
+            data-id="{{ summary.id }}"
+            data-field="submission_number"
+          >
+            {{ summary.submission_number }}
+          </td>
+          <td
+            class="editable centre-aligned"
+            data-type="select"
+            data-id="{{ summary.id }}"
+            data-field="submission_company"
+            data-options="{% for gc in grading_company_enum %}{{ gc.name }}{% if not loop.last %},{% endif %}{% endfor %}"
+          >
+            {{ summary.submission_company | grading_company_enum_format }}
+          </td>
           <td class="
-            editable-date right-aligned
+            editable right-aligned
             {% if summary.submission_date is none %}
               gray
             {% endif %}
           "
-            data-id="{{ summary.submission_number }}"
+            data-type="date"
+            data-id="{{ summary.id }}"
             data-field="submission_date">
             {{ summary.submission_date if summary.submission_date else '' }}
           </td>
           <td class="
-            editable-date right-aligned
+            editable right-aligned
             {% if summary.return_date is none %}
               gray
             {% endif %}
           "
-            data-id="{{ summary.submission_number }}"
+            data-type="date"
+            data-id="{{ summary.id }}"
             data-field="return_date">
             {{ summary.return_date if summary.return_date else '' }}
           </td>
@@ -98,14 +115,15 @@
             {{ summary.profit_on_sold | yen }}
           </td>
           <td class="
-            editable-date right-aligned
+            editable right-aligned
             {% if summary.break_even_date is none %}
               gray
             {% else %}
               green
             {% endif %}
           "
-            data-id="{{ summary.submission_number }}"
+            data-type="date"
+            data-id="{{ summary.id }}"
             data-field="break_even_date">
             {{ summary.break_even_date if summary.break_even_date else '' }}
           </td>

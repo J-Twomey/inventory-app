@@ -359,7 +359,7 @@ class Submission(Base):
     __tablename__ = 'submissions'
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    submission_number: Mapped[int] = mapped_column(Integer)
+    submission_number: Mapped[int] = mapped_column(Integer, unique=True, nullable=False)
     submission_company: Mapped[GradingCompany] = mapped_column(
         EnumInt(GradingCompany),
         nullable=False,
@@ -463,7 +463,7 @@ class GradingRecord(Base):
         index=True,
         nullable=False,
     )
-    submission_number: Mapped[int] = mapped_column(
+    submission_id: Mapped[int] = mapped_column(
         ForeignKey('submissions.id', ondelete='CASCADE'),
         nullable=False,
     )
@@ -483,6 +483,18 @@ class GradingRecord(Base):
     def submission_company(cls) -> ColumnElement[GradingCompany]:
         return (
             select(Submission.submission_company)
-            .where(Submission.submission_number == cls.submission_number)
+            .where(Submission.id == cls.submission_id)
+            .scalar_subquery()
+        )
+
+    @hybrid_property
+    def submission_number(self) -> int:
+        return self.submission.submission_number
+
+    @submission_number.expression  # type: ignore[no-redef]
+    def submission_number(cls) -> ColumnElement[int]:
+        return (
+            select(Submission.submission_number)
+            .where(Submission.id == cls.submission_id)
             .scalar_subquery()
         )

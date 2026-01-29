@@ -59,7 +59,7 @@
           <td>{{ record.original_item.set_name }}</td>
           <td>{{ record.original_item.language | enum }}</td>
           <td>{{ record.original_item.category | enum }}</td>
-          <td>{{ record.submission_company | grading_company_enum }}</td>
+          <td>{{ record.submission_company | grading_company_enum_format }}</td>
           <td class="centre-aligned {{ 'faint' if record.grade is none else '' }}">{{ record.cert }}</td>
           <td class="centre-aligned {{ 'faint' if record.grade is none else '' }}">
             {% if record.grade is none %}

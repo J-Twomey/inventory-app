@@ -254,3 +254,15 @@
   background-color: #a0c5e8;
 }
 
+.inline-error {
+  position: absolute;
+  background: #ffe6e6;
+  color: #900;
+  border: 1px solid #cc0000;
+  padding: 4px 8px;
+  font-size: 18px;
+  border-radius: 4px;
+  white-space: nowrap;
+  z-index: 1000;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}

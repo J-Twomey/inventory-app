@@ -37,6 +37,8 @@ from .crud import (
     get_total_number_of_items,
     get_total_number_of_submissions,
     search_for_items,
+    SubmissionNotFound,
+    SubmissionNumberConflict,
 )
 from .database import get_db
 from .item_enums import (
@@ -51,13 +53,12 @@ from .item_enums import (
 )
 from .schemas import (
     E,
-    GradingRecordCreate,
     GradingRecordUpdateForm,
     ItemCreateForm,
     ItemForSubmissionForm,
     ItemSearchForm,
     ItemUpdateForm,
-    parse_nullable_date,
+    parse_submission_update_field,
     SubmissionCreate,
 )
 
@@ -221,12 +222,13 @@ def view_submissions_summary(
             'show_limit': show_limit,
             'prev_url': prev_url,
             'next_url': next_url,
+            'grading_company_enum': GradingCompany,
         },
     )
 
 
 class SubmissionTableUpdatePayload(TypedDict, total=False):
-    submission_number: int
+    submission_id: int
     field: str
     value: str
 
@@ -236,12 +238,32 @@ def update_submission_summary_field(
         payload: SubmissionTableUpdatePayload = Body(...),
         db: Session = Depends(get_db),
 ) -> JSONResponse:
-    submission_number = payload['submission_number']
+    submission_id = payload['submission_id']
     field = payload['field']
-    update_value = parse_nullable_date(payload['value'])
+    update_value = parse_submission_update_field(field, payload['value'])
 
-    edit_result = edit_submission_single_field(db, submission_number, field, update_value)
-    return JSONResponse({'status_code': edit_result})
+    try:
+        edit_submission_single_field(db, submission_id, field, update_value)
+        return JSONResponse(
+            status_code=200,
+            content={'success': True},
+        )
+    except SubmissionNotFound:
+        return JSONResponse(
+            status_code=404,
+            content={
+                'success': False,
+                'error_message': 'Submission not found',
+            },
+        )
+    except SubmissionNumberConflict:
+        return JSONResponse(
+            status_code=409,
+            content={
+                'success': False,
+                'error_message': 'Provided submission number is already in use',
+            },
+        )
 
 
 @router.get('/grading_records_view', response_class=HTMLResponse)
@@ -308,15 +330,8 @@ def submit_add_submission_form(
         return_date=None,
         break_even_date=None,
     )
-    records = [
-        GradingRecordCreate(
-            item_id=i,
-            submission_number=submission_number,
-        )
-        for i in item_ids
-    ]
     try:
-        create_submission(db, submission_summary, records)
+        create_submission(db, submission_summary, item_ids)
     except ValueError as e:
         error_message = str(e)
         return templates.TemplateResponse(
@@ -445,4 +460,4 @@ templates.env.filters['dollar'] = format_dollar
 templates.env.filters['yen'] = format_yen
 templates.env.filters['percent'] = format_percent
 templates.env.filters['enum'] = format_enum
-templates.env.filters['grading_company_enum'] = format_grading_company_enum
+templates.env.filters['grading_company_enum_format'] = format_grading_company_enum

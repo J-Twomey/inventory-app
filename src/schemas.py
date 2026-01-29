@@ -756,7 +756,7 @@ class GradingRecordBase(BaseModel):
     model_config = ConfigDict(extra='forbid')
 
     item_id: int | None = None
-    submission_number: int | None = None
+    submission_id: int | None = None
     grading_fee: int | None = None
     grade: float | None = None
     cert: int | None = None
@@ -765,7 +765,7 @@ class GradingRecordBase(BaseModel):
 
 class GradingRecordCreate(GradingRecordBase):
     item_id: int
-    submission_number: int
+    submission_id: int
 
     def to_model_kwargs(self) -> dict[str, int | float | bool | None]:
         return self.model_dump()
@@ -779,7 +779,7 @@ class GradingRecordUpdate(GradingRecordBase):
 @dataclass
 class GradingRecordUpdateForm:
     item_id: str | None = None
-    submission_number: str | None = None
+    submission_id: str | None = None
     grading_fee: str | None = None
     grade: str | None = None
     cert: str | None = None
@@ -789,7 +789,7 @@ class GradingRecordUpdateForm:
     def as_form(
         cls,
         item_id: Annotated[str | None, Form()] = None,
-        submission_number: Annotated[str | None, Form()] = None,
+        submission_id: Annotated[str | None, Form()] = None,
         grading_fee: Annotated[str | None, Form()] = None,
         grade: Annotated[str | None, Form()] = None,
         cert: Annotated[str | None, Form()] = None,
@@ -797,7 +797,7 @@ class GradingRecordUpdateForm:
     ) -> 'GradingRecordUpdateForm':
         return cls(
             item_id=item_id,
-            submission_number=submission_number,
+            submission_id=submission_id,
             grading_fee=grading_fee,
             grade=grade,
             cert=cert,
@@ -807,7 +807,7 @@ class GradingRecordUpdateForm:
     def to_grading_record_update(self) -> GradingRecordUpdate:
         update_vals: dict[str, Any] = {}
         set_if_value(update_vals, 'item_id', parse_nullable(self.item_id, int))
-        set_if_value(update_vals, 'submission_number', parse_nullable(self.submission_number, int))
+        set_if_value(update_vals, 'submission_id', parse_nullable(self.submission_id, int))
         set_if_value(update_vals, 'grading_fee', parse_nullable(self.grading_fee, int))
         set_if_value(update_vals, 'grade', parse_nullable(self.grade, float))
         set_if_value(update_vals, 'cert', parse_nullable(self.cert, int))
@@ -886,3 +886,19 @@ def parse_nullable_percent(value: str | None) -> float | None:
     if value_parsed is not None:
         value_parsed /= 100.
     return value_parsed
+
+
+def parse_submission_update_field(
+        field: str,
+        value: str | None,
+) -> date | int | GradingCompany | None:
+    if value in ('', None):
+        return None
+    if 'date' in field:
+        return parse_nullable_date(value)
+    elif field == 'submission_number':
+        return parse_nullable(value, int)
+    elif field == 'submission_company':
+        return parse_nullable_enum(value, GradingCompany)
+    else:
+        raise ValueError(f'Unsupported editable field: {field}')

@@ -7,11 +7,13 @@ from sqlalchemy import (
     func,
     select,
 )
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.elements import BinaryExpression
 
 from .item_enums import (
     Intent,
+    GradingCompany,
     Status,
 )
 from .models import (
@@ -175,11 +177,20 @@ def perform_item_update(
 def create_submission(
         db: Session,
         submission_summary: SubmissionCreate,
-        grading_records: list[GradingRecordCreate],
+        item_ids: list[int],
 ) -> None:
     try:
         submission_summary_data = submission_summary.to_model_kwargs()
-        db.add(Submission(**submission_summary_data))
+        submission = Submission(**submission_summary_data)
+        db.add(submission)
+        db.flush()
+        grading_records = [
+            GradingRecordCreate(
+                item_id=i,
+                submission_id=submission.id,
+            )
+            for i in item_ids
+        ]
 
         for grading_record in grading_records:
             record = GradingRecord(**grading_record.to_model_kwargs())
@@ -202,9 +213,9 @@ def create_submission(
 
 def get_submission(
         db: Session,
-        submission_number: int,
+        submission_id: int,
 ) -> Submission | None:
-    return db.query(Submission).filter(Submission.submission_number == submission_number).first()
+    return db.query(Submission).filter(Submission.id == submission_id).first()
 
 
 def get_newest_submissions(
@@ -222,19 +233,30 @@ def get_total_number_of_submissions(db: Session) -> int:
     return db.query(Submission).count()
 
 
+class SubmissionNotFound(Exception):
+    pass
+
+
+class SubmissionNumberConflict(Exception):
+    pass
+
+
 def edit_submission_single_field(
         db: Session,
-        submission_number: int,
+        submission_id: int,
         field: str,
-        update_value: date | None,
-) -> int:
-    submission = get_submission(db, submission_number)
+        update_value: date | int | GradingCompany | None,
+) -> None:
+    submission = get_submission(db, submission_id)
     if submission is None:
-        return 404
-    setattr(submission, field, update_value)
-    db.commit()
-    db.refresh(submission)
-    return 303
+        raise SubmissionNotFound
+    try:
+        setattr(submission, field, update_value)
+        db.commit()
+        db.refresh(submission)
+    except IntegrityError:
+        db.rollback()
+        raise SubmissionNumberConflict
 
 
 def get_grading_record(
