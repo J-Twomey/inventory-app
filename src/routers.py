@@ -261,7 +261,7 @@ def update_submission_summary_field(
             status_code=409,
             content={
                 'success': False,
-                'error_message': 'Provided submission number is already in use',
+                'error_message': 'Provided submission number is already in use or is negative',
             },
         )
 

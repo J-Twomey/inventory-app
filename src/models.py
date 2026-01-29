@@ -4,6 +4,7 @@ from sqlalchemy import (
     Boolean,
     case,
     cast,
+    CheckConstraint,
     Date,
     Float,
     ForeignKey,
@@ -372,6 +373,13 @@ class Submission(Base):
         back_populates='submission',
         cascade='all, delete-orphan',
     )
+
+    __table_args__ = (
+            CheckConstraint(
+                'submission_number >= 0',
+                name='ck_submission_number_non_negative',
+            ),
+        )
 
     @hybrid_property
     def card_cost(self) -> int:
