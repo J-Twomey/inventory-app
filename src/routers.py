@@ -41,6 +41,7 @@ from .crud import (
     SubmissionNumberConflict,
 )
 from .database import get_db
+from .helper_types import E
 from .item_enums import (
     Category,
     GradingCompany,
@@ -51,14 +52,13 @@ from .item_enums import (
     Qualifier,
     Status,
 )
+from .parsers import parse_submission_update_field
 from .schemas import (
-    E,
     GradingRecordUpdateForm,
     ItemCreateForm,
     ItemForSubmissionForm,
     ItemSearchForm,
     ItemUpdateForm,
-    parse_submission_update_field,
     SubmissionCreate,
 )
 
