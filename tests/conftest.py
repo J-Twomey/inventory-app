@@ -274,7 +274,7 @@ class GradingRecordFactory:
         self,
         id: int = 1,
         item_id: int = 100,
-        submission_number: int = 1,
+        submission_id: int = 1,
         grading_fee: int | None = None,
         grade: float | None = None,
         cert: int | None = None,
@@ -283,7 +283,7 @@ class GradingRecordFactory:
         return GradingRecord(
             id=id,
             item_id=item_id,
-            submission_number=submission_number,
+            submission_id=submission_id,
             grading_fee=grading_fee,
             grade=grade,
             cert=cert,
@@ -299,6 +299,7 @@ def grading_record_factory() -> GradingRecordFactory:
 class SubmissionFactory:
     def get(
         self,
+        id: int = 0,
         submission_number: int = 1,
         submission_company: item_enums.GradingCompany = item_enums.GradingCompany.PSA,
         submission_date: date | None = None,
@@ -306,6 +307,7 @@ class SubmissionFactory:
         break_even_date: date | None = None,
     ) -> Submission:
         return Submission(
+            id=id,
             submission_number=submission_number,
             submission_company=submission_company,
             submission_date=submission_date,
@@ -328,6 +330,7 @@ def item_with_submissions_factory(
 ) -> Callable[[Any], Item]:
     def get(
         grading_record_ids: list[int] | None = None,
+        submission_ids: list[int] | None = None,
         submission_numbers: list[int] | None = None,
         submission_companies: list[item_enums.GradingCompany] | None = None,
         submission_dates: list[date | None] | None = None,
@@ -340,6 +343,7 @@ def item_with_submissions_factory(
         **item_kwargs: Any,
     ) -> Item:
         grading_record_ids_ = grading_record_ids or [1]
+        submission_ids_ = submission_ids or [1]
         submission_numbers_ = submission_numbers or [1]
         submission_companies_ = submission_companies or len(grading_record_ids_) * [
             item_enums.GradingCompany.PSA
@@ -355,6 +359,7 @@ def item_with_submissions_factory(
         # input validation
         input_lists: list[Sized] = [
             grading_record_ids_,
+            submission_ids_,
             submission_numbers_,
             submission_companies_,
             submission_dates_,
@@ -367,14 +372,16 @@ def item_with_submissions_factory(
         ]
         assert len({len(lst) for lst in input_lists}) == 1
 
-        sub_nums_indices_map: dict[int, list[int]] = {}
-        for i, sub_num in enumerate(submission_numbers_):
-            if sub_num not in sub_nums_indices_map:
-                sub_nums_indices_map[sub_num] = []
-            sub_nums_indices_map[sub_num].append(i)
+        sub_ids_indices_map: dict[int, list[int]] = {}
+        for i, sub_id in enumerate(submission_ids_):
+            if sub_id not in sub_ids_indices_map:
+                sub_ids_indices_map[sub_id] = []
+            sub_ids_indices_map[sub_id].append(i)
 
-        for sub_num, sub_indices in sub_nums_indices_map.items():
+        for sub_id, sub_indices in sub_ids_indices_map.items():
             # input validation
+            sub_numbers = [submission_numbers_[i] for i in sub_indices]
+            assert len(set(sub_numbers)) == 1
             sub_companies = [submission_companies_[i] for i in sub_indices]
             assert len(set(sub_companies)) == 1
             sub_submit_dates = [submission_dates_[i] for i in sub_indices]
@@ -384,7 +391,8 @@ def item_with_submissions_factory(
             sub_break_even_dates = [break_even_dates_[i] for i in sub_indices]
             assert len(set(sub_break_even_dates)) == 1
             submission = submission_factory.get(
-                submission_number=sub_num,
+                id=sub_id,
+                submission_number=sub_numbers[0],
                 submission_company=sub_companies[0],
                 submission_date=sub_submit_dates[0],
                 return_date=sub_return_dates[0],
@@ -399,7 +407,7 @@ def item_with_submissions_factory(
             grading_record_factory.get(
                 id=grading_record_ids_[i],
                 item_id=item.id,
-                submission_number=submission_numbers_[i],
+                submission_id=submission_ids_[i],
                 grading_fee=grading_fees_[i],
                 grade=grades_[i],
                 cert=certs_[i],

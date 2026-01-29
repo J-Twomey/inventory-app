@@ -15,6 +15,7 @@ def test_total_grading_fees(
 ) -> None:
     item_with_submissions = item_with_submissions_factory(
         grading_record_ids=[1, 2, 3],
+        submission_ids=[1, 2, 3],
         submission_numbers=[1, 2, 3],
         grading_fees=[10, 20, 30],
         grades=[1, 1, 1],
@@ -36,6 +37,7 @@ def test_total_cost(
 ) -> None:
     item_with_submissions = item_with_submissions_factory(
         grading_record_ids=[1, 2],
+        submission_ids=[1, 2],
         submission_numbers=[1, 2],
         grading_fees=[10, 20],
         grades=[1, 1],

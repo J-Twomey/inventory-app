@@ -483,7 +483,7 @@ def test_get_total_number_of_grading_records(
 
     grading_record = grading_record_factory.get(
         item_id=item.id,
-        submission_number=submission.submission_number,
+        submission_id=submission.id,
     )
     db_session.add(grading_record)
     db_session.flush()
@@ -513,8 +513,14 @@ def test_get_max_sub_number_with_skipped_number(
         db_session: Session,
         submission_factory: SubmissionFactory,
 ) -> None:
+    sub_ids = [0, 1]
     sub_nums = [1, 3]
-    submissions = [submission_factory.get(submission_number=s) for s in sub_nums]
+    submissions = [
+        submission_factory.get(
+            id=i,
+            submission_number=s
+        ) for i, s in zip(sub_ids, sub_nums, strict=True)
+    ]
     db_session.add_all(submissions)
     db_session.flush()
 
