@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       } else if (type === 'select') {
         input = document.createElement('select');
-        const options = cell.dataset.options.split(',');
+        const options = cell.dataset.options.split(',').map(opt => opt.trim());
 
         options.forEach(opt => {
           const option = document.createElement('option');

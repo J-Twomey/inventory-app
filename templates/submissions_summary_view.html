@@ -60,7 +60,13 @@
             data-type="select"
             data-id="{{ summary.id }}"
             data-field="submission_company"
-            data-options="{% for gc in grading_company_enum %}{{ gc.name }}{% if not loop.last %},{% endif %}{% endfor %}"
+            data-options="
+              {% for gc in grading_company_enum if gc.name != 'RAW' %}
+                {{ gc.name }}
+                {% if not loop.last %},
+              {% endif %}
+              {% endfor %}
+            "
           >
             {{ summary.submission_company | grading_company_enum_format }}
           </td>
