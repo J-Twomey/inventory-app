@@ -1,9 +1,6 @@
 import json
-from enum import Enum, IntEnum
-from typing import (
-    Type,
-    TypeVar,
-)
+from enum import Enum
+from typing import Type
 
 from sqlalchemy.engine.interfaces import Dialect
 from sqlalchemy.types import (
@@ -11,6 +8,8 @@ from sqlalchemy.types import (
     TypeDecorator,
     TEXT,
 )
+
+from .helper_types import EInt
 
 
 class Category(Enum):
@@ -128,23 +127,20 @@ class ListingType(Enum):
     AUCTION = 2
 
 
-E = TypeVar('E', bound=IntEnum)
-
-
-class EnumList(TypeDecorator[list[E]]):
+class EnumList(TypeDecorator[list[EInt]]):
     impl = TEXT
     cache_ok = True
 
     def __init__(
             self,
-            enum_class: Type[E],
+            enum_class: Type[EInt],
     ) -> None:
         self.enum_class = enum_class
         super().__init__()
 
     def process_bind_param(
             self,
-            value: list[E] | list[int] | None,
+            value: list[EInt] | list[int] | None,
             dialect: Dialect,
     ) -> str | None:
         if value is None:
@@ -163,27 +159,27 @@ class EnumList(TypeDecorator[list[E]]):
             self,
             value: str | None,
             dialect: Dialect,
-    ) -> list[E] | None:
+    ) -> list[EInt] | None:
         if value is None:
             return None
         raw: list[int] = json.loads(value)
         return [self.enum_class(v) for v in raw]
 
 
-class EnumInt(TypeDecorator[E]):
+class EnumInt(TypeDecorator[EInt]):
     impl = Integer
     cache_ok = True
 
     def __init__(
             self,
-            enum_cls: Type[E],
+            enum_cls: Type[EInt],
     ) -> None:
         self.enum_cls = enum_cls
         super().__init__()
 
     def process_bind_param(
             self,
-            value: E | None,
+            value: EInt | None,
             dialect: Dialect,
     ) -> int | None:
         if value is None:
@@ -196,7 +192,7 @@ class EnumInt(TypeDecorator[E]):
             self,
             value: int | None,
             dialect: Dialect,
-    ) -> E | None:
+    ) -> EInt | None:
         if value is None:
             return None
         return self.enum_cls(value)
