@@ -496,10 +496,20 @@
         </tr>
         <tr id="details-{{ item.id }}" style="display: none;">
           <td colspan="5">
-            <strong>GD:</strong> {{ item.group_discount }}<br>
+            <strong>Audit Item:</strong> {{ item.audit_target }}<br>
             <strong>Import Fee:</strong> {{ item.import_fee | yen }}<br>
-            <strong>Audit:</strong> {{ item.audit_target }}<br>
+            <strong>List Type:</strong> {{ item.list_type | enum | replace('_', ' ')}}<br>
             <strong>Exchange Rate:</strong> {{ item.usd_to_jpy_rate }}<br>
+            <strong>Shipping:</strong> {{ item.shipping }}<br>
+            <strong>Sale Fee:</strong> {{ item.sale_fee }}<br>
+            <strong>Group Discount:</strong> {{ item.group_discount }}<br>
+            <strong>Object Variant:</strong> {{ item.object_variant | enum }}<br>
+            <strong>Purchase Grading Company:</strong> {{ item.purchase_grading_company | grading_company_enum_format }}<br>
+            <strong>Purchase Grade:</strong> {{ item.purchase_grade }}<br>
+            <strong>Purchase Cert:</strong> {{ item.purchase_cert }}<br>
+            <strong>Current Cert:</strong> {{ item.cert }}<br>
+            <strong>Cracked From Purchase:</strong> {{ item.cracked_from_purchase }}<br>
+            <strong>Number Of Submissions:</strong> {{ item.submissions | length }}<br>
             <strong>Qualifiers:</strong>
               {% for q in item.qualifiers %}
                 {{ q | enum }}{% if not loop.last %}, {% endif %}
