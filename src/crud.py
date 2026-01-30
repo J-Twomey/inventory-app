@@ -4,6 +4,7 @@ from typing import Any
 
 from sqlalchemy import (
     and_,
+    desc,
     func,
     select,
 )
@@ -278,9 +279,16 @@ def get_newest_grading_records(
         skip: int = 0,
         limit: int = 100,
 ) -> Sequence[GradingRecord]:
-    items = db.query(
-        GradingRecord,
-    ).order_by(GradingRecord.id.desc()).offset(skip).limit(limit).all()
+    items = (
+        db.query(GradingRecord)
+        .order_by(
+            desc(GradingRecord.submission_number),
+            desc(GradingRecord.id),
+        )
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
     return list(reversed(items))
 
 
