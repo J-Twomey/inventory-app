@@ -99,6 +99,12 @@
   padding: 0.75rem 1.5rem;
 }
 
+.btn-full {
+  width: 100%;
+  padding: 0.5rem 1.25rem;
+  font-size: 1rem;
+}
+
 .margin-bottom-20 {
   margin-bottom: 20px;
 }

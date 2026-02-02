@@ -1,6 +1,9 @@
 from datetime import date
 
-from typing import TypedDict
+from typing import (
+    Sequence,
+    TypedDict,
+)
 
 from fastapi import (
     APIRouter,
@@ -52,6 +55,7 @@ from .item_enums import (
     Qualifier,
     Status,
 )
+from .models import Item
 from .parsers import parse_submission_update_field
 from .schemas import (
     GradingRecordUpdateForm,
@@ -79,6 +83,7 @@ def view_items(
         search_form: ItemSearchForm = Depends(ItemSearchForm.as_query),
         show_limit: int = 20,
         skip: int = 0,
+        selection_mode: bool = False,
 ) -> Response:
     show_limit = max(1, min(show_limit, 500))
     skip = max(0, skip)
@@ -93,7 +98,7 @@ def view_items(
     else:
         items = search_for_items(db, search_data)
         num_results = len(items)
-        items = items[-(skip + show_limit): -skip if skip != 0 else None]
+        items = slice_items(items, skip, show_limit)
 
     prev_url, next_url = generate_page_urls(
         request=request,
@@ -118,11 +123,12 @@ def view_items(
             'show_limit': show_limit,
             'prev_url': prev_url,
             'next_url': next_url,
+            'selection_mode': selection_mode,
         },
     )
 
 
-@router.get('/add_item')
+@router.get('/add_item', response_class=HTMLResponse)
 def show_add_item_form(request: Request) -> Response:
     return templates.TemplateResponse(
         'add_item.html',
@@ -294,7 +300,7 @@ def view_grading_records(
     )
 
 
-@router.get('/add_submission')
+@router.get('/add_submission', response_class=HTMLResponse)
 def show_add_submission_form(
         request: Request,
         db: Session = Depends(get_db),
@@ -346,6 +352,52 @@ def submit_add_submission_form(
             },
         )
     return RedirectResponse(url='/grading_records_view?submitted=1', status_code=303)
+
+
+@router.get('/items_lookup', response_class=HTMLResponse)
+def items_lookup(
+        request: Request,
+        db: Session = Depends(get_db),
+        search_form: ItemSearchForm = Depends(ItemSearchForm.as_query),
+        show_limit: int = 20,
+        skip: int = 0,
+        selection_mode: bool = True,
+) -> Response:
+    search_data = search_form.to_item_search()
+
+    if search_data.status is None:
+        search_data.status = Status.STORAGE
+    if search_data.intent is None:
+        search_data.intent = Intent.GRADE
+
+    items = search_for_items(db, search_data)
+    num_results = len(items)
+    items = slice_items(items, skip, show_limit)
+    prev_url, next_url = generate_page_urls(
+        request=request,
+        skip=skip,
+        show_limit=show_limit,
+        num_results=num_results,
+    )
+    return templates.TemplateResponse(
+        'items_lookup.html',
+        {
+            'request': request,
+            'items': items,
+            'form_data': search_form,
+            'qualifier_enum': Qualifier,
+            'category_enum': Category,
+            'language_enum': Language,
+            'status_enum': Status,
+            'intent_enum': Intent,
+            'grading_company_enum': GradingCompany,
+            'show_limit': show_limit,
+            'prev_url': prev_url,
+            'next_url': next_url,
+            'num_results': num_results,
+            'selection_mode': selection_mode,
+        },
+    )
 
 
 @router.get('/item_info_for_submission_form/{item_id}', response_model=ItemForSubmissionForm)
@@ -410,6 +462,14 @@ def submit_edit_grading_record(
     edit_params = update_form.to_grading_record_update()
     edit_result = edit_grading_record(db, grading_record_id, edit_params)
     return RedirectResponse('/grading_records_view', status_code=edit_result)
+
+
+def slice_items(
+        items: Sequence[Item],
+        skip: int,
+        show_limit: int,
+) -> Sequence[Item]:
+    return items[-(skip + show_limit): -skip if skip != 0 else None]
 
 
 def generate_page_urls(

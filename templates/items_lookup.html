@@ -1,0 +1,185 @@
+<form id="items-lookup-form" method="get" action="/items_lookup">
+  <input type="hidden" name="selection_mode" value="1">
+    <label style="float: right;">
+      Max Rows:
+      <input
+        type="number"
+        name="show_limit"
+        value="{{ show_limit }}"
+        min="1"
+        step="1"
+        style="width: 5em;"
+        onchange="this.form.requestSubmit()"
+      >
+    </label>
+  <div class="label-container">
+    <div class="label-block general">
+      <div class="divider">----- General -----</div>
+
+      <div class="label-row">
+        <input type="text" name="name" placeholder="Name" value="{{ form_data.name if form_data and form_data.name is not none else '' }}">
+        <input type="text" name="set_name" placeholder="Set Name" value="{{ form_data.set_name if form_data and form_data.set_name is not none else '' }}">
+        <input type="text" name="details" placeholder="Details" value="{{ form_data.details if form_data and form_data.details is not none else '' }}">
+        <label for="category">Type:</label>
+        <select name="category" id="category_search_select">
+          <option value="">Any</option>
+          {% for category in category_enum %}
+            <option value="{{ category.name }}" {% if form_data and form_data.category == category.name %}selected{% endif %}>
+              {{ category.name.title() }}
+            </option>
+          {% endfor %}
+        </select>
+
+        <label for="language">Language:</label>
+        <select name="language" id="language_search_select">
+          <option value="">Any</option>
+          {% for language in language_enum %}
+            <option value="{{ language.name }}" {% if form_data and form_data.language == language.name %}selected{% endif %}>
+              {{ language.name.title().replace('_', ' ') }}
+            </option>
+          {% endfor %}
+        </select>
+
+        <label for="intent">Intent:</label>
+        <select name="intent" id="intent_search_select">
+          <option value="">Any</option>
+          {% for intent in intent_enum %}
+            <option
+              value="{{ intent.name }}"
+              {% if form_data and form_data.intent == intent.name or (not form_data or not form_data.intent) and intent.name == 'GRADE' %}
+                selected
+              {% endif %}
+            >
+              {{ intent.name.title() }}
+            </option>
+          {% endfor %}
+        </select>
+
+        <label for="status">Status:</label>
+        <select name="status" id="status_search_select">
+          <option value="">Any</option>
+          {% for status in status_enum %}
+            <option
+              value="{{ status.name }}"
+              {% if form_data and form_data.status == status.name or (not form_data or not form_data.status) and status.name == 'STORAGE' %}
+                selected
+              {% endif %}
+            >
+              {{ status.name.title() }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <div class="label-block qualifiers">
+      <div class="divider">----- Qualifiers -----</div>
+
+      <div class="label-row">
+        {% set qualifiers = qualifier_enum | list %}
+        {% set N = 7 %}
+        {% for qualifier in qualifiers[:N] %}
+          <label>
+            <input
+              type="checkbox"
+              name="qualifiers"
+              value="{{ qualifier.name }}" {% if form_data and qualifier.name in form_data.qualifiers %}checked{% endif %}
+            >
+            {{ qualifier.name.title().replace('_', ' ') }}
+          </label><br>
+        {% endfor %}
+      </div>
+
+      <div class="label-row">
+        {% for qualifier in qualifiers[N:] %}
+          <label>
+            <input
+              type="checkbox"
+              name="qualifiers"
+              value="{{ qualifier.name }}" {% if form_data and qualifier.name in form_data.qualifiers %}checked{% endif %}
+            >
+            {{ qualifier.name.title().replace('_', ' ') }}
+          </label><br>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="label-block purchase">
+      <div class="divider">----- Purchase -----</div>
+
+      <div class="label-row">
+        <label for="purchase_date_min">Purchase Date (Min):</label>
+        <input
+          type="date"
+          name="purchase_date_min"
+          placeholder="Min"
+          value="{{ form_data.purchase_date_min if form_data else '' }}"
+        >
+
+        <label for="purchase_date_max">Purchase Date (Max):</label>
+        <input
+          type="date"
+          name="purchase_date_max"
+          placeholder="Max"
+          value="{{ form_data.purchase_date_max if form_data else '' }}"
+        >
+      </div>
+
+      <div class="label-row">
+        <label for="purchase_price_min">Purchase Price (Min):</label>
+        <input
+          type="number"
+          name="purchase_price_min"
+          placeholder="Min"
+          value="{{ form_data.purchase_price_min if form_data else '' }}"
+        >
+
+        <label for="purchase_price_max">Purchase Price (Max):</label>
+        <input
+          type="number"
+          name="purchase_price_max"
+          placeholder="Max"
+          value="{{ form_data.purchase_price_max if form_data else '' }}"
+        >
+      </div>
+
+      <div class="label-row">
+        <label for="total_cost_min">Total Cost (Min):</label>
+        <input
+          type="number"
+          name="total_cost_min"
+          placeholder="Min"
+          value="{{ form_data.total_cost_min if form_data else '' }}"
+        >
+
+        <label for="total_cost_max">Total Cost (Max):</label>
+        <input
+          type="number"
+          name="total_cost_max"
+          placeholder="Max"
+          value="{{ form_data.total_cost_max if form_data else '' }}"
+        >
+      </div>
+    </div>
+
+  </div>
+  <button type="submit" class="btn-green btn-full">Search</button>
+</form>
+
+<br>
+
+{% include 'items/_items_table.html' %}
+
+<div class="pagination">
+  {% if prev_url != "none" %}
+    <a href="{{ prev_url }}" class="btn btn-black btn-small"><span>Previous</span></a>
+  {% else %}
+    <span class="btn btn-black-disabled btn-small"><span><<< End</span></span>
+  {% endif %}
+
+  {% if next_url != "none" %}
+    <a href="{{ next_url }}" class="btn btn-black btn-small"><span>Next</span></a>
+  {% else %}
+    <span class="btn btn-black-disabled btn-small"><span>End >>></span></span>
+  {% endif %}
+</div>

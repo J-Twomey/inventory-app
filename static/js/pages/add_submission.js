@@ -71,7 +71,12 @@ function initExistingRows() {
 function createRow() {
   const newRow = document.createElement('tr');
   newRow.innerHTML = `
-    <td><input type="number" name="item_ids" class="item-id-input" required></td>
+    <td>
+      <button type="button" class="open-item-search">Select</button>
+    </td>
+    <td>
+      <input type="number" name="item_ids" class="item-id-input" required>
+    </td>
     <td class="item-name"></td>
     <td class="item-set"></td>
     <td class="item-type"></td>
@@ -168,4 +173,81 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Save whenever inputs change
   document.addEventListener('input', saveFormState);
+});
+
+// Dialog box for item ID search
+const dialog = document.getElementById('item-selection-dialog');
+const content = document.getElementById('item-selection-content');
+
+let activeRow = null;
+
+// Open the selection dialog (per-row Select button)
+document.addEventListener('click', async (e) => {
+  const openBtn = e.target.closest('.open-item-search');
+  if (!openBtn) return;
+
+  activeRow = openBtn.closest('tr');
+
+  const response = await fetch('/items_lookup?selection_mode=1');
+  content.innerHTML = await response.text();
+  dialog.showModal();
+});
+
+// Close the dialog when click outside the modal
+dialog.addEventListener('click', (e) => {
+  if (e.target === dialog) {
+    dialog.close();
+    activeRow = null;
+  }
+});
+
+// Handle item selection inside the dialog
+document.addEventListener('click', (e) => {
+  const selectBtn = e.target.closest('.select-item');
+  if (!selectBtn || !activeRow) return;
+
+  const itemId = selectBtn.dataset.itemId;
+
+  const input = activeRow.querySelector('.item-id-input');
+  if (input) {
+    input.value = itemId;
+    updateRowFromItemId(input);
+  }
+
+  dialog.close();
+  activeRow = null;
+});
+
+// Change page
+document.addEventListener('click', async (e) => {
+  if (!dialog.open) return;
+
+  const link = e.target.closest('a');
+  if (!link) return;
+
+  const href = link.getAttribute('href');
+  if (!href || href === 'none' || href.startsWith('#')) return;
+
+  const url = new URL(href, window.location.origin);
+  if (url.pathname !== '/items_lookup') return;
+
+  e.preventDefault();
+
+  const response = await fetch(url.toString());
+  content.innerHTML = await response.text();
+});
+
+// Item search submit
+document.addEventListener('submit', async (e) => {
+  if (!dialog.open) return;
+
+  const form = e.target.closest('form');
+  if (!form) return;
+  if (form.id !== 'items-lookup-form') return;
+
+  e.preventDefault();
+
+  const url = form.action + '?' + new URLSearchParams(new FormData(form));
+  const response = await fetch(url);
+  content.innerHTML = await response.text();
 });
