@@ -195,7 +195,10 @@ document.addEventListener('click', async (e) => {
 
 // Close the dialog when click outside the modal
 dialog.addEventListener('click', (e) => {
-  if (e.target === dialog) {
+  const panel = dialog.querySelector('.dialog-panel');
+  if (!panel) return;
+
+  if (!panel.contains(e.target)) {
     dialog.close();
     activeRow = null;
   }

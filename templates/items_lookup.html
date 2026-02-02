@@ -1,5 +1,6 @@
 <form id="items-lookup-form" method="get" action="/items_lookup">
   <input type="hidden" name="selection_mode" value="1">
+  <div class="label-container">
     <label style="float: right;">
       Max Rows:
       <input
@@ -12,7 +13,6 @@
         onchange="this.form.requestSubmit()"
       >
     </label>
-  <div class="label-container">
     <div class="label-block general">
       <div class="divider">----- General -----</div>
 
@@ -169,6 +169,8 @@
 <br>
 
 {% include 'items/_items_table.html' %}
+
+<br>
 
 <div class="pagination">
   {% if prev_url != "none" %}
