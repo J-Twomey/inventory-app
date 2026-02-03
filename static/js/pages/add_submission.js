@@ -212,6 +212,7 @@ document.addEventListener('click', (e) => {
 
   dialog.close();
   activeRow = null;
+  saveFormState();
 });
 
 // Change page
