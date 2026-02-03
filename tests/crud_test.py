@@ -16,8 +16,8 @@ from .conftest import (
 
 
 def test_create_item_all_nullables_none(
-        db_session: Session,
-        item_create_factory: ItemCreateFactory,
+    db_session: Session,
+    item_create_factory: ItemCreateFactory,
 ) -> None:
     item = item_create_factory.get()
     db_item = crud.create_item(db_session, item)
@@ -27,8 +27,8 @@ def test_create_item_all_nullables_none(
 
 
 def test_create_item_all_nullables_provided(
-        db_session: Session,
-        item_create_factory: ItemCreateFactory,
+    db_session: Session,
+    item_create_factory: ItemCreateFactory,
 ) -> None:
     item = item_create_factory.get(
         qualifiers=[item_enums.Qualifier.UNLIMITED],
@@ -54,8 +54,8 @@ def test_create_item_all_nullables_provided(
 
 
 def test_create_item_multiple_qualifiers(
-        db_session: Session,
-        item_create_factory: ItemCreateFactory,
+    db_session: Session,
+    item_create_factory: ItemCreateFactory,
 ) -> None:
     input_qualifiers = [item_enums.Qualifier.REVERSE_HOLO, item_enums.Qualifier.CRYSTAL]
     item = item_create_factory.get(
@@ -68,8 +68,8 @@ def test_create_item_multiple_qualifiers(
 
 
 def test_get_item_returns_correct_item(
-        db_session: Session,
-        item_factory: ItemFactory,
+    db_session: Session,
+    item_factory: ItemFactory,
 ) -> None:
     item = item_factory.get(name='GET_ITEM_TEST_ITEM')
     db_session.add(item)
@@ -81,8 +81,8 @@ def test_get_item_returns_correct_item(
 
 
 def test_get_item_no_item(
-        db_session: Session,
-        item_factory: ItemFactory,
+    db_session: Session,
+    item_factory: ItemFactory,
 ) -> None:
     item = item_factory.get(name='GET_ITEM_TEST_NO_ITEM')
     db_session.add(item)
@@ -92,8 +92,8 @@ def test_get_item_no_item(
 
 
 def test_get_newest_items_return_all_items(
-        db_session: Session,
-        item_factory: ItemFactory,
+    db_session: Session,
+    item_factory: ItemFactory,
 ) -> None:
     item_names = ['one', 'two', 'three']
     items = [item_factory.get(name=n, id=i) for i, n in enumerate(item_names)]
@@ -110,8 +110,8 @@ def test_get_newest_items_return_all_items(
 
 
 def test_get_newest_items_skip_newest_item(
-        db_session: Session,
-        item_factory: ItemFactory,
+    db_session: Session,
+    item_factory: ItemFactory,
 ) -> None:
     item_names = ['one', 'two', 'three']
     items = [item_factory.get(name=n, id=i) for i, n in enumerate(item_names)]
@@ -128,8 +128,8 @@ def test_get_newest_items_skip_newest_item(
 
 
 def test_get_newest_items_take_multiple_items(
-        db_session: Session,
-        item_factory: ItemFactory,
+    db_session: Session,
+    item_factory: ItemFactory,
 ) -> None:
     item_names = ['one', 'two', 'three']
     items = [item_factory.get(name=n, id=i) for i, n in enumerate(item_names)]
@@ -146,8 +146,8 @@ def test_get_newest_items_take_multiple_items(
 
 
 def test_get_newest_items_skip_all_items(
-        db_session: Session,
-        item_factory: ItemFactory,
+    db_session: Session,
+    item_factory: ItemFactory,
 ) -> None:
     item_names = ['one', 'two']
     items = [item_factory.get(name=n, id=i) for i, n in enumerate(item_names)]
@@ -164,8 +164,8 @@ def test_get_newest_items_no_items(db_session: Session) -> None:
 
 
 def test_get_total_number_of_items(
-        db_session: Session,
-        item_factory: ItemFactory,
+    db_session: Session,
+    item_factory: ItemFactory,
 ) -> None:
     item_names = ['one', 'two']
     items = [item_factory.get(name=n, id=i) for i, n in enumerate(item_names)]
@@ -177,8 +177,8 @@ def test_get_total_number_of_items(
 
 
 def test_delete_item_by_id_success(
-        db_session: Session,
-        item_factory: ItemFactory,
+    db_session: Session,
+    item_factory: ItemFactory,
 ) -> None:
     item_names = ['one', 'two']
     items = [item_factory.get(name=n, id=i) for i, n in enumerate(item_names)]
@@ -193,8 +193,8 @@ def test_delete_item_by_id_success(
 
 
 def test_delete_item_by_id_failure(
-        db_session: Session,
-        item_factory: ItemFactory,
+    db_session: Session,
+    item_factory: ItemFactory,
 ) -> None:
     item_names = ['one']
     items = [item_factory.get(name=n, id=i) for i, n in enumerate(item_names)]
@@ -209,8 +209,8 @@ def test_delete_item_by_id_failure(
 
 
 def test_search_for_items_no_filters(
-        db_session: Session,
-        item_factory: ItemFactory,
+    db_session: Session,
+    item_factory: ItemFactory,
 ) -> None:
     item_names = ['one']
     items = [item_factory.get(name=n, id=i) for i, n in enumerate(item_names)]
@@ -223,8 +223,8 @@ def test_search_for_items_no_filters(
 
 
 def test_search_for_items_simple_case(
-        db_session: Session,
-        item_factory: ItemFactory,
+    db_session: Session,
+    item_factory: ItemFactory,
 ) -> None:
     item_names = ['one', 'two']
     items = [item_factory.get(name=n, id=i) for i, n in enumerate(item_names)]
@@ -238,8 +238,8 @@ def test_search_for_items_simple_case(
 
 
 def test_search_for_items_multiple_search_criteria(
-        db_session: Session,
-        item_factory: ItemFactory,
+    db_session: Session,
+    item_factory: ItemFactory,
 ) -> None:
     item_grading_companies = [
         item_enums.GradingCompany.RAW,
@@ -284,8 +284,8 @@ def test_search_for_items_multiple_search_criteria(
 
 
 def test_search_for_items_multiple_qualifiers(
-        db_session: Session,
-        item_factory: ItemFactory,
+    db_session: Session,
+    item_factory: ItemFactory,
 ) -> None:
     item_qualifiers = [
         [item_enums.Qualifier.NON_HOLO],
@@ -304,8 +304,8 @@ def test_search_for_items_multiple_qualifiers(
 
 
 def test_edit_item_no_item_found(
-        db_session: Session,
-        item_factory: ItemFactory,
+    db_session: Session,
+    item_factory: ItemFactory,
 ) -> None:
     item = item_factory.get(id=1)
     db_session.add(item)
@@ -315,8 +315,8 @@ def test_edit_item_no_item_found(
 
 
 def test_edit_item_no_changes(
-        db_session: Session,
-        item_factory: ItemFactory,
+    db_session: Session,
+    item_factory: ItemFactory,
 ) -> None:
     original_item = item_factory.get()
     db_session.add(original_item)
@@ -330,8 +330,8 @@ def test_edit_item_no_changes(
 
 
 def test_edit_item_single_field(
-        db_session: Session,
-        item_factory: ItemFactory,
+    db_session: Session,
+    item_factory: ItemFactory,
 ) -> None:
     item = item_factory.get()
     db_session.add(item)
@@ -347,8 +347,8 @@ def test_edit_item_single_field(
 
 
 def test_edit_item_enum_field(
-        db_session: Session,
-        item_factory: ItemFactory,
+    db_session: Session,
+    item_factory: ItemFactory,
 ) -> None:
     item = item_factory.get()
     db_session.add(item)
@@ -364,8 +364,8 @@ def test_edit_item_enum_field(
 
 
 def test_edit_item_multiple_changes(
-        db_session: Session,
-        item_factory: ItemFactory,
+    db_session: Session,
+    item_factory: ItemFactory,
 ) -> None:
     item = item_factory.get()
     db_session.add(item)
@@ -385,8 +385,8 @@ def test_edit_item_multiple_changes(
 
 
 def test_edit_item_add_new_qualifier(
-        db_session: Session,
-        item_factory: ItemFactory,
+    db_session: Session,
+    item_factory: ItemFactory,
 ) -> None:
     item = item_factory.get()
     db_session.add(item)
@@ -402,8 +402,8 @@ def test_edit_item_add_new_qualifier(
 
 
 def test_edit_item_add_extra_qualifier_to_existing(
-        db_session: Session,
-        item_factory: ItemFactory,
+    db_session: Session,
+    item_factory: ItemFactory,
 ) -> None:
     item = item_factory.get(qualifiers=[item_enums.Qualifier.CRYSTAL])
     db_session.add(item)
@@ -453,8 +453,8 @@ def test_get_total_number_of_submissions_no_subs(db_session: Session) -> None:
 
 
 def test_get_total_number_of_submissions(
-        db_session: Session,
-        submission_factory: SubmissionFactory,
+    db_session: Session,
+    submission_factory: SubmissionFactory,
 ) -> None:
     submission = submission_factory.get()
     db_session.add(submission)
@@ -470,10 +470,10 @@ def get_total_number_of_grading_records_no_records(db_session: Session) -> None:
 
 
 def test_get_total_number_of_grading_records(
-        db_session: Session,
-        item_factory: ItemFactory,
-        submission_factory: SubmissionFactory,
-        grading_record_factory: GradingRecordFactory,
+    db_session: Session,
+    item_factory: ItemFactory,
+    submission_factory: SubmissionFactory,
+    grading_record_factory: GradingRecordFactory,
 ) -> None:
     item = item_factory.get()
     submission = submission_factory.get()
@@ -498,8 +498,8 @@ def test_get_max_sub_number_no_subs(db_session: Session) -> None:
 
 
 def test_get_max_sub_number(
-        db_session: Session,
-        submission_factory: SubmissionFactory,
+    db_session: Session,
+    submission_factory: SubmissionFactory,
 ) -> None:
     submission = submission_factory.get()
     db_session.add(submission)
@@ -510,8 +510,8 @@ def test_get_max_sub_number(
 
 
 def test_get_max_sub_number_with_skipped_number(
-        db_session: Session,
-        submission_factory: SubmissionFactory,
+    db_session: Session,
+    submission_factory: SubmissionFactory,
 ) -> None:
     sub_ids = [0, 1]
     sub_nums = [1, 3]
