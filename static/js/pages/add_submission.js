@@ -248,3 +248,31 @@ document.addEventListener('submit', async (e) => {
   const response = await fetch(url);
   content.innerHTML = await response.text();
 });
+
+// Reset search conditions
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('#search-fields-reset');
+  if (!btn) return;
+  if (!dialog.open) return;
+
+  const form = btn.closest('form');
+  if (!form) return;
+
+  // Clear text/number/date inputs
+  form.querySelectorAll('input[type="text"], input[type="number"], input[type="date"]').forEach((el) => {
+    if (el.name === 'show_limit') return;
+    el.value = '';
+  });
+
+  // Reset selects to "Any"
+  form.querySelectorAll('select').forEach((sel) => {
+    sel.selectedIndex = 0;
+  });
+
+  // Uncheck checkboxes
+  form.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
+    cb.checked = false;
+  });
+
+  form.requestSubmit();
+});

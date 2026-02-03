@@ -1,18 +1,23 @@
 <form id="items-lookup-form" method="get" action="/items_lookup">
   <input type="hidden" name="selection_mode" value="1">
   <div class="label-container">
-    <label style="float: right;">
-      Max Rows:
-      <input
-        type="number"
-        name="show_limit"
-        value="{{ show_limit }}"
-        min="1"
-        step="1"
-        style="width: 5em;"
-        onchange="this.form.requestSubmit()"
-      >
-    </label>
+    <div>
+      <label>
+        Max Rows:
+        <input
+          type="number"
+          name="show_limit"
+          value="{{ show_limit }}"
+          min="1"
+          step="1"
+          style="width: 5em;"
+          onchange="this.form.requestSubmit()"
+        >
+      </label>
+      <button type="button" id="search-fields-reset" class="btn btn-orange btn-small margin-bottom-20">
+        Reset Search Conditions
+      </button>
+    </div>
     <div class="label-block general">
       <div class="divider">----- General -----</div>
 

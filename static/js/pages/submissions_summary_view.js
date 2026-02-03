@@ -18,7 +18,6 @@ function showInlineError(cell, message) {
   }, 2000);
 }
 
-
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('td.editable').forEach(cell => {
     cell.addEventListener('click', () => {
