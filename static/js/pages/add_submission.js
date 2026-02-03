@@ -1,3 +1,6 @@
+import { initDetailsToggle } from '../helpers/toggles.js';
+
+
 // Function to fetch item info via AJAX
 async function fetchItemInfo(itemId) {
   const response = await fetch(`/item_info_for_submission_form/${itemId}`);
@@ -55,17 +58,6 @@ function setupRow(row) {
     saveFormState();
   });
 }
-
-// Function to initialise existing rows
-function initExistingRows() {
-  document.querySelectorAll('tr').forEach(row => {
-    // Populate cached data
-    const input = row.querySelector('.item-id-input');
-    if (input.value) updateRowFromItemId(input);
-
-    setupRow(row);
-  });
-};
 
 // Function to create a new table row
 function createRow() {
@@ -190,6 +182,7 @@ document.addEventListener('click', async (e) => {
 
   const response = await fetch('/items_lookup?selection_mode=1');
   content.innerHTML = await response.text();
+  initDetailsToggle(content);
   dialog.showModal();
 });
 
