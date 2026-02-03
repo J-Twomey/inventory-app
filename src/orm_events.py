@@ -28,8 +28,8 @@ class FlushContext(Protocol):
 
 @event.listens_for(Engine, 'connect')
 def enable_sqlite_foreign_keys(
-        dbapi_connection: SQLiteDBAPIConnection,
-        connection_record: ConnectionPoolEntry,
+    dbapi_connection: SQLiteDBAPIConnection,
+    connection_record: ConnectionPoolEntry,
 ) -> None:
     cursor = dbapi_connection.cursor()
     cursor.execute('PRAGMA foreign_keys=ON')
@@ -38,9 +38,9 @@ def enable_sqlite_foreign_keys(
 
 @event.listens_for(Session, 'before_flush')
 def delete_empty_submissions(
-        session: Session,
-        flush_context: FlushContext,
-        instances: Iterable[object] | None,
+    session: Session,
+    flush_context: FlushContext,
+    instances: Iterable[object] | None,
 ) -> None:
     affected_submissions: set[Submission] = set()
 

@@ -6,7 +6,7 @@ from .conftest import GradingRecordFactory
 
 
 def test_check_valid_grading_record_update_already_graded(
-        grading_record_factory: GradingRecordFactory,
+    grading_record_factory: GradingRecordFactory,
 ) -> None:
     record = grading_record_factory.get(grading_fee=1000, grade=9., cert=10000)
     update = GradingRecordUpdate()
@@ -14,7 +14,7 @@ def test_check_valid_grading_record_update_already_graded(
 
 
 def test_check_valid_grading_record_update_changes_ok(
-        grading_record_factory: GradingRecordFactory,
+    grading_record_factory: GradingRecordFactory,
 ) -> None:
     record = grading_record_factory.get(grading_fee=None, grade=None, cert=None)
     update = GradingRecordUpdate(grading_fee=100, grade=9.5, cert=12345)
@@ -22,7 +22,7 @@ def test_check_valid_grading_record_update_changes_ok(
 
 
 def test_check_valid_grading_record_update_changes_ng(
-        grading_record_factory: GradingRecordFactory,
+    grading_record_factory: GradingRecordFactory,
 ) -> None:
     record = grading_record_factory.get(grading_fee=None, grade=None, cert=None)
     update = GradingRecordUpdate(grading_fee=100, grade=9.5, cert=None)

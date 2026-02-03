@@ -323,10 +323,10 @@ def submission_factory() -> SubmissionFactory:
 
 @pytest.fixture(scope='function')
 def item_with_submissions_factory(
-        db_session: Session,
-        item_factory: ItemFactory,
-        grading_record_factory: GradingRecordFactory,
-        submission_factory: SubmissionFactory,
+    db_session: Session,
+    item_factory: ItemFactory,
+    grading_record_factory: GradingRecordFactory,
+    submission_factory: SubmissionFactory,
 ) -> Callable[[Any], Item]:
     def get(
         grading_record_ids: list[int] | None = None,

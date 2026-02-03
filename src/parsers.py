@@ -18,8 +18,8 @@ from .item_enums import (
 
 
 def parse_enum(
-        value: str,
-        enum_cls: Type[E],
+    value: str,
+    enum_cls: Type[E],
 ) -> E:
     try:
         return enum_cls[value.upper()]
@@ -28,8 +28,8 @@ def parse_enum(
 
 
 def parse_nullable_enum(
-        value: str | None,
-        enum_cls: Type[E],
+    value: str | None,
+    enum_cls: Type[E],
 ) -> E | None:
     if value == '' or value is None:
         return None
@@ -48,8 +48,8 @@ def parse_to_qualifiers_list(values: list[str] | None) -> list[Qualifier]:
 
 
 def parse_nullable(
-        value: str | None,
-        parser: Callable[[str], T],
+    value: str | None,
+    parser: Callable[[str], T],
 ) -> T | None:
     if value is None or value == '':
         return None
@@ -82,8 +82,8 @@ def parse_nullable_percent(value: str | None) -> float | None:
 
 
 def parse_submission_update_field(
-        field: str,
-        value: str | None,
+    field: str,
+    value: str | None,
 ) -> date | int | GradingCompany | None:
     if value in ('', None):
         return None

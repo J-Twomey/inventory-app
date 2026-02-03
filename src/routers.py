@@ -78,12 +78,12 @@ def read_root(request: Request) -> Response:
 
 @router.get('/items_view', response_class=HTMLResponse)
 def view_items(
-        request: Request,
-        db: Session = Depends(get_db),
-        search_form: ItemSearchForm = Depends(ItemSearchForm.as_query),
-        show_limit: int = 20,
-        skip: int = 0,
-        selection_mode: bool = False,
+    request: Request,
+    db: Session = Depends(get_db),
+    search_form: ItemSearchForm = Depends(ItemSearchForm.as_query),
+    show_limit: int = 20,
+    skip: int = 0,
+    selection_mode: bool = False,
 ) -> Response:
     show_limit = max(1, min(show_limit, 500))
     skip = max(0, skip)

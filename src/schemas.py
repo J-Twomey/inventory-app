@@ -82,9 +82,9 @@ class ItemBase(BaseModel):
     @field_validator('*', mode='before')
     @classmethod
     def empty_str_to_none(
-            cls,
-            v: T,
-            info: ValidationInfo,
+        cls,
+        v: T,
+        info: ValidationInfo,
     ) -> T | None:
         # Empty string is handled differently for these fields
         if info.field_name in {
@@ -100,7 +100,10 @@ class ItemBase(BaseModel):
 
     @field_validator('qualifiers', mode='before')
     @classmethod
-    def parse_qualifiers(cls, v: Any) -> list[Qualifier]:
+    def parse_qualifiers(
+        cls,
+        v: Any,
+    ) -> list[Qualifier]:
         if isinstance(v, str):
             return [Qualifier[x.strip()] for x in v.split(',') if x.strip()]
         elif isinstance(v, list) and all(isinstance(x, Qualifier) for x in v):
@@ -203,8 +206,8 @@ class ItemCreate(ItemBase):
     object_variant: ObjectVariant
 
     def to_model_kwargs(
-            self,
-            exclude: set[str] = set(),
+        self,
+        exclude: set[str] = set(),
     ) -> dict[str, Any]:
         return self.model_dump(exclude=exclude)
 
@@ -817,9 +820,9 @@ class GradingRecordUpdateForm:
 
 
 def set_if_value(
-        d: dict[str, Any],
-        key: str,
-        value: Any,
+    d: dict[str, Any],
+    key: str,
+    value: Any,
 ) -> None:
     if value is not None and value != '' and value != [] and value != {}:
         d[key] = value

@@ -34,10 +34,10 @@ from .conftest import (
     ),
 )
 def test_item_base_empty_str_to_none_validator(
-        item_base_factory: ItemBaseFactory,
-        field: str,
-        input_value: Any,
-        expected_value: Any,
+    item_base_factory: ItemBaseFactory,
+    field: str,
+    input_value: Any,
+    expected_value: Any,
 ) -> None:
     field_settings = {
         field: input_value,
@@ -71,9 +71,9 @@ def test_item_base_empty_str_to_none_validator(
     ),
 )
 def test_item_base_parse_qualifiers_validator(
-        item_base_factory: ItemBaseFactory,
-        input_value: str | list[item_enums.Qualifier],
-        expected_value: list[item_enums.Qualifier],
+    item_base_factory: ItemBaseFactory,
+    input_value: str | list[item_enums.Qualifier],
+    expected_value: list[item_enums.Qualifier],
 ) -> None:
     item = item_base_factory.get(qualifiers=input_value)  # type: ignore[arg-type]
     actual_value = item.qualifiers
@@ -150,7 +150,7 @@ def test_item_base_sale_date_before_list_date(item_base_factory: ItemBaseFactory
 
 
 def test_check_required_fields_based_on_status_no_error(
-        item_base_factory: ItemBaseFactory,
+    item_base_factory: ItemBaseFactory,
 ) -> None:
     item_base_factory.get(
         purchase_date=date(2025, 5, 5),
@@ -167,7 +167,7 @@ def test_check_required_fields_based_on_status_no_error(
 
 
 def test_check_required_fields_based_on_status_error_case(
-        item_base_factory: ItemBaseFactory,
+    item_base_factory: ItemBaseFactory,
 ) -> None:
     with pytest.raises(ValidationError) as e:
         item_base_factory.get(
@@ -187,7 +187,7 @@ def test_check_required_fields_based_on_status_error_case(
 
 
 def test_check_required_null_fields_based_on_status_no_error(
-        item_base_factory: ItemBaseFactory,
+    item_base_factory: ItemBaseFactory,
 ) -> None:
     item_base_factory.get(
         purchase_date=date(2025, 5, 5),
@@ -196,7 +196,7 @@ def test_check_required_null_fields_based_on_status_no_error(
 
 
 def test_check_required_null_fields_based_on_status_error_case(
-        item_base_factory: ItemBaseFactory,
+    item_base_factory: ItemBaseFactory,
 ) -> None:
     with pytest.raises(ValidationError) as e:
         item_base_factory.get(
@@ -339,7 +339,7 @@ def test_appropriate_audit_target_closed_error(item_base_factory: ItemBaseFactor
 
 
 def test_appropriate_status_based_on_intent_no_error(
-        item_create_factory: ItemCreateFactory,
+    item_create_factory: ItemCreateFactory,
 ) -> None:
     item_create_factory.get(
         status=item_enums.Status.SUBMITTED,
@@ -348,7 +348,7 @@ def test_appropriate_status_based_on_intent_no_error(
 
 
 def test_appropriate_status_based_on_intent_error_case(
-        item_create_factory: ItemCreateFactory,
+    item_create_factory: ItemCreateFactory,
 ) -> None:
     with pytest.raises(ValidationError) as e:
         item_create_factory.get(
@@ -428,8 +428,8 @@ def test_parse_nullable_no_parse(value: str | None) -> None:
     ),
 )
 def test_parse_nullable_do_parse(
-        value: str,
-        parser: type[schemas.T],
+    value: str,
+    parser: type[schemas.T],
 ) -> None:
     result = schemas.parse_nullable(value, parser)
     assert isinstance(result, parser)
@@ -523,8 +523,8 @@ def test_set_if_value_no_set(value: Any) -> None:
     ),
 )
 def test_parse_nullable_percent(
-        value: str | None,
-        expected: float | None,
+    value: str | None,
+    expected: float | None,
 ) -> None:
     result = schemas.parse_nullable_percent(value)
     assert result == expected

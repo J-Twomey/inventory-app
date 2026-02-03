@@ -10,8 +10,8 @@ from .conftest import ItemFactory
 
 
 def test_total_grading_fees(
-        db_session: Session,
-        item_with_submissions_factory: Callable[..., Item],
+    db_session: Session,
+    item_with_submissions_factory: Callable[..., Item],
 ) -> None:
     item_with_submissions = item_with_submissions_factory(
         grading_record_ids=[1, 2, 3],
@@ -32,8 +32,8 @@ def test_total_grading_fees(
 
 
 def test_total_cost(
-        db_session: Session,
-        item_with_submissions_factory: Callable[..., Item],
+    db_session: Session,
+    item_with_submissions_factory: Callable[..., Item],
 ) -> None:
     item_with_submissions = item_with_submissions_factory(
         grading_record_ids=[1, 2],
@@ -56,8 +56,8 @@ def test_total_cost(
 
 
 def test_grading_company_no_submission_no_crack(
-        db_session: Session,
-        item_factory: ItemFactory,
+    db_session: Session,
+    item_factory: ItemFactory,
 ) -> None:
     item = item_factory.get(
         purchase_grading_company=item_enums.GradingCompany.BGS,
@@ -77,8 +77,8 @@ def test_grading_company_no_submission_no_crack(
 
 
 def test_grading_company_no_submission_cracked_from_purchase(
-        db_session: Session,
-        item_factory: ItemFactory,
+    db_session: Session,
+    item_factory: ItemFactory,
 ) -> None:
     item = item_factory.get(
         purchase_grading_company=item_enums.GradingCompany.BGS,
@@ -98,8 +98,8 @@ def test_grading_company_no_submission_cracked_from_purchase(
 
 
 def test_grading_company_latest_sub_cracked(
-        db_session: Session,
-        item_with_submissions_factory: Callable[..., Item],
+    db_session: Session,
+    item_with_submissions_factory: Callable[..., Item],
 ) -> None:
     item_with_submissions = item_with_submissions_factory(
         grading_record_ids=[1],
@@ -120,8 +120,8 @@ def test_grading_company_latest_sub_cracked(
 
 
 def test_grading_company_latest_sub_not_cracked(
-        db_session: Session,
-        item_with_submissions_factory: Callable[..., Item],
+    db_session: Session,
+    item_with_submissions_factory: Callable[..., Item],
 ) -> None:
     item_with_submissions = item_with_submissions_factory(
         grading_record_ids=[1],
@@ -142,8 +142,8 @@ def test_grading_company_latest_sub_not_cracked(
 
 
 def test_grade_no_submission_no_crack(
-        db_session: Session,
-        item_factory: ItemFactory,
+    db_session: Session,
+    item_factory: ItemFactory,
 ) -> None:
     item = item_factory.get(
         purchase_grading_company=item_enums.GradingCompany.PSA,
@@ -163,8 +163,8 @@ def test_grade_no_submission_no_crack(
 
 
 def test_grade_no_submission_cracked_from_purchase(
-        db_session: Session,
-        item_factory: ItemFactory,
+    db_session: Session,
+    item_factory: ItemFactory,
 ) -> None:
     item = item_factory.get(
         purchase_grading_company=item_enums.GradingCompany.PSA,
@@ -184,8 +184,8 @@ def test_grade_no_submission_cracked_from_purchase(
 
 
 def test_grade_latest_sub_cracked(
-        db_session: Session,
-        item_with_submissions_factory: Callable[..., Item],
+    db_session: Session,
+    item_with_submissions_factory: Callable[..., Item],
 ) -> None:
     item_with_submissions = item_with_submissions_factory(
         grading_record_ids=[1],
@@ -206,8 +206,8 @@ def test_grade_latest_sub_cracked(
 
 
 def test_grade_latest_sub_not_cracked(
-        db_session: Session,
-        item_with_submissions_factory: Callable[..., Item],
+    db_session: Session,
+    item_with_submissions_factory: Callable[..., Item],
 ) -> None:
     item_with_submissions = item_with_submissions_factory(
         grading_record_ids=[1],
@@ -228,8 +228,8 @@ def test_grade_latest_sub_not_cracked(
 
 
 def test_cert_no_submission_no_crack(
-        db_session: Session,
-        item_factory: ItemFactory,
+    db_session: Session,
+    item_factory: ItemFactory,
 ) -> None:
     item = item_factory.get(
         purchase_grading_company=item_enums.GradingCompany.PSA,
@@ -249,8 +249,8 @@ def test_cert_no_submission_no_crack(
 
 
 def test_cert_no_submission_cracked_from_purchase(
-        db_session: Session,
-        item_factory: ItemFactory,
+    db_session: Session,
+    item_factory: ItemFactory,
 ) -> None:
     item = item_factory.get(
         purchase_grading_company=item_enums.GradingCompany.PSA,
@@ -270,8 +270,8 @@ def test_cert_no_submission_cracked_from_purchase(
 
 
 def test_cert_latest_sub_cracked(
-        db_session: Session,
-        item_with_submissions_factory: Callable[..., Item],
+    db_session: Session,
+    item_with_submissions_factory: Callable[..., Item],
 ) -> None:
     item_with_submissions = item_with_submissions_factory(
         grading_record_ids=[1],
@@ -292,8 +292,8 @@ def test_cert_latest_sub_cracked(
 
 
 def test_cert_latest_sub_not_cracked(
-        db_session: Session,
-        item_with_submissions_factory: Callable[..., Item],
+    db_session: Session,
+    item_with_submissions_factory: Callable[..., Item],
 ) -> None:
     item_with_submissions = item_with_submissions_factory(
         grading_record_ids=[1],
@@ -323,11 +323,11 @@ def test_cert_latest_sub_not_cracked(
     ),
 )
 def test_total_fees(
-        db_session: Session,
-        item_factory: ItemFactory,
-        shipping: float | None,
-        sale_fee: float | None,
-        expected_total: float | None,
+    db_session: Session,
+    item_factory: ItemFactory,
+    shipping: float | None,
+    sale_fee: float | None,
+    expected_total: float | None,
 ) -> None:
     item = item_factory.get(shipping=shipping, sale_fee=sale_fee)
     # Python side
@@ -351,12 +351,12 @@ def test_total_fees(
     ),
 )
 def test_return_usd(
-        db_session: Session,
-        item_factory: ItemFactory,
-        sale_total: float | None,
-        shipping: float | None,
-        sale_fee: float | None,
-        expected_return: float | None,
+    db_session: Session,
+    item_factory: ItemFactory,
+    sale_total: float | None,
+    shipping: float | None,
+    sale_fee: float | None,
+    expected_return: float | None,
 ) -> None:
     item = item_factory.get(sale_total=sale_total, shipping=shipping, sale_fee=sale_fee)
     # Python side
@@ -380,13 +380,13 @@ def test_return_usd(
     ),
 )
 def test_return_jpy(
-        db_session: Session,
-        item_factory: ItemFactory,
-        sale_total: float | None,
-        shipping: float | None,
-        sale_fee: float | None,
-        usd_to_jpy_rate: float | None,
-        expected_return: int | None,
+    db_session: Session,
+    item_factory: ItemFactory,
+    sale_total: float | None,
+    shipping: float | None,
+    sale_fee: float | None,
+    usd_to_jpy_rate: float | None,
+    expected_return: int | None,
 ) -> None:
     item = item_factory.get(
         sale_total=sale_total,
@@ -422,15 +422,15 @@ def test_return_jpy(
     ),
 )
 def test_net_jpy(
-        db_session: Session,
-        item_with_submissions_factory: Callable[..., Item],
-        purchase_price: int,
-        grading_fee: int,
-        sale_total: float | None,
-        shipping: float | None,
-        sale_fee: float | None,
-        usd_to_jpy_rate: float | None,
-        expected_net: int | None,
+    db_session: Session,
+    item_with_submissions_factory: Callable[..., Item],
+    purchase_price: int,
+    grading_fee: int,
+    sale_total: float | None,
+    shipping: float | None,
+    sale_fee: float | None,
+    usd_to_jpy_rate: float | None,
+    expected_net: int | None,
 ) -> None:
     item = item_with_submissions_factory(
         grading_record_ids=[1],
@@ -472,15 +472,15 @@ def test_net_jpy(
     ),
 )
 def test_net_percent(
-        db_session: Session,
-        item_with_submissions_factory: Callable[..., Item],
-        purchase_price: int,
-        grading_fee: int | None,
-        sale_total: float | None,
-        shipping: float | None,
-        sale_fee: float | None,
-        usd_to_jpy_rate: float | None,
-        expected_percent: float | None,
+    db_session: Session,
+    item_with_submissions_factory: Callable[..., Item],
+    purchase_price: int,
+    grading_fee: int | None,
+    sale_total: float | None,
+    shipping: float | None,
+    sale_fee: float | None,
+    usd_to_jpy_rate: float | None,
+    expected_percent: float | None,
 ) -> None:
     item = item_with_submissions_factory(
         grading_record_ids=[1],

@@ -132,16 +132,16 @@ class EnumList(TypeDecorator[list[EInt]]):
     cache_ok = True
 
     def __init__(
-            self,
-            enum_class: Type[EInt],
+        self,
+        enum_class: Type[EInt],
     ) -> None:
         self.enum_class = enum_class
         super().__init__()
 
     def process_bind_param(
-            self,
-            value: list[EInt] | list[int] | None,
-            dialect: Dialect,
+        self,
+        value: list[EInt] | list[int] | None,
+        dialect: Dialect,
     ) -> str | None:
         if value is None:
             return None
@@ -156,9 +156,9 @@ class EnumList(TypeDecorator[list[EInt]]):
         return json.dumps(int_representations)
 
     def process_result_value(
-            self,
-            value: str | None,
-            dialect: Dialect,
+        self,
+        value: str | None,
+        dialect: Dialect,
     ) -> list[EInt] | None:
         if value is None:
             return None
@@ -171,16 +171,16 @@ class EnumInt(TypeDecorator[EInt]):
     cache_ok = True
 
     def __init__(
-            self,
-            enum_cls: Type[EInt],
+        self,
+        enum_cls: Type[EInt],
     ) -> None:
         self.enum_cls = enum_cls
         super().__init__()
 
     def process_bind_param(
-            self,
-            value: EInt | None,
-            dialect: Dialect,
+        self,
+        value: EInt | None,
+        dialect: Dialect,
     ) -> int | None:
         if value is None:
             return None
@@ -189,9 +189,9 @@ class EnumInt(TypeDecorator[EInt]):
         # return value
 
     def process_result_value(
-            self,
-            value: int | None,
-            dialect: Dialect,
+        self,
+        value: int | None,
+        dialect: Dialect,
     ) -> EInt | None:
         if value is None:
             return None

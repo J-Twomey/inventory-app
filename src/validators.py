@@ -10,8 +10,8 @@ from .schemas import GradingRecordUpdate
 
 
 def check_intent(
-        item: Item,
-        desired: Intent,
+    item: Item,
+    desired: Intent,
 ) -> None:
     if item.intent != desired:
         raise ValueError(
@@ -21,8 +21,8 @@ def check_intent(
 
 
 def check_status(
-        item: Item,
-        desired: Status,
+    item: Item,
+    desired: Status,
 ) -> None:
     if item.status != desired:
         raise ValueError(
@@ -60,8 +60,8 @@ def check_valid_intent_or_status_update(
 
 
 def check_valid_grading_record_update(
-        record: GradingRecord,
-        update: GradingRecordUpdate,
+    record: GradingRecord,
+    update: GradingRecordUpdate,
 ) -> None:
     if all(
         (

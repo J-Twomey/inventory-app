@@ -39,8 +39,8 @@ from .validators import (
 
 
 def create_item(
-        db: Session,
-        item: ItemCreate,
+    db: Session,
+    item: ItemCreate,
 ) -> Item:
     item_data = item.to_model_kwargs(
         exclude={
@@ -60,16 +60,16 @@ def create_item(
 
 
 def get_item(
-        db: Session,
-        item_id: int,
+    db: Session,
+    item_id: int,
 ) -> Item | None:
     return db.query(Item).filter(Item.id == item_id).first()
 
 
 def get_newest_items(
-        db: Session,
-        skip: int = 0,
-        limit: int = 100,
+    db: Session,
+    skip: int = 0,
+    limit: int = 100,
 ) -> Sequence[Item]:
     items = db.query(Item).order_by(Item.id.desc()).offset(skip).limit(limit).all()
     return list(reversed(items))
@@ -80,8 +80,8 @@ def get_total_number_of_items(db: Session) -> int:
 
 
 def delete_item_by_id(
-        db: Session,
-        item_id: int,
+    db: Session,
+    item_id: int,
 ) -> bool:
     item = get_item(db, item_id)
     if item is None:
@@ -92,8 +92,8 @@ def delete_item_by_id(
 
 
 def search_for_items(
-        db: Session,
-        search_params: ItemSearch,
+    db: Session,
+    search_params: ItemSearch,
 ) -> Sequence[Item]:
     search_values = search_params.model_dump(exclude_unset=True)
     filters, post_filters = build_search_filters(search_values)
@@ -116,7 +116,7 @@ def search_for_items(
 
 
 def build_search_filters(
-        search_params: dict[str, Any],
+    search_params: dict[str, Any],
 ) -> tuple[list[BinaryExpression[Any]], list[tuple[str, Any]]]:
     filters: list[BinaryExpression[Any]] = []
     post_filters: list[tuple[str, Any]] = []
@@ -144,9 +144,9 @@ def build_search_filters(
 
 
 def edit_item(
-        db: Session,
-        item_id: int,
-        item_update: ItemUpdate,
+    db: Session,
+    item_id: int,
+    item_update: ItemUpdate,
 ) -> int:
     item = get_item(db, item_id)
     if item is None:
@@ -164,8 +164,8 @@ def edit_item(
 
 
 def perform_item_update(
-        item: Item,
-        item_update: ItemUpdate,
+    item: Item,
+    item_update: ItemUpdate,
 ) -> None:
     update_data = item_update.to_model_kwargs()
     # always add qualifiers even if it is an empty list
@@ -176,9 +176,9 @@ def perform_item_update(
 
 
 def create_submission(
-        db: Session,
-        submission_summary: SubmissionCreate,
-        item_ids: list[int],
+    db: Session,
+    submission_summary: SubmissionCreate,
+    item_ids: list[int],
 ) -> None:
     try:
         submission_summary_data = submission_summary.to_model_kwargs()
@@ -213,16 +213,16 @@ def create_submission(
 
 
 def get_submission(
-        db: Session,
-        submission_id: int,
+    db: Session,
+    submission_id: int,
 ) -> Submission | None:
     return db.query(Submission).filter(Submission.id == submission_id).first()
 
 
 def get_newest_submissions(
-        db: Session,
-        skip: int = 0,
-        limit: int = 100,
+    db: Session,
+    skip: int = 0,
+    limit: int = 100,
 ) -> list[Submission]:
     submissions = db.query(
         Submission,
@@ -243,10 +243,10 @@ class SubmissionNumberConflict(Exception):
 
 
 def edit_submission_single_field(
-        db: Session,
-        submission_id: int,
-        field: str,
-        update_value: date | int | GradingCompany | None,
+    db: Session,
+    submission_id: int,
+    field: str,
+    update_value: date | int | GradingCompany | None,
 ) -> None:
     submission = get_submission(db, submission_id)
     if submission is None:
@@ -261,23 +261,23 @@ def edit_submission_single_field(
 
 
 def get_grading_record(
-        db: Session,
-        record_id: int,
+    db: Session,
+    record_id: int,
 ) -> GradingRecord | None:
     return db.query(GradingRecord).filter(GradingRecord.id == record_id).first()
 
 
 def get_all_grading_records_for_item(
-        db: Session,
-        item_id: int,
+    db: Session,
+    item_id: int,
 ) -> list[GradingRecord]:
     return db.query(GradingRecord).filter(GradingRecord.item_id == item_id).all()
 
 
 def get_newest_grading_records(
-        db: Session,
-        skip: int = 0,
-        limit: int = 100,
+    db: Session,
+    skip: int = 0,
+    limit: int = 100,
 ) -> Sequence[GradingRecord]:
     items = (
         db.query(GradingRecord)
@@ -297,8 +297,8 @@ def get_total_number_of_grading_records(db: Session) -> int:
 
 
 def delete_grading_record_by_id(
-        db: Session,
-        record_id: int,
+    db: Session,
+    record_id: int,
 ) -> bool:
     record = get_grading_record(db, record_id)
     if record is None:
@@ -317,16 +317,16 @@ def delete_grading_record_by_id(
 
 
 def perform_delete_grading_record(
-        db: Session,
-        record: GradingRecord,
+    db: Session,
+    record: GradingRecord,
 ) -> None:
     db.delete(record)
 
 
 def edit_grading_record(
-        db: Session,
-        record_id: int,
-        record_update: GradingRecordUpdate,
+    db: Session,
+    record_id: int,
+    record_update: GradingRecordUpdate,
 ) -> int:
     record = get_grading_record(db, record_id)
     if record is None:
