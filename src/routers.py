@@ -148,8 +148,8 @@ def show_add_item_form(request: Request) -> Response:
 
 @router.post('/add_item')
 def submit_add_item_form(
-        form: ItemCreateForm = Depends(ItemCreateForm.as_form),
-        db: Session = Depends(get_db),
+    form: ItemCreateForm = Depends(ItemCreateForm.as_form),
+    db: Session = Depends(get_db),
 ) -> RedirectResponse:
     item = form.to_item_create()
     create_item(db, item)
@@ -158,8 +158,8 @@ def submit_add_item_form(
 
 @router.get('/delete/{item_id}')
 def delete_item(
-        item_id: int,
-        db: Session = Depends(get_db),
+    item_id: int,
+    db: Session = Depends(get_db),
 ) -> RedirectResponse:
     success = delete_item_by_id(db, item_id)
     if not success:
@@ -169,9 +169,9 @@ def delete_item(
 
 @router.get('/edit/{item_id}', response_class=HTMLResponse)
 def open_edit_item_form(
-        item_id: int,
-        request: Request,
-        db: Session = Depends(get_db),
+    item_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
 ) -> Response:
     item = get_item(db, item_id)
     if item is None:
@@ -195,9 +195,9 @@ def open_edit_item_form(
 
 @router.post('/edit/{item_id}')
 def submit_edit_item(
-        item_id: int,
-        update_form: ItemUpdateForm = Depends(ItemUpdateForm.as_form),
-        db: Session = Depends(get_db),
+    item_id: int,
+    update_form: ItemUpdateForm = Depends(ItemUpdateForm.as_form),
+    db: Session = Depends(get_db),
 ) -> RedirectResponse:
     edit_params = update_form.to_item_update()
     edit_result = edit_item(db, item_id, edit_params)
@@ -206,10 +206,10 @@ def submit_edit_item(
 
 @router.get('/submissions_summary_view', response_class=HTMLResponse)
 def view_submissions_summary(
-        request: Request,
-        db: Session = Depends(get_db),
-        show_limit: int = 20,
-        skip: int = 0,
+    request: Request,
+    db: Session = Depends(get_db),
+    show_limit: int = 20,
+    skip: int = 0,
 ) -> Response:
     show_limit = max(1, min(show_limit, 500))
     num_results = get_total_number_of_submissions(db)
@@ -241,8 +241,8 @@ class SubmissionTableUpdatePayload(TypedDict, total=False):
 
 @router.post('/submissions_summary_edit')
 def update_submission_summary_field(
-        payload: SubmissionTableUpdatePayload = Body(...),
-        db: Session = Depends(get_db),
+    payload: SubmissionTableUpdatePayload = Body(...),
+    db: Session = Depends(get_db),
 ) -> JSONResponse:
     submission_id = payload['submission_id']
     field = payload['field']
@@ -274,10 +274,10 @@ def update_submission_summary_field(
 
 @router.get('/grading_records_view', response_class=HTMLResponse)
 def view_grading_records(
-        request: Request,
-        db: Session = Depends(get_db),
-        show_limit: int = 20,
-        skip: int = 0,
+    request: Request,
+    db: Session = Depends(get_db),
+    show_limit: int = 20,
+    skip: int = 0,
 ) -> Response:
     show_limit = max(1, min(show_limit, 500))
     num_results = get_total_number_of_grading_records(db)
@@ -302,8 +302,8 @@ def view_grading_records(
 
 @router.get('/add_submission', response_class=HTMLResponse)
 def show_add_submission_form(
-        request: Request,
-        db: Session = Depends(get_db),
+    request: Request,
+    db: Session = Depends(get_db),
 ) -> Response:
     current_max_sub_number = get_max_sub_number(db)
     return templates.TemplateResponse(
@@ -318,12 +318,12 @@ def show_add_submission_form(
 
 @router.post('/add_submission')
 def submit_add_submission_form(
-        request: Request,
-        submission_number: int = Form(...),
-        submission_company: str = Form(...),
-        submission_date: str = Form(...),
-        item_ids: list[int] = Form(...),
-        db: Session = Depends(get_db),
+    request: Request,
+    submission_number: int = Form(...),
+    submission_company: str = Form(...),
+    submission_date: str = Form(...),
+    item_ids: list[int] = Form(...),
+    db: Session = Depends(get_db),
 ) -> Response:
     if submission_date == '':
         parsed_date = None
@@ -356,12 +356,12 @@ def submit_add_submission_form(
 
 @router.get('/items_lookup', response_class=HTMLResponse)
 def items_lookup(
-        request: Request,
-        db: Session = Depends(get_db),
-        search_form: ItemSearchForm = Depends(ItemSearchForm.as_query),
-        show_limit: int = 20,
-        skip: int = 0,
-        selection_mode: bool = True,
+    request: Request,
+    db: Session = Depends(get_db),
+    search_form: ItemSearchForm = Depends(ItemSearchForm.as_query),
+    show_limit: int = 20,
+    skip: int = 0,
+    selection_mode: bool = True,
 ) -> Response:
     search_data = search_form.to_item_search()
 
@@ -402,8 +402,8 @@ def items_lookup(
 
 @router.get('/item_info_for_submission_form/{item_id}', response_model=ItemForSubmissionForm)
 def get_item_info_for_submission_form(
-        item_id: int,
-        db: Session = Depends(get_db),
+    item_id: int,
+    db: Session = Depends(get_db),
 ) -> ItemForSubmissionForm:
     item = get_item(db, item_id)
     if item is None:
@@ -425,8 +425,8 @@ def get_item_info_for_submission_form(
 
 @router.get('/grading_record_delete/{grading_record_id}')
 def delete_submission_item(
-        grading_record_id: int,
-        db: Session = Depends(get_db),
+    grading_record_id: int,
+    db: Session = Depends(get_db),
 ) -> RedirectResponse:
     success = delete_grading_record_by_id(db, grading_record_id)
     if not success:
@@ -436,9 +436,9 @@ def delete_submission_item(
 
 @router.get('/grading_record_edit/{grading_record_id}', response_class=HTMLResponse)
 def open_edit_grading_record_form(
-        grading_record_id: int,
-        request: Request,
-        db: Session = Depends(get_db),
+    grading_record_id: int,
+    request: Request,
+    db: Session = Depends(get_db),
 ) -> Response:
     record = get_grading_record(db, grading_record_id)
     if record is None:
@@ -455,9 +455,9 @@ def open_edit_grading_record_form(
 
 @router.post('/grading_record_edit/{grading_record_id}')
 def submit_edit_grading_record(
-        grading_record_id: int,
-        update_form: GradingRecordUpdateForm = Depends(GradingRecordUpdateForm.as_form),
-        db: Session = Depends(get_db),
+    grading_record_id: int,
+    update_form: GradingRecordUpdateForm = Depends(GradingRecordUpdateForm.as_form),
+    db: Session = Depends(get_db),
 ) -> RedirectResponse:
     edit_params = update_form.to_grading_record_update()
     edit_result = edit_grading_record(db, grading_record_id, edit_params)
@@ -465,18 +465,18 @@ def submit_edit_grading_record(
 
 
 def slice_items(
-        items: Sequence[Item],
-        skip: int,
-        show_limit: int,
+    items: Sequence[Item],
+    skip: int,
+    show_limit: int,
 ) -> Sequence[Item]:
     return items[-(skip + show_limit): -skip if skip != 0 else None]
 
 
 def generate_page_urls(
-        request: Request,
-        skip: int,
-        show_limit: int,
-        num_results: int,
+    request: Request,
+    skip: int,
+    show_limit: int,
+    num_results: int,
 ) -> tuple[str, str]:
     if skip + show_limit < num_results:
         prev_url = str(request.url.include_query_params(skip=skip + show_limit))
