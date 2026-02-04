@@ -28,7 +28,7 @@ app.mount('/static', StaticFiles(directory='static'), name='static')
 
 
 def open_browser() -> None:
-    time.sleep(1)
+    time.sleep(0.2)
     webbrowser.open('http://127.0.0.1:8000')
 
 
