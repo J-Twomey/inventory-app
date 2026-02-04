@@ -272,3 +272,9 @@
   z-index: 1000;
   box-shadow: 0 2px 6px rgba(0,0,0,0.15);
 }
+
+.dev-border {
+  box-sizing: border-box;
+  border: 2px solid red;
+  min-height: 100vh;
+}

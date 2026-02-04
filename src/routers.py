@@ -1,3 +1,4 @@
+import os
 from datetime import date
 
 from typing import (
@@ -68,6 +69,9 @@ from .schemas import (
 
 
 templates = Jinja2Templates(directory='templates')
+templates.env.globals['DEV_MODE'] = (
+    os.getenv('DEV_MODE') == '1'
+)
 router = APIRouter()
 
 

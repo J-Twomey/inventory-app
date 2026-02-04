@@ -59,7 +59,7 @@ def check_valid_intent_or_status_update(
             )
     if current_status == Status.SUBMITTED and update_status is not None:
         raise ValueError(
-            f'Cannot update an item status if it is SUBMITTED (use the grading record page)',
+            'Cannot update an item status if it is SUBMITTED (use the grading record page)',
         )
 
 
