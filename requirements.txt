@@ -1,0 +1,17 @@
+add_trailing_comma==3.2.0
+annotated-types==0.7.0
+coverage==7.9.2
+fastapi==0.115.12
+flake8==7.2.0
+Jinja2==3.1.6
+mypy==1.16.0
+mypy_extensions==1.1.0
+pycodestyle==2.13.0
+pydantic==2.11.7
+pyflakes==3.3.2
+pytest==8.4.1
+python-multipart==0.0.20
+SQLAlchemy==2.0.41
+typing_extensions==4.14.0
+typing-inspection==0.4.1
+uvicorn==0.34.3
