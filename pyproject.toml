@@ -1,14 +1,28 @@
-[tool.flake8]
-max-line-length = 99
-exclude = ["env"]
-
 [tool.mypy]
 check_untyped_defs = true
 disallow_any_generics = true
 disallow_incomplete_defs = true
 disallow_untyped_defs = true
 exclude = ["env"]
+python_version = "3.12"
 warn_redundant_casts = true
 warn_return_any = true
 warn_unreachable = true
 warn_unused_ignores = true
+
+[tool.ruff]
+extend-exclude = ["env"]
+line-length = 99
+target-version = "py312"
+
+[tool.ruff.lint.flake8-quotes]
+inline-quotes = "single"
+
+[tool.ruff.format]
+indent-style = "space"
+line-ending = "auto"
+quote-style = "single"
+skip-magic-trailing-comma = true
+
+[tool.ruff.lint]
+select = ["ALL"]
