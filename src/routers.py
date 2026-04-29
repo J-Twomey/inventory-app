@@ -500,6 +500,12 @@ def format_yen(value: float | None) -> str:
     return f'¥{value:,.0f}'
 
 
+def format_yen_with_decimal(value: float | None) -> str:
+    if value is None:
+        return ''
+    return f'¥{value:,.2f}'
+
+
 def format_percent(value: float | None) -> str:
     if value is None:
         return ''
@@ -516,6 +522,7 @@ def format_grading_company_enum(e: GradingCompany) -> str:
 
 templates.env.filters['dollar'] = format_dollar
 templates.env.filters['yen'] = format_yen
+templates.env.filters['decimal_yen'] = format_yen_with_decimal
 templates.env.filters['percent'] = format_percent
 templates.env.filters['enum'] = format_enum
 templates.env.filters['grading_company_enum_format'] = format_grading_company_enum
