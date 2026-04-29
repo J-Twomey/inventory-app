@@ -507,7 +507,7 @@ def format_percent(value: float | None) -> str:
 
 
 def format_enum(e: E) -> str:
-    return e.name.title() if e else ''
+    return e.name.title().replace('_', ' ') if e else ''
 
 
 def format_grading_company_enum(e: GradingCompany) -> str:
