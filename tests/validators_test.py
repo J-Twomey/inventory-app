@@ -1,14 +1,15 @@
 import pytest
 
-import src.validators as validators
+from src import validators
 from src.schemas import GradingRecordUpdate
+
 from .conftest import GradingRecordFactory
 
 
 def test_check_valid_grading_record_update_already_graded(
     grading_record_factory: GradingRecordFactory,
 ) -> None:
-    record = grading_record_factory.get(grading_fee=1000, grade=9., cert=10000)
+    record = grading_record_factory.get(grading_fee=1000, grade=9.0, cert=10000)
     update = GradingRecordUpdate()
     validators.check_valid_grading_record_update(record, update)
 

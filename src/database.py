@@ -1,6 +1,6 @@
 import os
+from collections.abc import Generator
 from functools import lru_cache
-from typing import Generator
 
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
@@ -12,10 +12,7 @@ from sqlalchemy.orm import (
 
 DEV_MODE = True
 
-if DEV_MODE:
-    SQLALCHEMY_DATABASE_URL = 'sqlite:///./db/test6.db'
-else:
-    SQLALCHEMY_DATABASE_URL = 'sqlite:///./db/prod.db'
+SQLALCHEMY_DATABASE_URL = 'sqlite:///./db/test6.db' if DEV_MODE else 'sqlite:///./db/prod.db'
 
 
 @lru_cache(maxsize=1)
@@ -34,8 +31,8 @@ class Base(DeclarativeBase):
 
 
 def get_db() -> Generator[Session, None, None]:
-    SessionLocal = get_sessionmaker()
-    db: Session = SessionLocal()
+    local_session = get_sessionmaker()
+    db = local_session()
     try:
         yield db
     finally:

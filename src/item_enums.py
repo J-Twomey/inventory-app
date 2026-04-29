@@ -1,12 +1,11 @@
 import json
 from enum import Enum
-from typing import Type
 
 from sqlalchemy.engine.interfaces import Dialect
 from sqlalchemy.types import (
+    TEXT,
     Integer,
     TypeDecorator,
-    TEXT,
 )
 
 from .helper_types import EInt
@@ -90,8 +89,8 @@ class Intent(Enum):
         all_ok = [Status.STORAGE, Status.VAULT, Status.ORDER]
         mapping = {
             Intent.KEEP: all_ok,
-            Intent.SELL: all_ok + [Status.CLOSED, Status.LISTED],
-            Intent.GRADE: all_ok + [Status.SUBMITTED],
+            Intent.SELL: [*all_ok, Status.CLOSED, Status.LISTED],
+            Intent.GRADE: [*all_ok, Status.SUBMITTED],
             Intent.CRACK: all_ok,
             Intent.TBD: all_ok,
         }
@@ -133,7 +132,7 @@ class EnumList(TypeDecorator[list[EInt]]):
 
     def __init__(
         self,
-        enum_class: Type[EInt],
+        enum_class: type[EInt],
     ) -> None:
         self.enum_class = enum_class
         super().__init__()
@@ -141,7 +140,7 @@ class EnumList(TypeDecorator[list[EInt]]):
     def process_bind_param(
         self,
         value: list[EInt] | list[int] | None,
-        dialect: Dialect,
+        _dialect: Dialect,
     ) -> str | None:
         if value is None:
             return None
@@ -152,13 +151,13 @@ class EnumList(TypeDecorator[list[EInt]]):
             elif isinstance(v, int):
                 int_representations.append(v)
             else:
-                raise ValueError(f'Expected {self.enum_class.__name__} or int, got {type(v)}')
+                raise TypeError(f'Expected {self.enum_class.__name__} or int, got {type(v)}')
         return json.dumps(int_representations)
 
     def process_result_value(
         self,
         value: str | None,
-        dialect: Dialect,
+        _dialect: Dialect,
     ) -> list[EInt] | None:
         if value is None:
             return None
@@ -172,7 +171,7 @@ class EnumInt(TypeDecorator[EInt]):
 
     def __init__(
         self,
-        enum_cls: Type[EInt],
+        enum_cls: type[EInt],
     ) -> None:
         self.enum_cls = enum_cls
         super().__init__()
@@ -180,18 +179,16 @@ class EnumInt(TypeDecorator[EInt]):
     def process_bind_param(
         self,
         value: EInt | None,
-        dialect: Dialect,
+        _dialect: Dialect,
     ) -> int | None:
         if value is None:
             return None
-        # elif isinstance(value, Enum):
         return value.value
-        # return value
 
     def process_result_value(
         self,
         value: int | None,
-        dialect: Dialect,
+        _dialect: Dialect,
     ) -> EInt | None:
         if value is None:
             return None

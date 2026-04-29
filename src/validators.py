@@ -39,24 +39,33 @@ def check_valid_intent_or_status_update(
 ) -> None:
     if update_intent is None and update_status is None:
         return
-    elif update_intent is not None and update_status is None:
-        if current_status not in update_intent.allowed_statuses:
-            raise ValueError(
-                f'Cannot update item with status of {current_status.name} to have intent of '
-                f'{update_intent.name}',
-            )
-    elif update_intent is None and update_status is not None:
-        if update_status not in current_intent.allowed_statuses:
-            raise ValueError(
-                f'Cannot update item with intent of {current_intent.name} to have status of '
-                f'{update_status.name}',
-            )
-    elif update_intent is not None and update_status is not None:
-        if update_status not in update_intent.allowed_statuses:
-            raise ValueError(
-                f'Cannot update item to have intent of {update_intent.name} and status of '
-                f'{update_status.name}',
-            )
+    if (
+        update_intent is not None
+        and update_status is None
+        and current_status not in update_intent.allowed_statuses
+    ):
+        raise ValueError(
+            f'Cannot update item with status of {current_status.name} to have intent of '
+            f'{update_intent.name}',
+        )
+    if (
+        (update_intent is None)
+        and update_status is not None
+        and update_status not in current_intent.allowed_statuses
+    ):
+        raise ValueError(
+            f'Cannot update item with intent of {current_intent.name} to have status of '
+            f'{update_status.name}',
+        )
+    if (
+        update_intent is not None
+        and update_status is not None
+        and update_status not in update_intent.allowed_statuses
+    ):
+        raise ValueError(
+            f'Cannot update item to have intent of {update_intent.name} and status of '
+            f'{update_status.name}',
+        )
     if current_status == Status.SUBMITTED and update_status is not None:
         raise ValueError(
             'Cannot update an item status if it is SUBMITTED (use the grading record page)',

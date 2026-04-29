@@ -1,11 +1,14 @@
-import pytest
-from typing import Callable
+from collections.abc import Callable
 
+import pytest
 from sqlalchemy.orm import Session
 
-import src.crud as crud
-import src.item_enums as item_enums
+from src import (
+    crud,
+    item_enums,
+)
 from src.models import Item
+
 from .conftest import ItemFactory
 
 
@@ -315,12 +318,12 @@ def test_cert_latest_sub_not_cracked(
 
 @pytest.mark.parametrize(
     ('shipping', 'sale_fee', 'expected_total'),
-    (
+    [
         pytest.param(None, None, None, id='no_fees'),
         pytest.param(None, 8.7, None, id='no_shipping'),
         pytest.param(5.5, None, None, id='no_sale_fee'),
         pytest.param(5.5, 8.7, 14.2, id='with_fees'),
-    ),
+    ],
 )
 def test_total_fees(
     db_session: Session,
@@ -342,13 +345,13 @@ def test_total_fees(
 
 @pytest.mark.parametrize(
     ('sale_total', 'shipping', 'sale_fee', 'expected_return'),
-    (
+    [
         pytest.param(None, None, None, None, id='no_fees'),
         pytest.param(None, 5.34, 8.66, None, id='no_sale_total'),
         pytest.param(11.23, None, 8.66, None, id='no_total_fee'),
         pytest.param(15.31, 5.54, 8.66, 1.11, id='net_positive'),
         pytest.param(10.35, 5.54, 8.66, -3.85, id='net_negative'),
-    ),
+    ],
 )
 def test_return_usd(
     db_session: Session,
@@ -371,13 +374,13 @@ def test_return_usd(
 
 @pytest.mark.parametrize(
     ('sale_total', 'shipping', 'sale_fee', 'usd_to_jpy_rate', 'expected_return'),
-    (
+    [
         pytest.param(None, None, None, None, None, id='no_fees'),
         pytest.param(9.64, 3.21, None, 140.55, None, id='no_return_usd'),
         pytest.param(9.64, 3.21, 2.87, None, None, id='no_exchange_rate'),
         pytest.param(9.64, 3.21, 2.87, 140.55, 500, id='net_positive'),
         pytest.param(5.49, 3.27, 2.99, 140.55, -108, id='net_negative'),
-    ),
+    ],
 )
 def test_return_jpy(
     db_session: Session,
@@ -414,12 +417,12 @@ def test_return_jpy(
         'usd_to_jpy_rate',
         'expected_net',
     ),
-    (
+    [
         pytest.param(10, 100, None, None, None, None, None, id='no_sale'),
         pytest.param(10, 100, 9.64, 3.21, 2.87, 140.55, 390, id='net_positive'),
         pytest.param(1000, 100, 9.64, 3.21, 2.87, 140.55, -600, id='positive_ret_net_neg'),
         pytest.param(10, 1000, 5.49, 3.27, 2.99, 140.55, -1118, id='negative_ret_net_neg'),
-    ),
+    ],
 )
 def test_net_jpy(
     db_session: Session,
@@ -463,13 +466,13 @@ def test_net_jpy(
         'usd_to_jpy_rate',
         'expected_percent',
     ),
-    (
+    [
         pytest.param(10, 100, None, None, None, None, None, id='no_sale'),
-        pytest.param(0, None, 9.55, 3.33, 2.11, 140.55, 0., id='no_costs'),
+        pytest.param(0, None, 9.55, 3.33, 2.11, 140.55, 0.0, id='no_costs'),
         pytest.param(10, 100, 9.64, 3.21, 2.87, 140.55, 354.55, id='net_positive'),
         pytest.param(1000, 100, 9.64, 3.21, 2.87, 140.55, -54.55, id='positive_ret_net_neg'),
         pytest.param(10, 100, 5.49, 3.27, 2.99, 140.55, -198.18, id='negative_ret_net_neg'),
-    ),
+    ],
 )
 def test_net_percent(
     db_session: Session,

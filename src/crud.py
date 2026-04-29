@@ -13,8 +13,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql.elements import BinaryExpression
 
 from .item_enums import (
-    Intent,
     GradingCompany,
+    Intent,
     Status,
 )
 from .models import (
@@ -105,10 +105,9 @@ def search_for_items(
     # Post filtering (for qualifiers and grading_company)
     for field, value in post_filters:
         if field == 'qualifiers':
-            qualifier_values = [q for q in value]
+            qualifier_values = list(value)
             results = [
-                item for item in results
-                if all(q in item.qualifiers for q in qualifier_values)
+                item for item in results if all(q in item.qualifiers for q in qualifier_values)
             ]
         elif field == 'grading_company':
             results = [item for item in results if item.grading_company == value]
@@ -180,6 +179,15 @@ def create_submission(
     submission_summary: SubmissionCreate,
     item_ids: list[int],
 ) -> None:
+    linked_items: list[Item] = []
+    for item_id in item_ids:
+        linked_item = get_item(db, item_id)
+        if linked_item is None:
+            raise ValueError(f'Item with id {item_id} not found')
+        check_intent(linked_item, desired=Intent.GRADE)
+        check_status(linked_item, desired=Status.STORAGE)
+        linked_items.append(linked_item)
+
     try:
         submission_summary_data = submission_summary.to_model_kwargs()
         submission = Submission(**submission_summary_data)
@@ -193,14 +201,8 @@ def create_submission(
             for i in item_ids
         ]
 
-        for grading_record in grading_records:
-            record = GradingRecord(**grading_record.to_model_kwargs())
-            linked_item = get_item(db, record.item_id)
-            if linked_item is None:
-                raise ValueError(f'Item with id {record.item_id} not found')
-            check_intent(linked_item, desired=Intent.GRADE)
-            check_status(linked_item, desired=Status.STORAGE)
-            db.add(record)
+        for grading_record, linked_item in zip(grading_records, linked_items, strict=True):
+            db.add(GradingRecord(**grading_record.to_model_kwargs()))
 
             # Update item to SUBMITTED
             item_update = ItemUpdate(status=Status.SUBMITTED)
@@ -224,9 +226,15 @@ def get_newest_submissions(
     skip: int = 0,
     limit: int = 100,
 ) -> list[Submission]:
-    submissions = db.query(
-        Submission,
-    ).order_by(Submission.submission_number.desc()).offset(skip).limit(limit).all()
+    submissions = (
+        db.query(
+            Submission,
+        )
+        .order_by(Submission.submission_number.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
     return list(reversed(submissions))
 
 
@@ -234,11 +242,11 @@ def get_total_number_of_submissions(db: Session) -> int:
     return db.query(Submission).count()
 
 
-class SubmissionNotFound(Exception):
+class SubmissionNotFoundError(Exception):
     pass
 
 
-class SubmissionNumberConflict(Exception):
+class SubmissionNumberConflictError(Exception):
     pass
 
 
@@ -250,14 +258,14 @@ def edit_submission_single_field(
 ) -> None:
     submission = get_submission(db, submission_id)
     if submission is None:
-        raise SubmissionNotFound
+        raise SubmissionNotFoundError
     try:
         setattr(submission, field, update_value)
         db.commit()
         db.refresh(submission)
     except IntegrityError:
         db.rollback()
-        raise SubmissionNumberConflict
+        raise SubmissionNumberConflictError from None
 
 
 def get_grading_record(

@@ -20,9 +20,10 @@ from src.routers import router
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
     Base.metadata.create_all(bind=get_engine())
     yield
+
 
 app = FastAPI(lifespan=lifespan)
 app.include_router(router)

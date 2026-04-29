@@ -3,10 +3,13 @@ from datetime import date
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.operators import eq
 
-import src.crud as crud
-import src.item_enums as item_enums
-import src.models as models
-import src.schemas as schemas
+from src import (
+    crud,
+    item_enums,
+    models,
+    schemas,
+)
+
 from .conftest import (
     GradingRecordFactory,
     ItemCreateFactory,
@@ -22,7 +25,8 @@ def test_create_item_all_nullables_none(
     item = item_create_factory.get()
     db_item = crud.create_item(db_session, item)
     item_from_db = db_session.query(models.Item).first()
-    assert db_item.id is not None and db_item == item_from_db
+    assert db_item.id is not None
+    assert db_item == item_from_db
     assert db_item.name == 'TESTER'
 
 
@@ -35,22 +39,23 @@ def test_create_item_all_nullables_provided(
         status=item_enums.Status.CLOSED,
         details='Mint',
         purchase_grading_company=item_enums.GradingCompany.PSA,
-        purchase_grade=10.,
+        purchase_grade=10.0,
         purchase_cert=123456789,
-        list_price=500.,
+        list_price=500.0,
         list_type=item_enums.ListingType.FIXED,
         list_date=date(2025, 10, 10),
-        sale_total=550.,
+        sale_total=550.0,
         sale_date=date(2025, 10, 11),
-        shipping=25.,
-        sale_fee=25.,
+        shipping=25.0,
+        sale_fee=25.0,
         usd_to_jpy_rate=150.0,
     )
     db_item = crud.create_item(db_session, item)
     item_from_db = db_session.query(models.Item).first()
-    assert db_item.id is not None and db_item == item_from_db
+    assert db_item.id is not None
+    assert db_item == item_from_db
     assert db_item.name == 'TESTER'
-    assert db_item.sale_total == 550.
+    assert db_item.sale_total == 550.0
 
 
 def test_create_item_multiple_qualifiers(
@@ -63,7 +68,8 @@ def test_create_item_multiple_qualifiers(
     )
     db_item = crud.create_item(db_session, item)
     item_from_db = db_session.query(models.Item).first()
-    assert db_item.id is not None and db_item == item_from_db
+    assert db_item.id is not None
+    assert db_item == item_from_db
     assert db_item.qualifiers == input_qualifiers
 
 
@@ -96,7 +102,7 @@ def test_get_newest_items_return_all_items(
     item_factory: ItemFactory,
 ) -> None:
     item_names = ['one', 'two', 'three']
-    items = [item_factory.get(name=n, id=i) for i, n in enumerate(item_names)]
+    items = [item_factory.get(name=n, idx=i) for i, n in enumerate(item_names)]
     ids = [i.id for i in items]
     db_session.add_all(items)
     db_session.flush()
@@ -114,7 +120,7 @@ def test_get_newest_items_skip_newest_item(
     item_factory: ItemFactory,
 ) -> None:
     item_names = ['one', 'two', 'three']
-    items = [item_factory.get(name=n, id=i) for i, n in enumerate(item_names)]
+    items = [item_factory.get(name=n, idx=i) for i, n in enumerate(item_names)]
     ids = [i.id for i in items]
     db_session.add_all(items)
     db_session.flush()
@@ -132,7 +138,7 @@ def test_get_newest_items_take_multiple_items(
     item_factory: ItemFactory,
 ) -> None:
     item_names = ['one', 'two', 'three']
-    items = [item_factory.get(name=n, id=i) for i, n in enumerate(item_names)]
+    items = [item_factory.get(name=n, idx=i) for i, n in enumerate(item_names)]
     ids = [i.id for i in items]
     db_session.add_all(items)
     db_session.flush()
@@ -150,7 +156,7 @@ def test_get_newest_items_skip_all_items(
     item_factory: ItemFactory,
 ) -> None:
     item_names = ['one', 'two']
-    items = [item_factory.get(name=n, id=i) for i, n in enumerate(item_names)]
+    items = [item_factory.get(name=n, idx=i) for i, n in enumerate(item_names)]
     db_session.add_all(items)
     db_session.flush()
 
@@ -168,7 +174,7 @@ def test_get_total_number_of_items(
     item_factory: ItemFactory,
 ) -> None:
     item_names = ['one', 'two']
-    items = [item_factory.get(name=n, id=i) for i, n in enumerate(item_names)]
+    items = [item_factory.get(name=n, idx=i) for i, n in enumerate(item_names)]
     db_session.add_all(items)
     db_session.flush()
 
@@ -181,7 +187,7 @@ def test_delete_item_by_id_success(
     item_factory: ItemFactory,
 ) -> None:
     item_names = ['one', 'two']
-    items = [item_factory.get(name=n, id=i) for i, n in enumerate(item_names)]
+    items = [item_factory.get(name=n, idx=i) for i, n in enumerate(item_names)]
     ids = [i.id for i in items]
     db_session.add_all(items)
     db_session.flush()
@@ -197,15 +203,15 @@ def test_delete_item_by_id_failure(
     item_factory: ItemFactory,
 ) -> None:
     item_names = ['one']
-    items = [item_factory.get(name=n, id=i) for i, n in enumerate(item_names)]
+    items = [item_factory.get(name=n, idx=i) for i, n in enumerate(item_names)]
     ids = [i.id for i in items]
     db_session.add_all(items)
     db_session.flush()
 
     result = crud.delete_item_by_id(db_session, ids[-1] + 1)
     assert result is False
-    for id in ids:
-        assert crud.get_item(db_session, id) is not None
+    for i in ids:
+        assert crud.get_item(db_session, i) is not None
 
 
 def test_search_for_items_no_filters(
@@ -213,7 +219,7 @@ def test_search_for_items_no_filters(
     item_factory: ItemFactory,
 ) -> None:
     item_names = ['one']
-    items = [item_factory.get(name=n, id=i) for i, n in enumerate(item_names)]
+    items = [item_factory.get(name=n, idx=i) for i, n in enumerate(item_names)]
     db_session.add_all(items)
     db_session.flush()
 
@@ -227,7 +233,7 @@ def test_search_for_items_simple_case(
     item_factory: ItemFactory,
 ) -> None:
     item_names = ['one', 'two']
-    items = [item_factory.get(name=n, id=i) for i, n in enumerate(item_names)]
+    items = [item_factory.get(name=n, idx=i) for i, n in enumerate(item_names)]
     db_session.add_all(items)
     db_session.flush()
 
@@ -251,22 +257,24 @@ def test_search_for_items_multiple_search_criteria(
         item_enums.Language.KOREAN,
         item_enums.Language.GERMAN,
     ]
-    grades = [None, 9., 9.]
+    grades = [None, 9.0, 9.0]
     certs = [None, 1, 1]
     items = [
         item_factory.get(
-            id=i,
+            idx=i,
             purchase_grading_company=gc,
             language=lang,
             purchase_grade=g,
             purchase_cert=c,
-        ) for i, (gc, lang, g, c) in enumerate(
+        )
+        for i, (gc, lang, g, c) in enumerate(
             zip(
                 item_grading_companies,
                 item_languages,
                 grades,
                 certs,
-            )
+                strict=True,
+            ),
         )
     ]
     db_session.add_all(items)
@@ -293,7 +301,7 @@ def test_search_for_items_multiple_qualifiers(
         [item_enums.Qualifier.CRYSTAL],
         [],
     ]
-    items = [item_factory.get(id=i, qualifiers=q) for i, q in enumerate(item_qualifiers)]
+    items = [item_factory.get(idx=i, qualifiers=q) for i, q in enumerate(item_qualifiers)]
     db_session.add_all(items)
     db_session.flush()
 
@@ -307,7 +315,7 @@ def test_edit_item_no_item_found(
     db_session: Session,
     item_factory: ItemFactory,
 ) -> None:
-    item = item_factory.get(id=1)
+    item = item_factory.get(idx=1)
     db_session.add(item)
     db_session.flush()
     result = crud.edit_item(db_session, item_id=100, item_update=schemas.ItemUpdate())
@@ -371,7 +379,7 @@ def test_edit_item_multiple_changes(
     db_session.add(item)
     db_session.flush()
     item_changes = schemas.ItemUpdate(
-        purchase_grade=10.,
+        purchase_grade=10.0,
         purchase_grading_company=item_enums.GradingCompany.BGS,
     )
 
@@ -381,7 +389,7 @@ def test_edit_item_multiple_changes(
     changed_item = crud.get_item(db_session, item.id)
     assert changed_item is not None
     assert changed_item.grading_company == item_enums.GradingCompany.BGS
-    assert changed_item.grade == 10.
+    assert changed_item.grade == 10.0
 
 
 def test_edit_item_add_new_qualifier(
@@ -409,7 +417,7 @@ def test_edit_item_add_extra_qualifier_to_existing(
     db_session.add(item)
     db_session.flush()
     # Qualifiers are handled such that the newly added ones should be appended to the existing ones
-    new_qualifiers = item.qualifiers + [item_enums.Qualifier.UNLIMITED]
+    new_qualifiers = [*item.qualifiers, item_enums.Qualifier.UNLIMITED]
     item_changes = schemas.ItemUpdate(qualifiers=new_qualifiers)
 
     result = crud.edit_item(db_session, item_id=item.id, item_update=item_changes)
@@ -516,10 +524,8 @@ def test_get_max_sub_number_with_skipped_number(
     sub_ids = [0, 1]
     sub_nums = [1, 3]
     submissions = [
-        submission_factory.get(
-            id=i,
-            submission_number=s
-        ) for i, s in zip(sub_ids, sub_nums, strict=True)
+        submission_factory.get(idx=i, submission_number=s)
+        for i, s in zip(sub_ids, sub_nums, strict=True)
     ]
     db_session.add_all(submissions)
     db_session.flush()

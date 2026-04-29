@@ -2,18 +2,18 @@ from datetime import date
 
 from sqlalchemy import (
     Boolean,
-    case,
-    cast,
     CheckConstraint,
     Date,
     Float,
     ForeignKey,
-    func,
     Integer,
+    String,
+    case,
+    cast,
+    func,
     literal,
     null,
     select,
-    String,
     true,
 )
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -41,21 +41,20 @@ from .item_enums import (
     Status,
 )
 
-
 NullableDate = Mapped[date | None]
 NullableFloat = Mapped[float | None]
 NullableInt = Mapped[int | None]
 
 
-def NullableDateColumn() -> NullableDate:
+def NullableDateColumn() -> NullableDate:  # noqa: N802
     return mapped_column(Date, nullable=True)
 
 
-def NullableFloatColumn() -> NullableFloat:
+def NullableFloatColumn() -> NullableFloat:  # noqa: N802
     return mapped_column(Float, nullable=True)
 
 
-def NullableIntColumn() -> NullableInt:
+def NullableIntColumn() -> NullableInt:  # noqa: N802
     return mapped_column(Integer, nullable=True)
 
 
@@ -104,7 +103,7 @@ class Item(Base):
         return sum(sub.grading_fee for sub in self.submissions if sub.grading_fee is not None)
 
     @total_grading_fees.expression  # type: ignore[no-redef]
-    def total_grading_fees(cls) -> BinaryExpression[int]:
+    def total_grading_fees(cls) -> BinaryExpression[int]:  # noqa: N805
         return (
             select(func.sum(GradingRecord.grading_fee))
             .where(GradingRecord.item_id == cls.id)
@@ -117,7 +116,7 @@ class Item(Base):
         return self.purchase_price + self.total_grading_fees + self.import_fee
 
     @total_cost.expression  # type: ignore[no-redef]
-    def total_cost(cls) -> BinaryExpression[int]:
+    def total_cost(cls) -> BinaryExpression[int]:  # noqa: N805
         return cls.purchase_price + cls.total_grading_fees + cls.import_fee
 
     @hybrid_property
@@ -130,16 +129,13 @@ class Item(Base):
         if latest_submission is None:
             if self.cracked_from_purchase:
                 return GradingCompany.RAW
-            else:
-                return self.purchase_grading_company
-        else:
-            if latest_submission.is_cracked:
-                return GradingCompany.RAW
-            else:
-                return latest_submission.submission.submission_company
+            return self.purchase_grading_company
+        if latest_submission.is_cracked:
+            return GradingCompany.RAW
+        return latest_submission.submission.submission_company
 
     @grading_company.expression  # type: ignore[no-redef]
-    def grading_company(cls) -> ColumnElement[GradingCompany]:
+    def grading_company(cls) -> ColumnElement[GradingCompany]:  # noqa: N805
         latest_company = (
             select(GradingRecord.submission_company)
             .where(GradingRecord.item_id == cls.id)
@@ -178,16 +174,13 @@ class Item(Base):
         if latest_submission is None:
             if self.cracked_from_purchase:
                 return None
-            else:
-                return self.purchase_grade
-        else:
-            if latest_submission.is_cracked:
-                return None
-            else:
-                return latest_submission.grade
+            return self.purchase_grade
+        if latest_submission.is_cracked:
+            return None
+        return latest_submission.grade
 
     @grade.expression  # type: ignore[no-redef]
-    def grade(cls) -> ColumnElement[float | None]:
+    def grade(cls) -> ColumnElement[float | None]:  # noqa: N805
         latest_grade = (
             select(GradingRecord.grade)
             .where(GradingRecord.item_id == cls.id)
@@ -226,16 +219,13 @@ class Item(Base):
         if latest_submission is None:
             if self.cracked_from_purchase:
                 return None
-            else:
-                return self.purchase_cert
-        else:
-            if latest_submission.is_cracked:
-                return None
-            else:
-                return latest_submission.cert
+            return self.purchase_cert
+        if latest_submission.is_cracked:
+            return None
+        return latest_submission.cert
 
     @cert.expression  # type: ignore[no-redef]
-    def cert(cls) -> ColumnElement[int | None]:
+    def cert(cls) -> ColumnElement[int | None]:  # noqa: N805
         latest_cert = (
             select(GradingRecord.cert)
             .where(GradingRecord.item_id == cls.id)
@@ -268,11 +258,10 @@ class Item(Base):
     def total_fees(self) -> float | None:
         if self.shipping is None or self.sale_fee is None:
             return None
-        else:
-            return round(self.shipping + self.sale_fee, 2)
+        return round(self.shipping + self.sale_fee, 2)
 
     @total_fees.expression  # type: ignore[no-redef]
-    def total_fees(cls) -> ColumnElement[float | None]:
+    def total_fees(cls) -> ColumnElement[float | None]:  # noqa: N805
         return case(
             (
                 (cls.shipping.is_not(None)) & (cls.sale_fee.is_not(None)),
@@ -285,11 +274,10 @@ class Item(Base):
     def return_usd(self) -> float | None:
         if self.sale_total is None or self.total_fees is None:
             return None
-        else:
-            return round(self.sale_total - self.total_fees, 2)
+        return round(self.sale_total - self.total_fees, 2)
 
     @return_usd.expression  # type: ignore[no-redef]
-    def return_usd(cls) -> ColumnElement[float | None]:
+    def return_usd(cls) -> ColumnElement[float | None]:  # noqa: N805
         return case(
             (
                 (cls.sale_total.is_not(None)) & (cls.total_fees.is_not(None)),
@@ -302,11 +290,10 @@ class Item(Base):
     def return_jpy(self) -> int | None:
         if self.return_usd is None or self.usd_to_jpy_rate is None:
             return None
-        else:
-            return round(self.return_usd * self.usd_to_jpy_rate)
+        return round(self.return_usd * self.usd_to_jpy_rate)
 
     @return_jpy.expression  # type: ignore[no-redef]
-    def return_jpy(cls) -> ColumnElement[int | None]:
+    def return_jpy(cls) -> ColumnElement[int | None]:  # noqa: N805
         return case(
             (
                 (cls.return_usd.is_not(None)) & (cls.usd_to_jpy_rate.is_not(None)),
@@ -319,11 +306,10 @@ class Item(Base):
     def net_jpy(self) -> int | None:
         if self.return_jpy is None:
             return None
-        else:
-            return round(self.return_jpy - self.total_cost)
+        return round(self.return_jpy - self.total_cost)
 
     @net_jpy.expression  # type: ignore[no-redef]
-    def net_jpy(cls) -> ColumnElement[int | None]:
+    def net_jpy(cls) -> ColumnElement[int | None]:  # noqa: N805
         return case(
             (
                 cls.return_jpy.is_not(None),
@@ -336,13 +322,12 @@ class Item(Base):
     def net_percent(self) -> float | None:
         if self.net_jpy is None:
             return None
-        elif self.total_cost == 0:
-            return 0.
-        else:
-            return round(100 * self.net_jpy / self.total_cost, 2)
+        if self.total_cost == 0:
+            return 0.0
+        return round(100 * self.net_jpy / self.total_cost, 2)
 
     @net_percent.expression  # type: ignore[no-redef]
-    def net_percent(cls) -> ColumnElement[float | None]:
+    def net_percent(cls) -> ColumnElement[float | None]:  # noqa: N805
         return case(
             (
                 cls.net_jpy.is_(None),
@@ -352,7 +337,7 @@ class Item(Base):
                 cls.total_cost != 0,
                 func.round(cls.net_jpy / cls.total_cost, 2),
             ),
-            else_=0.,
+            else_=0.0,
         )
 
 
@@ -375,11 +360,11 @@ class Submission(Base):
     )
 
     __table_args__ = (
-            CheckConstraint(
-                'submission_number >= 0',
-                name='ck_submission_number_non_negative',
-            ),
-        )
+        CheckConstraint(
+            'submission_number >= 0',
+            name='ck_submission_number_non_negative',
+        ),
+    )
 
     @hybrid_property
     def card_cost(self) -> int:
@@ -403,7 +388,8 @@ class Submission(Base):
     def total_return(self) -> int:
         return_values = [
             item.original_item.return_jpy
-            for item in self.submission_items if item.original_item.return_jpy is not None
+            for item in self.submission_items
+            if item.original_item.return_jpy is not None
         ]
         return sum(return_values)
 
@@ -414,11 +400,12 @@ class Submission(Base):
     @hybrid_property
     def profit_on_sold(self) -> int:
         profits = [
-            item.original_item.return_jpy -
-            item.original_item.purchase_price -
-            item.original_item.import_fee -
-            item.grading_fee
-            for item in self.submission_items if item.original_item.return_jpy is not None
+            item.original_item.return_jpy
+            - item.original_item.purchase_price
+            - item.original_item.import_fee
+            - item.grading_fee
+            for item in self.submission_items
+            if item.original_item.return_jpy is not None
         ]
         return sum(profits)
 
@@ -446,7 +433,8 @@ class Submission(Base):
     @hybrid_property
     def num_closed(self) -> int:
         sold_or_cracked_items = [
-            item for item in self.submission_items
+            item
+            for item in self.submission_items
             if (item.original_item.return_jpy is not None) or item.is_cracked
         ]
         return len(sold_or_cracked_items)
@@ -488,7 +476,7 @@ class GradingRecord(Base):
         return self.submission.submission_company
 
     @submission_company.expression  # type: ignore[no-redef]
-    def submission_company(cls) -> ColumnElement[GradingCompany]:
+    def submission_company(cls) -> ColumnElement[GradingCompany]:  # noqa: N805
         return (
             select(Submission.submission_company)
             .where(Submission.id == cls.submission_id)
@@ -500,7 +488,7 @@ class GradingRecord(Base):
         return self.submission.submission_number
 
     @submission_number.expression  # type: ignore[no-redef]
-    def submission_number(cls) -> ColumnElement[int]:
+    def submission_number(cls) -> ColumnElement[int]:  # noqa: N805
         return (
             select(Submission.submission_number)
             .where(Submission.id == cls.submission_id)

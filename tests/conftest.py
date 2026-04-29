@@ -1,9 +1,13 @@
-from collections.abc import Sized
+from collections.abc import (
+    Callable,
+    Generator,
+    Sized,
+)
 from datetime import date
 from typing import (
     Any,
-    Callable,
-    Generator,
+    TypedDict,
+    Unpack,
 )
 
 import pytest
@@ -15,8 +19,8 @@ from sqlalchemy.orm import (
     sessionmaker,
 )
 
-import src.item_enums as item_enums
 from main import app
+from src import item_enums
 from src.database import (
     Base,
     get_db,
@@ -31,7 +35,6 @@ from src.schemas import (
     ItemCreate,
 )
 
-
 TEST_DATABASE_URL = 'sqlite:///:memory:'
 
 
@@ -43,12 +46,12 @@ def engine() -> Generator[Engine, None, None]:
     engine.dispose()
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture
 def db_session(engine: Engine) -> Generator[Session, None, None]:
     connection = engine.connect()
     transaction = connection.begin()
-    SessionLocal = sessionmaker(bind=connection)
-    db = SessionLocal()
+    sessionlocal = sessionmaker(bind=connection)
+    db = sessionlocal()
     try:
         yield db
     finally:
@@ -57,19 +60,50 @@ def db_session(engine: Engine) -> Generator[Session, None, None]:
         connection.close()
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture
 def client(db_session: Session) -> Generator[TestClient, None, None]:
     def override_get_db() -> Generator[Session, None, None]:
         yield db_session
+
     app.dependency_overrides[get_db] = override_get_db
     with TestClient(app) as cl:
         yield cl
 
 
+class ItemTD(TypedDict, total=False):
+    idx: int
+    name: str
+    set_name: str
+    category: item_enums.Category
+    language: item_enums.Language
+    qualifiers: list[item_enums.Qualifier] | None
+    details: str | None
+    purchase_date: date
+    purchase_price: int
+    status: item_enums.Status
+    intent: item_enums.Intent
+    import_fee: int
+    purchase_grading_company: item_enums.GradingCompany
+    purchase_grade: float | None
+    purchase_cert: float | None
+    list_price: float | None
+    list_type: item_enums.ListingType
+    list_date: date | None
+    sale_total: float | None
+    sale_date: date | None
+    shipping: float | None
+    sale_fee: float | None
+    usd_to_jpy_rate: float | None
+    group_discount: bool
+    object_variant: item_enums.ObjectVariant
+    audit_target: bool
+    cracked_from_purchase: bool
+
+
 class ItemFactory:
     def get(
         self,
-        id: int = 1,
+        idx: int = 1,
         name: str = 'TESTER',
         set_name: str = 'Base Set',
         category: item_enums.Category = item_enums.Category.CARD,
@@ -100,7 +134,7 @@ class ItemFactory:
         if qualifiers is None:
             qualifiers = []
         return Item(
-            id=id,
+            id=idx,
             name=name,
             set_name=set_name,
             category=category,
@@ -130,7 +164,7 @@ class ItemFactory:
         )
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture
 def item_factory() -> ItemFactory:
     return ItemFactory()
 
@@ -197,7 +231,7 @@ class ItemBaseFactory:
         )
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture
 def item_base_factory() -> ItemBaseFactory:
     return ItemBaseFactory()
 
@@ -264,7 +298,7 @@ class ItemCreateFactory:
         )
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture
 def item_create_factory() -> ItemCreateFactory:
     return ItemCreateFactory()
 
@@ -272,7 +306,7 @@ def item_create_factory() -> ItemCreateFactory:
 class GradingRecordFactory:
     def get(
         self,
-        id: int = 1,
+        idx: int = 1,
         item_id: int = 100,
         submission_id: int = 1,
         grading_fee: int | None = None,
@@ -281,7 +315,7 @@ class GradingRecordFactory:
         is_cracked: bool = False,
     ) -> GradingRecord:
         return GradingRecord(
-            id=id,
+            id=idx,
             item_id=item_id,
             submission_id=submission_id,
             grading_fee=grading_fee,
@@ -291,7 +325,7 @@ class GradingRecordFactory:
         )
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture
 def grading_record_factory() -> GradingRecordFactory:
     return GradingRecordFactory()
 
@@ -299,7 +333,7 @@ def grading_record_factory() -> GradingRecordFactory:
 class SubmissionFactory:
     def get(
         self,
-        id: int = 0,
+        idx: int = 0,
         submission_number: int = 1,
         submission_company: item_enums.GradingCompany = item_enums.GradingCompany.PSA,
         submission_date: date | None = None,
@@ -307,7 +341,7 @@ class SubmissionFactory:
         break_even_date: date | None = None,
     ) -> Submission:
         return Submission(
-            id=id,
+            id=idx,
             submission_number=submission_number,
             submission_company=submission_company,
             submission_date=submission_date,
@@ -316,12 +350,12 @@ class SubmissionFactory:
         )
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture
 def submission_factory() -> SubmissionFactory:
     return SubmissionFactory()
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture
 def item_with_submissions_factory(
     db_session: Session,
     item_factory: ItemFactory,
@@ -340,13 +374,13 @@ def item_with_submissions_factory(
         is_cracked_flags: list[bool] | None = None,
         return_dates: list[date | None] | None = None,
         break_even_dates: list[date | None] | None = None,
-        **item_kwargs: Any,
+        **item_kwargs: Unpack[ItemTD],
     ) -> Item:
         grading_record_ids_ = grading_record_ids or [1]
         submission_ids_ = submission_ids or [1]
         submission_numbers_ = submission_numbers or [1]
         submission_companies_ = submission_companies or len(grading_record_ids_) * [
-            item_enums.GradingCompany.PSA
+            item_enums.GradingCompany.PSA,
         ]
         submission_dates_ = submission_dates or len(grading_record_ids_) * [None]
         grading_fees_ = grading_fees or len(grading_record_ids_) * [None]
@@ -391,7 +425,7 @@ def item_with_submissions_factory(
             sub_break_even_dates = [break_even_dates_[i] for i in sub_indices]
             assert len(set(sub_break_even_dates)) == 1
             submission = submission_factory.get(
-                id=sub_id,
+                idx=sub_id,
                 submission_number=sub_numbers[0],
                 submission_company=sub_companies[0],
                 submission_date=sub_submit_dates[0],
@@ -405,7 +439,7 @@ def item_with_submissions_factory(
         db_session.flush()
         records = [
             grading_record_factory.get(
-                id=grading_record_ids_[i],
+                idx=grading_record_ids_[i],
                 item_id=item.id,
                 submission_id=submission_ids_[i],
                 grading_fee=grading_fees_[i],
@@ -421,4 +455,5 @@ def item_with_submissions_factory(
         db_session.commit()
         db_session.refresh(item)
         return item
+
     return get

@@ -19,21 +19,21 @@ from fastapi import (
 from pydantic import (
     BaseModel,
     ConfigDict,
+    ValidationInfo,
     field_validator,
     model_validator,
-    ValidationInfo,
 )
 
 from .helper_types import T
 from .item_enums import (
     Category,
-    Language,
-    Qualifier,
-    Status,
-    Intent,
     GradingCompany,
+    Intent,
+    Language,
     ListingType,
     ObjectVariant,
+    Qualifier,
+    Status,
 )
 from .parsers import (
     parse_enum,
@@ -102,20 +102,20 @@ class ItemBase(BaseModel):
     @classmethod
     def parse_qualifiers(
         cls,
-        v: Any,
+        v: str | list[Qualifier],
     ) -> list[Qualifier]:
         if isinstance(v, str):
             return [Qualifier[x.strip()] for x in v.split(',') if x.strip()]
-        elif isinstance(v, list) and all(isinstance(x, Qualifier) for x in v):
+        if isinstance(v, list) and all(isinstance(x, Qualifier) for x in v):
             return v
         raise ValueError('Qualifiers must be provided as str or list[Qualifier]')
 
     @model_validator(mode='after')
     def list_date_not_before_purchase_date(self) -> Self:
         if (
-            self.list_date is not None and
-            self.purchase_date is not None and
-            self.list_date < self.purchase_date
+            self.list_date is not None
+            and self.purchase_date is not None
+            and self.list_date < self.purchase_date
         ):
             raise ValueError(
                 f'Listing date cannot be before purchase date '
@@ -126,9 +126,9 @@ class ItemBase(BaseModel):
     @model_validator(mode='after')
     def sale_date_not_before_list_date(self) -> Self:
         if (
-            self.list_date is not None and
-            self.sale_date is not None and
-            self.sale_date < self.list_date
+            self.list_date is not None
+            and self.sale_date is not None
+            and self.sale_date < self.list_date
         ):
             raise ValueError(
                 f'Sale date cannot be before listing date '
@@ -139,10 +139,7 @@ class ItemBase(BaseModel):
     @model_validator(mode='after')
     def check_required_fields_based_on_status(self) -> Self:
         if self.status is not None:
-            missing = [
-                f for f in self.status.required_fields
-                if getattr(self, f) is None
-            ]
+            missing = [f for f in self.status.required_fields if getattr(self, f) is None]
             if len(missing) > 0:
                 raise ValueError(
                     f'Status {self.status.name} requires the following missing fields: {missing}',
@@ -152,10 +149,7 @@ class ItemBase(BaseModel):
     @model_validator(mode='after')
     def check_required_null_fields_based_on_status(self) -> Self:
         if self.status is not None:
-            not_null = [
-                f for f in self.status.required_to_be_null
-                if getattr(self, f) is not None
-            ]
+            not_null = [f for f in self.status.required_to_be_null if getattr(self, f) is not None]
             if len(not_null) > 0:
                 raise ValueError(
                     f'Status {self.status.name} requires the following fields to be null: '
@@ -167,14 +161,13 @@ class ItemBase(BaseModel):
     def appropriate_listing_type(self) -> Self:
         if self.list_type is None:
             return self
-        elif self.status == Status.LISTED or self.status == Status.CLOSED:
-            if self.list_type == ListingType.NO_LIST:
+        if self.list_type == ListingType.NO_LIST:
+            if self.status in (Status.LISTED, Status.CLOSED):
                 raise ValueError('Item cannot have list_type of NO_LIST if listed or sold')
-        else:
-            if self.list_type != ListingType.NO_LIST:
-                raise ValueError(
-                    'Item cannot have a list_type other than NO_LIST if not listed or sold',
-                )
+        elif self.status not in (Status.LISTED, Status.CLOSED):
+            raise ValueError(
+                'Item cannot have a list_type other than NO_LIST if not listed or sold',
+            )
         return self
 
     @model_validator(mode='after')
@@ -185,7 +178,7 @@ class ItemBase(BaseModel):
 
     @model_validator(mode='after')
     def appropriate_audit_target(self) -> Self:
-        if self.audit_target and (self.status == Status.CLOSED or self.status == Status.LISTED):
+        if self.audit_target and self.status in (Status.CLOSED, Status.LISTED):
             raise ValueError('Item assigned as an audit target can not be listed or closed')
         return self
 
@@ -207,7 +200,7 @@ class ItemCreate(ItemBase):
 
     def to_model_kwargs(
         self,
-        exclude: set[str] = set(),
+        exclude: set[str] | None = None,
     ) -> dict[str, Any]:
         return self.model_dump(exclude=exclude)
 
@@ -564,7 +557,7 @@ class ItemSearchForm:
         set_name: Annotated[str | None, Query()] = None,
         category: Annotated[str | None, Query()] = None,
         language: Annotated[str | None, Query()] = None,
-        qualifiers: Annotated[list[str], Query()] = [],
+        qualifiers: Annotated[list[str], Query()] = [],  # noqa: B006
         details: Annotated[str | None, Query()] = None,
         purchase_date_min: Annotated[str | None, Query()] = None,
         purchase_date_max: Annotated[str | None, Query()] = None,
@@ -672,11 +665,12 @@ class ItemSearchForm:
 
 
 class ItemForSubmissionForm(BaseModel):
-    '''
+    """
     This is necessary for usage with javascript to provide nicely formatted strings that can be
     used as is in the display. If further information about an item is required it can be added
     here.
-    '''
+    """
+
     model_config = ConfigDict(
         extra='forbid',
         from_attributes=True,
@@ -822,7 +816,7 @@ class GradingRecordUpdateForm:
 def set_if_value(
     d: dict[str, Any],
     key: str,
-    value: Any,
+    value: object,
 ) -> None:
-    if value is not None and value != '' and value != [] and value != {}:
+    if value is not None and value not in ('', [], {}):
         d[key] = value
