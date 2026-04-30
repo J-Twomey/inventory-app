@@ -10,10 +10,6 @@ from sqlalchemy.orm import (
     sessionmaker,
 )
 
-DEV_MODE = True
-
-SQLALCHEMY_DATABASE_URL = 'sqlite:///./db/test6.db' if DEV_MODE else 'sqlite:///./db/prod.db'
-
 
 @lru_cache(maxsize=1)
 def get_engine() -> Engine:
