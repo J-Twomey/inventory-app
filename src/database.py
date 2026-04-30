@@ -13,7 +13,12 @@ from sqlalchemy.orm import (
 
 @lru_cache(maxsize=1)
 def get_engine() -> Engine:
-    url = os.getenv('DATABASE_URL', 'sqlite:///./db/prod.db')
+    try:
+        dev_mode = os.environ['DEV_MODE'] == '1'
+    except KeyError:
+        raise RuntimeError('DEV_MODE environment variable is not set') from None
+
+    url = 'sqlite:///./db/test.db' if dev_mode else 'sqlite:///./db/prod_test.db'
     return create_engine(url, connect_args={'check_same_thread': False})
 
 

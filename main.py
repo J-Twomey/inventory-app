@@ -56,11 +56,9 @@ def main() -> None:
     dev_mode = parse_arguments()
     if dev_mode:
         os.environ['DEV_MODE'] = '1'
-        os.environ['DATABASE_URL'] = 'sqlite:///./db/test6.db'
         reload = True
     else:
         os.environ['DEV_MODE'] = '0'
-        os.environ['DATABASE_URL'] = 'sqlite:///./db/prod.db'
         reload = False
     threading.Thread(target=open_browser).start()
     uvicorn.run('main:app', host='127.0.0.1', port=8000, reload=reload)
