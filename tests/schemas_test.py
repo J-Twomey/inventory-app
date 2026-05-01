@@ -1,4 +1,5 @@
 from datetime import date
+from typing import Any
 
 import pytest
 from pydantic import ValidationError
@@ -41,7 +42,7 @@ def test_item_base_empty_str_to_none_validator(
     input_value: str | float | date | item_enums.Category | bool,
     expected_value: str | float | date | item_enums.Category | bool,
 ) -> None:
-    field_settings = {
+    field_settings: dict[str, Any] = {
         field: input_value,
         'status': item_enums.Status.LISTED,
         'intent': item_enums.Intent.SELL,
@@ -379,7 +380,7 @@ def test_set_if_value_do_set() -> None:
     ],
 )
 def test_set_if_value_no_set(value: str | list[object] | dict[str, object] | None) -> None:
-    input_dict = {}
+    input_dict: dict[str, Any] = {}
     key = 'a'
     schemas.set_if_value(input_dict, key, value)
     assert len(input_dict) == 0
