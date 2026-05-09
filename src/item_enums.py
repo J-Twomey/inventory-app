@@ -39,7 +39,7 @@ class Language(Enum):
 class ObjectVariant(Enum):
     STANDARD = 0
     GROUP_PURCHASE = 1
-    GROUP_SALE = 2
+    FROM_GROUP = 2
 
 
 class Status(Enum):
