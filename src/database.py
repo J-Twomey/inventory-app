@@ -21,7 +21,7 @@ def get_engine() -> Engine:
     except KeyError:
         raise RuntimeError('DEV_MODE environment variable is not set') from None
 
-    url = 'sqlite:///./db/test.db' if dev_mode else 'sqlite:///./db/prod_test.db'
+    url = 'sqlite:///./db/dev.db' if dev_mode else 'sqlite:///./db/prod.db'
     return create_engine(url, connect_args={'check_same_thread': False})
 
 
