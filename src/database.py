@@ -2,7 +2,10 @@ import os
 from collections.abc import Generator
 from functools import lru_cache
 
-from sqlalchemy import create_engine
+from sqlalchemy import (
+    create_engine,
+    inspect,
+)
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import (
     DeclarativeBase,
@@ -28,7 +31,9 @@ def get_sessionmaker() -> sessionmaker[Session]:
 
 
 class Base(DeclarativeBase):
-    pass
+    def __repr__(self) -> str:
+        cols = {c.key: getattr(self, c.key) for c in inspect(self).mapper.column_attrs}
+        return f'{self.__class__.__name__}({cols})'
 
 
 def get_db() -> Generator[Session, None, None]:
