@@ -82,11 +82,11 @@ def view_items(
     request: Request,
     db: DbSession,
     search_form: Annotated[ItemSearchForm, Depends(ItemSearchForm.as_query)],
-    show_limit: int = 20,
+    show_limit: int = 500,
     skip: int = 0,
     selection_mode: bool = False,
 ) -> Response:
-    show_limit = max(1, min(show_limit, 500))
+    show_limit = max(1, min(show_limit, 5000))
     skip = max(0, skip)
     search_data = search_form.to_item_search()
     search_values = {
@@ -210,10 +210,10 @@ def submit_edit_item(
 def view_submissions_summary(
     request: Request,
     db: DbSession,
-    show_limit: int = 20,
+    show_limit: int = 500,
     skip: int = 0,
 ) -> Response:
-    show_limit = max(1, min(show_limit, 500))
+    show_limit = max(1, min(show_limit, 5000))
     num_results = get_total_number_of_submissions(db)
     submissions = get_newest_submissions(db, skip=skip, limit=show_limit)
     prev_url, next_url = generate_page_urls(
@@ -278,10 +278,10 @@ def update_submission_summary_field(
 def view_grading_records(
     request: Request,
     db: DbSession,
-    show_limit: int = 20,
+    show_limit: int = 500,
     skip: int = 0,
 ) -> Response:
-    show_limit = max(1, min(show_limit, 500))
+    show_limit = max(1, min(show_limit, 5000))
     num_results = get_total_number_of_grading_records(db)
     grading_records = get_newest_grading_records(db, skip=skip, limit=show_limit)
     prev_url, next_url = generate_page_urls(
@@ -358,7 +358,7 @@ def items_lookup(
     request: Request,
     db: DbSession,
     search_form: Annotated[ItemSearchForm, Depends(ItemSearchForm.as_query)],
-    show_limit: int = 20,
+    show_limit: int = 100,
     skip: int = 0,
     selection_mode: bool = True,
 ) -> Response:
