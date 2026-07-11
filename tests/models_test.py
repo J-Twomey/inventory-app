@@ -1,7 +1,15 @@
 from collections.abc import Callable
+from typing import (
+    TYPE_CHECKING,
+    cast,
+)
 
 import pytest
+from sqlalchemy import select
 from sqlalchemy.orm import Session
+
+if TYPE_CHECKING:
+    from sqlalchemy.sql.elements import ColumnElement
 
 from src import (
     crud,
@@ -10,6 +18,11 @@ from src import (
 from src.models import Item
 
 from .conftest import ItemFactory
+
+# Class-level hybrid_property access is untyped with the `@x.expression` +
+# `type: ignore[no-redef]` pattern used in models.py, so cast once here
+item_total_grading_fees_expr = cast('ColumnElement[int]', Item.total_grading_fees)
+item_total_cost_expr = cast('ColumnElement[int]', Item.total_cost)
 
 
 def test_total_grading_fees(
@@ -32,6 +45,53 @@ def test_total_grading_fees(
     db_item = crud.get_item(db=db_session, item_id=item_with_submissions.id)
     assert db_item is not None
     assert db_item.total_grading_fees == expected_total
+    # SQL expression side
+    sql_total = db_session.execute(
+        select(item_total_grading_fees_expr).where(Item.id == item_with_submissions.id),
+    ).scalar()
+    assert sql_total == expected_total
+
+
+def test_total_grading_fees_no_submissions(
+    db_session: Session,
+    item_factory: ItemFactory,
+) -> None:
+    item = item_factory.get(purchase_price=1000, import_fee=100)
+    db_session.add(item)
+    db_session.commit()
+    # Python side
+    assert item.total_grading_fees == 0
+    # SQL expression side
+    sql_total = db_session.execute(
+        select(item_total_grading_fees_expr).where(Item.id == item.id),
+    ).scalar()
+    assert sql_total == 0
+    sql_total_cost = db_session.execute(
+        select(item_total_cost_expr).where(Item.id == item.id),
+    ).scalar()
+    assert sql_total_cost == 1100
+    matched_ids = (
+        db_session.execute(select(Item.id).where(item_total_cost_expr >= 0)).scalars().all()
+    )
+    assert item.id in matched_ids
+
+
+def test_total_grading_fees_all_fees_null(
+    db_session: Session,
+    item_with_submissions_factory: Callable[..., Item],
+) -> None:
+    item = item_with_submissions_factory(purchase_price=1000, import_fee=100)
+    # Python side
+    assert item.total_grading_fees == 0
+    # SQL expression side: SUM of only-NULL fees must coalesce to 0, not NULL
+    sql_total = db_session.execute(
+        select(item_total_grading_fees_expr).where(Item.id == item.id),
+    ).scalar()
+    assert sql_total == 0
+    sql_total_cost = db_session.execute(
+        select(item_total_cost_expr).where(Item.id == item.id),
+    ).scalar()
+    assert sql_total_cost == 1100
 
 
 def test_total_cost(

@@ -103,9 +103,9 @@ class Item(Base):
         return sum(sub.grading_fee for sub in self.submissions if sub.grading_fee is not None)
 
     @total_grading_fees.expression  # type: ignore[no-redef]
-    def total_grading_fees(cls) -> BinaryExpression[int]:  # noqa: N805
+    def total_grading_fees(cls) -> ColumnElement[int]:  # noqa: N805
         return (
-            select(func.sum(GradingRecord.grading_fee))
+            select(func.coalesce(func.sum(GradingRecord.grading_fee), 0))
             .where(GradingRecord.item_id == cls.id)
             .correlate(cls)
             .scalar_subquery()
