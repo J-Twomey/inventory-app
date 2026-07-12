@@ -337,7 +337,7 @@ class Item(Base):
             ),
             (
                 cls.total_cost != 0,
-                func.round(cls.net_jpy / cls.total_cost, 2),
+                func.round(100 * cls.net_jpy / cls.total_cost, 2),
             ),
             else_=0.0,
         )

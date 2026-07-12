@@ -25,6 +25,7 @@ item_total_grading_fees_expr = cast('ColumnElement[int]', Item.total_grading_fee
 item_total_cost_expr = cast('ColumnElement[int]', Item.total_cost)
 item_grade_expr = cast('ColumnElement[float | None]', Item.grade)
 item_cert_expr = cast('ColumnElement[int | None]', Item.cert)
+item_net_percent_expr = cast('ColumnElement[float | None]', Item.net_percent)
 
 
 def test_total_grading_fees(
@@ -652,3 +653,8 @@ def test_net_percent(
     db_item = crud.get_item(db=db_session, item_id=item.id)
     assert db_item is not None
     assert db_item.net_percent == expected_percent
+    # SQL expression side
+    sql_percent = db_session.execute(
+        select(item_net_percent_expr).where(Item.id == item.id),
+    ).scalar()
+    assert sql_percent == expected_percent
