@@ -112,3 +112,8 @@ fixtures (`item_factory`, `item_base_factory`, `item_create_factory`, `submissio
 with sensible defaults. `client` gives a `TestClient` with `get_db` overridden to the test
 session. Test files mirror `src/` modules 1:1 (`crud_test.py`, `models_test.py`,
 `parsers_test.py`, `schemas_test.py`, `validators_test.py`).
+
+## Preferences
+
+  - Don't add comments explaining obvious code. Comments should only be used for non-standard
+  approaches or subtle parts that could be confusing when looked at later on.
