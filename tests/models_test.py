@@ -23,6 +23,8 @@ from .conftest import ItemFactory
 # `type: ignore[no-redef]` pattern used in models.py, so cast once here
 item_total_grading_fees_expr = cast('ColumnElement[int]', Item.total_grading_fees)
 item_total_cost_expr = cast('ColumnElement[int]', Item.total_cost)
+item_grade_expr = cast('ColumnElement[float | None]', Item.grade)
+item_cert_expr = cast('ColumnElement[int | None]', Item.cert)
 
 
 def test_total_grading_fees(
@@ -223,6 +225,11 @@ def test_grade_no_submission_no_crack(
     db_item = crud.get_item(db=db_session, item_id=item.id)
     assert db_item is not None
     assert db_item.grade == expected_grade
+    # SQL expression side
+    sql_grade = db_session.execute(
+        select(item_grade_expr).where(Item.id == item.id),
+    ).scalar()
+    assert sql_grade == expected_grade
 
 
 def test_grade_no_submission_cracked_from_purchase(
@@ -244,6 +251,11 @@ def test_grade_no_submission_cracked_from_purchase(
     db_item = crud.get_item(db=db_session, item_id=item.id)
     assert db_item is not None
     assert db_item.grade == expected_grade
+    # SQL expression side
+    sql_grade = db_session.execute(
+        select(item_grade_expr).where(Item.id == item.id),
+    ).scalar()
+    assert sql_grade == expected_grade
 
 
 def test_grade_latest_sub_cracked(
@@ -266,6 +278,11 @@ def test_grade_latest_sub_cracked(
     db_item = crud.get_item(db=db_session, item_id=item_with_submissions.id)
     assert db_item is not None
     assert db_item.grade == expected_grade
+    # SQL expression side
+    sql_grade = db_session.execute(
+        select(item_grade_expr).where(Item.id == item_with_submissions.id),
+    ).scalar()
+    assert sql_grade == expected_grade
 
 
 def test_grade_latest_sub_not_cracked(
@@ -288,6 +305,34 @@ def test_grade_latest_sub_not_cracked(
     db_item = crud.get_item(db=db_session, item_id=item_with_submissions.id)
     assert db_item is not None
     assert db_item.grade == expected_grade
+    # SQL expression side
+    sql_grade = db_session.execute(
+        select(item_grade_expr).where(Item.id == item_with_submissions.id),
+    ).scalar()
+    assert sql_grade == expected_grade
+
+
+def test_grade_submitted_not_yet_graded(
+    db_session: Session,
+    item_with_submissions_factory: Callable[..., Item],
+) -> None:
+    item_with_submissions = item_with_submissions_factory(
+        grading_record_ids=[1],
+        submission_numbers=[1],
+        grading_fees=[10],
+        is_cracked_flags=[False],
+        purchase_grade=5,
+        purchase_cert=123,
+    )
+    # Python side
+    assert item_with_submissions.grade is None
+    # SQL expression side: a pending (NULL) grade must not fall back to purchase_grade
+    sql_grade = db_session.execute(
+        select(item_grade_expr).where(Item.id == item_with_submissions.id),
+    ).scalar()
+    assert sql_grade is None
+    matched_ids = db_session.execute(select(Item.id).where(item_grade_expr == 5)).scalars().all()
+    assert item_with_submissions.id not in matched_ids
 
 
 def test_cert_no_submission_no_crack(
@@ -309,6 +354,11 @@ def test_cert_no_submission_no_crack(
     db_item = crud.get_item(db=db_session, item_id=item.id)
     assert db_item is not None
     assert db_item.cert == expected_cert
+    # SQL expression side
+    sql_cert = db_session.execute(
+        select(item_cert_expr).where(Item.id == item.id),
+    ).scalar()
+    assert sql_cert == expected_cert
 
 
 def test_cert_no_submission_cracked_from_purchase(
@@ -330,6 +380,11 @@ def test_cert_no_submission_cracked_from_purchase(
     db_item = crud.get_item(db=db_session, item_id=item.id)
     assert db_item is not None
     assert db_item.cert == expected_cert
+    # SQL expression side
+    sql_cert = db_session.execute(
+        select(item_cert_expr).where(Item.id == item.id),
+    ).scalar()
+    assert sql_cert == expected_cert
 
 
 def test_cert_latest_sub_cracked(
@@ -352,6 +407,11 @@ def test_cert_latest_sub_cracked(
     db_item = crud.get_item(db=db_session, item_id=item_with_submissions.id)
     assert db_item is not None
     assert db_item.cert == expected_cert
+    # SQL expression side
+    sql_cert = db_session.execute(
+        select(item_cert_expr).where(Item.id == item_with_submissions.id),
+    ).scalar()
+    assert sql_cert == expected_cert
 
 
 def test_cert_latest_sub_not_cracked(
@@ -374,6 +434,34 @@ def test_cert_latest_sub_not_cracked(
     db_item = crud.get_item(db=db_session, item_id=item_with_submissions.id)
     assert db_item is not None
     assert db_item.cert == expected_cert
+    # SQL expression side
+    sql_cert = db_session.execute(
+        select(item_cert_expr).where(Item.id == item_with_submissions.id),
+    ).scalar()
+    assert sql_cert == expected_cert
+
+
+def test_cert_submitted_not_yet_graded(
+    db_session: Session,
+    item_with_submissions_factory: Callable[..., Item],
+) -> None:
+    item_with_submissions = item_with_submissions_factory(
+        grading_record_ids=[1],
+        submission_numbers=[1],
+        grading_fees=[10],
+        is_cracked_flags=[False],
+        purchase_grade=5,
+        purchase_cert=123,
+    )
+    # Python side
+    assert item_with_submissions.cert is None
+    # SQL expression side: a pending (NULL) cert must not fall back to purchase_cert
+    sql_cert = db_session.execute(
+        select(item_cert_expr).where(Item.id == item_with_submissions.id),
+    ).scalar()
+    assert sql_cert is None
+    matched_ids = db_session.execute(select(Item.id).where(item_cert_expr == 123)).scalars().all()
+    assert item_with_submissions.id not in matched_ids
 
 
 @pytest.mark.parametrize(

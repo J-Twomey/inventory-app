@@ -197,7 +197,7 @@ class Item(Base):
         )
         return case(
             (
-                latest_grade.is_(None),
+                latest_cracked.is_(None),
                 case(
                     (cls.cracked_from_purchase.is_(true()), literal(None, type_=Float())),
                     else_=cls.purchase_grade,
@@ -242,7 +242,9 @@ class Item(Base):
         )
         return case(
             (
-                latest_cert.is_(None),
+                # is_cracked is non-nullable, so a NULL here means no grading records exist;
+                # latest_cert can be NULL for a pending record and must not trigger the fallback
+                latest_cracked.is_(None),
                 case(
                     (cls.cracked_from_purchase.is_(true()), literal(None, type_=Integer())),
                     else_=cls.purchase_cert,
