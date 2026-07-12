@@ -123,8 +123,8 @@ def build_search_filters(
         if value is None or value == []:
             continue
 
-        # Filter qualifiers and cracked_from after the sql search
-        if field in ['qualifiers', 'cracked_from', 'grading_company']:
+        # Filter qualifiers and grading_company after the sql search
+        if field in ['qualifiers', 'grading_company']:
             post_filters.append((field, value))
         elif field == 'submission_number':
             raise NotImplementedError

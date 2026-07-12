@@ -489,7 +489,7 @@ class ItemSearch(BaseModel):
     purchase_price_max: Annotated[int | None, Form()] = None
     status: Annotated[Status | None, Form()] = None
     intent: Annotated[Intent | None, Form()] = None
-    cracked_from: Annotated[int | None, Form()] = None
+    cracked_from_purchase: Annotated[bool | None, Form()] = None
     grading_company: Annotated[GradingCompany | None, Form()] = None
     grade: Annotated[float | None, Form()] = None
     cert: Annotated[int | None, Form()] = None
@@ -527,7 +527,7 @@ class ItemSearchForm:
     purchase_price_max: str | None = None
     status: str | None = None
     intent: str | None = None
-    cracked_from: str | None = None
+    cracked_from_purchase: str | None = None
     grading_company: str | None = None
     grade: str | None = None
     cert: str | None = None
@@ -565,7 +565,7 @@ class ItemSearchForm:
         purchase_price_max: Annotated[str | None, Query()] = None,
         status: Annotated[str | None, Query()] = None,
         intent: Annotated[str | None, Query()] = None,
-        cracked_from: Annotated[str | None, Query()] = None,
+        cracked_from_purchase: Annotated[str | None, Query()] = None,
         grading_company: Annotated[str | None, Query()] = None,
         grade: Annotated[str | None, Query()] = None,
         cert: Annotated[str | None, Query()] = None,
@@ -601,7 +601,7 @@ class ItemSearchForm:
             purchase_price_max=purchase_price_max,
             status=status,
             intent=intent,
-            cracked_from=cracked_from,
+            cracked_from_purchase=cracked_from_purchase,
             grading_company=grading_company,
             grade=grade,
             cert=cert,
@@ -639,7 +639,7 @@ class ItemSearchForm:
             purchase_price_max=parse_nullable(self.purchase_price_max, int),
             status=parse_nullable_enum(self.status, Status),
             intent=parse_nullable_enum(self.intent, Intent),
-            cracked_from=parse_nullable(self.cracked_from, int),
+            cracked_from_purchase=parse_nullable_bool(self.cracked_from_purchase),
             grading_company=parse_nullable_enum(self.grading_company, GradingCompany),
             grade=parse_nullable(self.grade, float),
             cert=parse_nullable(self.cert, int),

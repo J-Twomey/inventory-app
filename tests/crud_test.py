@@ -311,6 +311,26 @@ def test_search_for_items_multiple_qualifiers(
     assert result[0].qualifiers == [item_enums.Qualifier.NON_HOLO, item_enums.Qualifier.CRYSTAL]
 
 
+def test_search_for_items_cracked_from_purchase(
+    db_session: Session,
+    item_factory: ItemFactory,
+) -> None:
+    cracked_flags = [False, False, True]
+    items = [item_factory.get(idx=i, cracked_from_purchase=f) for i, f in enumerate(cracked_flags)]
+    db_session.add_all(items)
+    db_session.flush()
+
+    search_params = schemas.ItemSearchForm(cracked_from_purchase='true').to_item_search()
+    result = crud.search_for_items(db_session, search_params)
+    assert len(result) == 1
+    assert result[0].cracked_from_purchase is True
+
+    search_params = schemas.ItemSearchForm(cracked_from_purchase='false').to_item_search()
+    result = crud.search_for_items(db_session, search_params)
+    assert len(result) == 2
+    assert all(item.cracked_from_purchase is False for item in result)
+
+
 def test_edit_item_no_item_found(
     db_session: Session,
     item_factory: ItemFactory,
@@ -445,8 +465,8 @@ def test_build_search_filters_no_special_case() -> None:
 
 
 def test_build_search_features_with_post_filter() -> None:
-    params = {'name': 'Unown', 'cracked_from': 1}
-    expected_post_filters = [('cracked_from', 1)]
+    params = {'name': 'Unown', 'grading_company': item_enums.GradingCompany.PSA}
+    expected_post_filters = [('grading_company', item_enums.GradingCompany.PSA)]
     filters, post_filters = crud.build_search_filters(params)
 
     assert filters[0].left.key == 'name'
