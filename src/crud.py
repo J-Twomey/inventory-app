@@ -35,6 +35,7 @@ from .validators import (
     check_status,
     check_valid_grading_record_update,
     check_valid_intent_or_status_update,
+    check_valid_merged_item_state,
 )
 
 
@@ -156,6 +157,7 @@ def edit_item(
         item_update.intent,
         item_update.status,
     )
+    check_valid_merged_item_state(item, item_update)
     perform_item_update(item, item_update)
     db.commit()
     db.refresh(item)

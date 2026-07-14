@@ -1,5 +1,6 @@
 from datetime import date
 
+import pytest
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.operators import eq
 
@@ -449,6 +450,33 @@ def test_edit_item_add_extra_qualifier_to_existing(
         item_enums.Qualifier.CRYSTAL,
         item_enums.Qualifier.UNLIMITED,
     ]
+
+
+def test_edit_item_rejects_invalid_merged_state(
+    db_session: Session,
+    item_factory: ItemFactory,
+) -> None:
+    item = item_factory.get(
+        status=item_enums.Status.LISTED,
+        intent=item_enums.Intent.SELL,
+        list_price=10.0,
+        list_type=item_enums.ListingType.FIXED,
+        list_date=date(2025, 6, 1),
+    )
+    db_session.add(item)
+    db_session.flush()
+    item_changes = schemas.ItemUpdate(
+        status=item_enums.Status.STORAGE,
+        list_type=item_enums.ListingType.NO_LIST,
+    )
+
+    with pytest.raises(ValueError, match='requires the following fields to be null'):
+        crud.edit_item(db_session, item_id=item.id, item_update=item_changes)
+
+    unchanged_item = crud.get_item(db_session, item.id)
+    assert unchanged_item is not None
+    assert unchanged_item.status == item_enums.Status.LISTED
+    assert unchanged_item.list_price == 10.0
 
 
 def test_build_search_filters_no_special_case() -> None:

@@ -6,7 +6,11 @@ from .models import (
     GradingRecord,
     Item,
 )
-from .schemas import GradingRecordUpdate
+from .schemas import (
+    GradingRecordUpdate,
+    ItemCreate,
+    ItemUpdate,
+)
 
 
 def check_intent(
@@ -70,6 +74,17 @@ def check_valid_intent_or_status_update(
         raise ValueError(
             'Cannot update an item status if it is SUBMITTED (use the grading record page)',
         )
+
+
+def check_valid_merged_item_state(
+    item: Item,
+    item_update: ItemUpdate,
+) -> None:
+    merged = {f: getattr(item, f) for f in ItemCreate.model_fields}
+    merged.update(item_update.to_model_kwargs())
+    # mirror perform_item_update, which overwrites qualifiers even with an empty list
+    merged['qualifiers'] = item_update.qualifiers
+    ItemCreate(**merged)
 
 
 def check_valid_grading_record_update(
