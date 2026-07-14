@@ -66,8 +66,13 @@ def client(db_session: Session) -> Generator[TestClient, None, None]:
         yield db_session
 
     app.dependency_overrides[get_db] = override_get_db
-    with TestClient(app) as cl:
-        yield cl
+    try:
+        # No `with` block: entering the TestClient context runs the app lifespan, which
+        # touches the real database via get_engine(). The test engine already has its
+        # tables, so tests must not run the lifespan.
+        yield TestClient(app)
+    finally:
+        app.dependency_overrides.clear()
 
 
 class ItemTD(TypedDict, total=False):
