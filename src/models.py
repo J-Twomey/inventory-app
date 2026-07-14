@@ -405,7 +405,7 @@ class Submission(Base):
             item.original_item.return_jpy
             - item.original_item.purchase_price
             - item.original_item.import_fee
-            - item.grading_fee
+            - (item.grading_fee or 0)
             for item in self.submission_items
             if item.original_item.return_jpy is not None
         ]

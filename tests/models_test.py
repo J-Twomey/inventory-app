@@ -658,3 +658,31 @@ def test_net_percent(
         select(item_net_percent_expr).where(Item.id == item.id),
     ).scalar()
     assert sql_percent == expected_percent
+
+
+@pytest.mark.parametrize(
+    ('grading_fee', 'expected_profit'),
+    [
+        pytest.param(50, 650, id='with_fee'),
+        pytest.param(None, 700, id='fee_not_recorded'),
+    ],
+)
+def test_submission_profit_on_sold(
+    item_with_submissions_factory: Callable[..., Item],
+    grading_fee: int | None,
+    expected_profit: int,
+) -> None:
+    item = item_with_submissions_factory(
+        grading_fees=[grading_fee],
+        is_cracked_flags=[True],
+        purchase_price=1000,
+        import_fee=100,
+        sale_total=20.0,
+        shipping=1.0,
+        sale_fee=1.0,
+        usd_to_jpy_rate=100.0,
+    )
+    submission = item.submissions[0].submission
+    assert submission.profit_on_sold == expected_profit
+    assert submission.profit_per_sold == expected_profit
+    assert submission.profit_per_closed == expected_profit
