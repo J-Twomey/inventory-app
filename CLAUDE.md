@@ -117,3 +117,5 @@ session. Test files mirror `src/` modules 1:1 (`crud_test.py`, `models_test.py`,
 
   - Don't add comments explaining obvious code. Comments should only be used for non-standard
   approaches or subtle parts that could be confusing when looked at later on.
+  - Don't write comments that only make sense in the context of a particular commit. Things
+  such as 'now that ~~~' should not be written as they can be confusing later on.
