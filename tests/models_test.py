@@ -1,15 +1,8 @@
 from collections.abc import Callable
-from typing import (
-    TYPE_CHECKING,
-    cast,
-)
 
 import pytest
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-
-if TYPE_CHECKING:
-    from sqlalchemy.sql.elements import ColumnElement
 
 from src import (
     crud,
@@ -18,14 +11,6 @@ from src import (
 from src.models import Item
 
 from .conftest import ItemFactory
-
-# Class-level hybrid_property access is untyped with the `@x.expression` +
-# `type: ignore[no-redef]` pattern used in models.py, so cast once here
-item_total_grading_fees_expr = cast('ColumnElement[int]', Item.total_grading_fees)
-item_total_cost_expr = cast('ColumnElement[int]', Item.total_cost)
-item_grade_expr = cast('ColumnElement[float | None]', Item.grade)
-item_cert_expr = cast('ColumnElement[int | None]', Item.cert)
-item_net_percent_expr = cast('ColumnElement[float | None]', Item.net_percent)
 
 
 def test_total_grading_fees(
@@ -50,7 +35,7 @@ def test_total_grading_fees(
     assert db_item.total_grading_fees == expected_total
     # SQL expression side
     sql_total = db_session.execute(
-        select(item_total_grading_fees_expr).where(Item.id == item_with_submissions.id),
+        select(Item.total_grading_fees).where(Item.id == item_with_submissions.id),
     ).scalar()
     assert sql_total == expected_total
 
@@ -66,16 +51,14 @@ def test_total_grading_fees_no_submissions(
     assert item.total_grading_fees == 0
     # SQL expression side
     sql_total = db_session.execute(
-        select(item_total_grading_fees_expr).where(Item.id == item.id),
+        select(Item.total_grading_fees).where(Item.id == item.id),
     ).scalar()
     assert sql_total == 0
     sql_total_cost = db_session.execute(
-        select(item_total_cost_expr).where(Item.id == item.id),
+        select(Item.total_cost).where(Item.id == item.id),
     ).scalar()
     assert sql_total_cost == 1100
-    matched_ids = (
-        db_session.execute(select(Item.id).where(item_total_cost_expr >= 0)).scalars().all()
-    )
+    matched_ids = db_session.execute(select(Item.id).where(Item.total_cost >= 0)).scalars().all()
     assert item.id in matched_ids
 
 
@@ -88,11 +71,11 @@ def test_total_grading_fees_all_fees_null(
     assert item.total_grading_fees == 0
     # SQL expression side: SUM of only-NULL fees must coalesce to 0, not NULL
     sql_total = db_session.execute(
-        select(item_total_grading_fees_expr).where(Item.id == item.id),
+        select(Item.total_grading_fees).where(Item.id == item.id),
     ).scalar()
     assert sql_total == 0
     sql_total_cost = db_session.execute(
-        select(item_total_cost_expr).where(Item.id == item.id),
+        select(Item.total_cost).where(Item.id == item.id),
     ).scalar()
     assert sql_total_cost == 1100
 
@@ -228,7 +211,7 @@ def test_grade_no_submission_no_crack(
     assert db_item.grade == expected_grade
     # SQL expression side
     sql_grade = db_session.execute(
-        select(item_grade_expr).where(Item.id == item.id),
+        select(Item.grade).where(Item.id == item.id),
     ).scalar()
     assert sql_grade == expected_grade
 
@@ -254,7 +237,7 @@ def test_grade_no_submission_cracked_from_purchase(
     assert db_item.grade == expected_grade
     # SQL expression side
     sql_grade = db_session.execute(
-        select(item_grade_expr).where(Item.id == item.id),
+        select(Item.grade).where(Item.id == item.id),
     ).scalar()
     assert sql_grade == expected_grade
 
@@ -281,7 +264,7 @@ def test_grade_latest_sub_cracked(
     assert db_item.grade == expected_grade
     # SQL expression side
     sql_grade = db_session.execute(
-        select(item_grade_expr).where(Item.id == item_with_submissions.id),
+        select(Item.grade).where(Item.id == item_with_submissions.id),
     ).scalar()
     assert sql_grade == expected_grade
 
@@ -308,7 +291,7 @@ def test_grade_latest_sub_not_cracked(
     assert db_item.grade == expected_grade
     # SQL expression side
     sql_grade = db_session.execute(
-        select(item_grade_expr).where(Item.id == item_with_submissions.id),
+        select(Item.grade).where(Item.id == item_with_submissions.id),
     ).scalar()
     assert sql_grade == expected_grade
 
@@ -329,10 +312,10 @@ def test_grade_submitted_not_yet_graded(
     assert item_with_submissions.grade is None
     # SQL expression side: a pending (NULL) grade must not fall back to purchase_grade
     sql_grade = db_session.execute(
-        select(item_grade_expr).where(Item.id == item_with_submissions.id),
+        select(Item.grade).where(Item.id == item_with_submissions.id),
     ).scalar()
     assert sql_grade is None
-    matched_ids = db_session.execute(select(Item.id).where(item_grade_expr == 5)).scalars().all()
+    matched_ids = db_session.execute(select(Item.id).where(Item.grade == 5)).scalars().all()
     assert item_with_submissions.id not in matched_ids
 
 
@@ -357,7 +340,7 @@ def test_cert_no_submission_no_crack(
     assert db_item.cert == expected_cert
     # SQL expression side
     sql_cert = db_session.execute(
-        select(item_cert_expr).where(Item.id == item.id),
+        select(Item.cert).where(Item.id == item.id),
     ).scalar()
     assert sql_cert == expected_cert
 
@@ -383,7 +366,7 @@ def test_cert_no_submission_cracked_from_purchase(
     assert db_item.cert == expected_cert
     # SQL expression side
     sql_cert = db_session.execute(
-        select(item_cert_expr).where(Item.id == item.id),
+        select(Item.cert).where(Item.id == item.id),
     ).scalar()
     assert sql_cert == expected_cert
 
@@ -410,7 +393,7 @@ def test_cert_latest_sub_cracked(
     assert db_item.cert == expected_cert
     # SQL expression side
     sql_cert = db_session.execute(
-        select(item_cert_expr).where(Item.id == item_with_submissions.id),
+        select(Item.cert).where(Item.id == item_with_submissions.id),
     ).scalar()
     assert sql_cert == expected_cert
 
@@ -437,7 +420,7 @@ def test_cert_latest_sub_not_cracked(
     assert db_item.cert == expected_cert
     # SQL expression side
     sql_cert = db_session.execute(
-        select(item_cert_expr).where(Item.id == item_with_submissions.id),
+        select(Item.cert).where(Item.id == item_with_submissions.id),
     ).scalar()
     assert sql_cert == expected_cert
 
@@ -458,10 +441,10 @@ def test_cert_submitted_not_yet_graded(
     assert item_with_submissions.cert is None
     # SQL expression side: a pending (NULL) cert must not fall back to purchase_cert
     sql_cert = db_session.execute(
-        select(item_cert_expr).where(Item.id == item_with_submissions.id),
+        select(Item.cert).where(Item.id == item_with_submissions.id),
     ).scalar()
     assert sql_cert is None
-    matched_ids = db_session.execute(select(Item.id).where(item_cert_expr == 123)).scalars().all()
+    matched_ids = db_session.execute(select(Item.id).where(Item.cert == 123)).scalars().all()
     assert item_with_submissions.id not in matched_ids
 
 
@@ -655,7 +638,7 @@ def test_net_percent(
     assert db_item.net_percent == expected_percent
     # SQL expression side
     sql_percent = db_session.execute(
-        select(item_net_percent_expr).where(Item.id == item.id),
+        select(Item.net_percent).where(Item.id == item.id),
     ).scalar()
     assert sql_percent == expected_percent
 
