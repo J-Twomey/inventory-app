@@ -13,7 +13,9 @@
   <label>Item ID:</label>
   <input type="number" name="item_id" value="{{ record.item_id }}"><br><br>
   <label>Submission Number:</label>
-  <input type="number" name="submission_number" value="{{ record.submission_number }}"><br><br>
+  <!-- Display only: the edit endpoint has never accepted submission_number changes, and with
+       the form now bound to GradingRecordUpdate (extra='forbid') submitting it would 422 -->
+  <input type="number" value="{{ record.submission_number }}" disabled><br><br>
   <label>Grading Fee:</label>
   <input type="number" name="grading_fee" value="{{ record.grading_fee }}"><br><br>
   <label>Grade:</label>

@@ -58,7 +58,7 @@ from .item_enums import (
 from .models import Item
 from .parsers import parse_submission_update_field
 from .schemas import (
-    GradingRecordUpdateForm,
+    GradingRecordUpdate,
     ItemCreateForm,
     ItemForSubmissionForm,
     ItemSearchForm,
@@ -454,10 +454,9 @@ def open_edit_grading_record_form(
 @router.post('/grading_record_edit/{grading_record_id}', response_class=RedirectResponse)
 def submit_edit_grading_record(
     grading_record_id: int,
-    update_form: Annotated[GradingRecordUpdateForm, Depends(GradingRecordUpdateForm.as_form)],
+    edit_params: Annotated[GradingRecordUpdate, Form()],
     db: DbSession,
 ) -> RedirectResponse:
-    edit_params = update_form.to_grading_record_update()
     edit_result = edit_grading_record(db, grading_record_id, edit_params)
     return RedirectResponse('/grading_records_view', status_code=edit_result)
 

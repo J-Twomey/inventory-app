@@ -770,47 +770,16 @@ class GradingRecordCreate(GradingRecordBase):
 
 
 class GradingRecordUpdate(GradingRecordBase):
+    @model_validator(mode='before')
+    @classmethod
+    def treat_empty_fields_as_unset(cls, data: object) -> object:
+        if isinstance(data, dict):
+            data = {k: v for k, v in data.items() if v is not None and v != ''}
+            data.setdefault('is_cracked', False)
+        return data
+
     def to_model_kwargs(self) -> dict[str, Any]:
         return self.model_dump(exclude_unset=True)
-
-
-@dataclass
-class GradingRecordUpdateForm:
-    item_id: str | None = None
-    submission_id: str | None = None
-    grading_fee: str | None = None
-    grade: str | None = None
-    cert: str | None = None
-    is_cracked: bool = False
-
-    @classmethod
-    def as_form(
-        cls,
-        item_id: Annotated[str | None, Form()] = None,
-        submission_id: Annotated[str | None, Form()] = None,
-        grading_fee: Annotated[str | None, Form()] = None,
-        grade: Annotated[str | None, Form()] = None,
-        cert: Annotated[str | None, Form()] = None,
-        is_cracked: Annotated[bool, Form()] = False,
-    ) -> 'GradingRecordUpdateForm':
-        return cls(
-            item_id=item_id,
-            submission_id=submission_id,
-            grading_fee=grading_fee,
-            grade=grade,
-            cert=cert,
-            is_cracked=is_cracked,
-        )
-
-    def to_grading_record_update(self) -> GradingRecordUpdate:
-        update_vals: dict[str, Any] = {}
-        set_if_value(update_vals, 'item_id', parse_nullable(self.item_id, int))
-        set_if_value(update_vals, 'submission_id', parse_nullable(self.submission_id, int))
-        set_if_value(update_vals, 'grading_fee', parse_nullable(self.grading_fee, int))
-        set_if_value(update_vals, 'grade', parse_nullable(self.grade, float))
-        set_if_value(update_vals, 'cert', parse_nullable(self.cert, int))
-        set_if_value(update_vals, 'is_cracked', self.is_cracked)
-        return GradingRecordUpdate(**update_vals)
 
 
 def set_if_value(
