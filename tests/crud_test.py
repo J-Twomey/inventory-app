@@ -224,7 +224,7 @@ def test_search_for_items_no_filters(
     db_session.add_all(items)
     db_session.flush()
 
-    search_params = schemas.ItemSearchForm().to_item_search()
+    search_params = schemas.ItemSearch()
     result = crud.search_for_items(db_session, search_params)
     assert len(result) == len(item_names)
 
@@ -238,7 +238,7 @@ def test_search_for_items_simple_case(
     db_session.add_all(items)
     db_session.flush()
 
-    search_params = schemas.ItemSearchForm(name='two').to_item_search()
+    search_params = schemas.ItemSearch(name='two')
     result = crud.search_for_items(db_session, search_params)
     assert len(result) == 1
     assert result[0].name == 'two'
@@ -281,10 +281,10 @@ def test_search_for_items_multiple_search_criteria(
     db_session.add_all(items)
     db_session.flush()
 
-    search_params = schemas.ItemSearchForm(
-        language='KOREAN',
-        grading_company='PSA',
-    ).to_item_search()
+    search_params = schemas.ItemSearch(
+        language=item_enums.Language.KOREAN,
+        grading_company=item_enums.GradingCompany.PSA,
+    )
 
     result = crud.search_for_items(db_session, search_params)
     assert len(result) == 1
@@ -306,7 +306,9 @@ def test_search_for_items_multiple_qualifiers(
     db_session.add_all(items)
     db_session.flush()
 
-    search_params = schemas.ItemSearchForm(qualifiers=['NON_HOLO', 'CRYSTAL']).to_item_search()
+    search_params = schemas.ItemSearch(
+        qualifiers=[item_enums.Qualifier.NON_HOLO, item_enums.Qualifier.CRYSTAL],
+    )
     result = crud.search_for_items(db_session, search_params)
     assert len(result) == 1
     assert result[0].qualifiers == [item_enums.Qualifier.NON_HOLO, item_enums.Qualifier.CRYSTAL]
@@ -321,12 +323,12 @@ def test_search_for_items_cracked_from_purchase(
     db_session.add_all(items)
     db_session.flush()
 
-    search_params = schemas.ItemSearchForm(cracked_from_purchase='true').to_item_search()
+    search_params = schemas.ItemSearch(cracked_from_purchase=True)
     result = crud.search_for_items(db_session, search_params)
     assert len(result) == 1
     assert result[0].cracked_from_purchase is True
 
-    search_params = schemas.ItemSearchForm(cracked_from_purchase='false').to_item_search()
+    search_params = schemas.ItemSearch(cracked_from_purchase=False)
     result = crud.search_for_items(db_session, search_params)
     assert len(result) == 2
     assert all(item.cracked_from_purchase is False for item in result)

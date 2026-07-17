@@ -3,6 +3,7 @@ from collections.abc import Callable
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
+from src import item_enums
 from src.models import Item
 
 from .conftest import ItemFactory
@@ -49,6 +50,76 @@ def test_submit_edit_item(
     assert response.status_code == 303
     assert response.headers['location'] == '/items_view'
     assert item.name == 'AFTER_EDIT'
+
+
+def test_submit_add_item_form(
+    client: TestClient,
+    db_session: Session,
+) -> None:
+    response = client.post(
+        '/add_item',
+        data={
+            'name': 'FORM_CREATED',
+            'set_name': 'Jungle',
+            'category': 'CARD',
+            'language': 'KOREAN',
+            'qualifiers': ['UNLIMITED', 'CRYSTAL'],
+            'details': '',
+            'purchase_date': '2025-05-05',
+            'purchase_price': '1000',
+            'status': 'STORAGE',
+            'intent': 'SELL',
+            'import_fee': '0',
+            'purchase_grading_company': 'RAW',
+            'purchase_grade': '',
+            'purchase_cert': '',
+            'list_price': '',
+            'list_type': 'NO_LIST',
+            'list_date': '',
+            'sale_total': '',
+            'sale_date': '',
+            'shipping': '',
+            'sale_fee': '',
+            'usd_to_jpy_rate': '',
+            'object_variant': 'STANDARD',
+            'audit_target': 'on',
+        },
+        follow_redirects=False,
+    )
+    assert response.status_code == 303
+    assert response.headers['location'] == '/items_view'
+
+    item = db_session.query(Item).filter(Item.name == 'FORM_CREATED').one()
+    assert item.language == item_enums.Language.KOREAN
+    assert item.qualifiers == [item_enums.Qualifier.UNLIMITED, item_enums.Qualifier.CRYSTAL]
+    assert item.audit_target is True
+    assert item.group_discount is False
+
+
+def test_view_items_search_with_pagination_params(
+    client: TestClient,
+    db_session: Session,
+    item_factory: ItemFactory,
+) -> None:
+    items = [
+        item_factory.get(idx=1, name='FINDME', language=item_enums.Language.KOREAN),
+        item_factory.get(idx=2, name='HIDDEN', language=item_enums.Language.GERMAN),
+    ]
+    db_session.add_all(items)
+    db_session.flush()
+
+    response = client.get(
+        '/items_view',
+        params={
+            'language': 'KOREAN',
+            'name': '',
+            'skip': 0,
+            'show_limit': 100,
+        },
+    )
+    assert response.status_code == 200
+    assert 'FINDME' in response.text
+    assert 'HIDDEN' not in response.text
 
 
 def test_submit_edit_grading_record(

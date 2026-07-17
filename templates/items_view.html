@@ -46,7 +46,7 @@
           <select name="category" id="category_search_select">
             <option value="">Any</option>
             {% for category in category_enum %}
-              <option value="{{ category.name }}" {% if form_data and form_data.category == category.name %}selected{% endif %}>
+              <option value="{{ category.name }}" {% if form_data and form_data.category == category %}selected{% endif %}>
                 {{ category.name.title() }}
               </option>
             {% endfor %}
@@ -56,7 +56,7 @@
           <select name="language" id="language_search_select">
             <option value="">Any</option>
             {% for language in language_enum %}
-              <option value="{{ language.name }}" {% if form_data and form_data.language == language.name %}selected{% endif %}>
+              <option value="{{ language.name }}" {% if form_data and form_data.language == language %}selected{% endif %}>
                 {{ language.name.title().replace('_', ' ') }}
               </option>
             {% endfor %}
@@ -66,7 +66,7 @@
           <select name="intent" id="intent_search_select">
             <option value="">Any</option>
             {% for intent in intent_enum %}
-              <option value="{{ intent.name }}" {% if form_data and form_data.intent == intent.name %}selected{% endif %}>
+              <option value="{{ intent.name }}" {% if form_data and form_data.intent == intent %}selected{% endif %}>
                 {{ intent.name.title() }}
               </option>
             {% endfor %}
@@ -76,7 +76,7 @@
           <select name="status" id="status_search_select">
             <option value="">Any</option>
             {% for status in status_enum %}
-              <option value="{{ status.name }}" {% if form_data and form_data.status == status.name %}selected{% endif %}>
+              <option value="{{ status.name }}" {% if form_data and form_data.status == status %}selected{% endif %}>
                 {{ status.name.title() }}
               </option>
             {% endfor %}
@@ -86,7 +86,7 @@
           <select name="object_variant" id="object_variant_search_select">
             <option value="">Any</option>
             {% for object_variant in object_variant_enum %}
-              <option value="{{ object_variant.name }}" {% if form_data and form_data.object_variant == object_variant.name %}selected{% endif %}>
+              <option value="{{ object_variant.name }}" {% if form_data and form_data.object_variant == object_variant %}selected{% endif %}>
                 {{ object_variant.name.title().replace('_', ' ') }}
               </option>
             {% endfor %}
@@ -95,15 +95,15 @@
           <label for="group_discount">Group Discount:</label>
           <select name="group_discount" id="group_discount">
             <option value="">Any</option>
-            <option value="true" {% if form_data and form_data.group_discount == 'true' %}selected{% endif %}>True</option>
-            <option value="false" {% if form_data and form_data.group_discount == 'false' %}selected{% endif %}>False</option>
+            <option value="true" {% if form_data and form_data.group_discount == true %}selected{% endif %}>True</option>
+            <option value="false" {% if form_data and form_data.group_discount == false %}selected{% endif %}>False</option>
           </select>
 
           <label for="audit_target">Audit Target:</label>
           <select name="audit_target" id="audit_target">
             <option value="">Any</option>
-            <option value="true" {% if form_data and form_data.audit_target == 'true' %}selected{% endif %}>True</option>
-            <option value="false" {% if form_data and form_data.audit_target == 'false' %}selected{% endif %}>False</option>
+            <option value="true" {% if form_data and form_data.audit_target == true %}selected{% endif %}>True</option>
+            <option value="false" {% if form_data and form_data.audit_target == false %}selected{% endif %}>False</option>
           </select>
         </div>
       </div>
@@ -119,7 +119,7 @@
           <select name="grading_company" id="grading_company_search_select">
             <option value="">Any</option>
             {% for grading_company in grading_company_enum %}
-              <option value="{{ grading_company.name }}" {% if form_data and form_data.grading_company == grading_company.name %}selected{% endif %}>
+              <option value="{{ grading_company.name }}" {% if form_data and form_data.grading_company == grading_company %}selected{% endif %}>
                 {{ grading_company.name }}
               </option>
             {% endfor %}
@@ -138,7 +138,7 @@
               <input
                 type="checkbox"
                 name="qualifiers"
-                value="{{ qualifier.name }}" {% if form_data and qualifier.name in form_data.qualifiers %}checked{% endif %}
+                value="{{ qualifier.name }}" {% if form_data and qualifier in form_data.qualifiers %}checked{% endif %}
               >
               {{ qualifier.name.title().replace('_', ' ') }}
             </label><br>
@@ -151,7 +151,7 @@
               <input
                 type="checkbox"
                 name="qualifiers"
-                value="{{ qualifier.name }}" {% if form_data and qualifier.name in form_data.qualifiers %}checked{% endif %}
+                value="{{ qualifier.name }}" {% if form_data and qualifier in form_data.qualifiers %}checked{% endif %}
               >
               {{ qualifier.name.title().replace('_', ' ') }}
             </label><br>
@@ -245,7 +245,7 @@
           <select name="list_type" id="list_type_search_select">
             <option value="">Any</option>
             {% for list_type in list_type_enum %}
-              <option value="{{ list_type.name }}" {% if form_data and form_data.list_type == list_type.name %}selected{% endif %}>
+              <option value="{{ list_type.name }}" {% if form_data and form_data.list_type == list_type %}selected{% endif %}>
                 {{ list_type.name.title().replace('_', ' ') }}
               </option>
             {% endfor %}

@@ -59,10 +59,10 @@ from .models import Item
 from .parsers import parse_submission_update_field
 from .schemas import (
     GradingRecordUpdate,
-    ItemCreateForm,
+    ItemCreate,
     ItemForSubmissionForm,
-    ItemSearchForm,
-    ItemUpdateForm,
+    ItemSearch,
+    ItemUpdate,
     SubmissionCreate,
 )
 
@@ -70,6 +70,18 @@ templates = Jinja2Templates(directory='templates')
 templates.env.globals['DEV_MODE'] = os.getenv('DEV_MODE') == '1'
 router = APIRouter()
 DbSession = Annotated[Session, Depends(get_db)]
+
+
+def item_search_from_query(request: Request) -> ItemSearch:
+    params: dict[str, object] = {
+        key: value for key, value in request.query_params.items() if key in ItemSearch.model_fields
+    }
+    if 'qualifiers' in params:
+        params['qualifiers'] = request.query_params.getlist('qualifiers')
+    return ItemSearch.model_validate(params)
+
+
+SearchQuery = Annotated[ItemSearch, Depends(item_search_from_query)]
 
 
 @router.get('/', response_class=HTMLResponse)
@@ -81,14 +93,13 @@ def read_root(request: Request) -> Response:
 def view_items(
     request: Request,
     db: DbSession,
-    search_form: Annotated[ItemSearchForm, Depends(ItemSearchForm.as_query)],
+    search_data: SearchQuery,
     show_limit: int = 500,
     skip: int = 0,
     selection_mode: bool = False,
 ) -> Response:
     show_limit = max(1, min(show_limit, 5000))
     skip = max(0, skip)
-    search_data = search_form.to_item_search()
     search_values = {
         k: v
         for k, v in search_data.model_dump(exclude_none=True).items()
@@ -113,7 +124,7 @@ def view_items(
         {
             'request': request,
             'items': items,
-            'form_data': search_form,
+            'form_data': search_data,
             'qualifier_enum': Qualifier,
             'category_enum': Category,
             'language_enum': Language,
@@ -150,10 +161,9 @@ def show_add_item_form(request: Request) -> Response:
 
 @router.post('/add_item')
 def submit_add_item_form(
-    form: Annotated[ItemCreateForm, Depends(ItemCreateForm.as_form)],
+    item: Annotated[ItemCreate, Form()],
     db: DbSession,
 ) -> RedirectResponse:
-    item = form.to_item_create()
     create_item(db, item)
     return RedirectResponse(url='/items_view', status_code=303)
 
@@ -198,10 +208,9 @@ def open_edit_item_form(
 @router.post('/edit/{item_id}')
 def submit_edit_item(
     item_id: int,
-    update_form: Annotated[ItemUpdateForm, Depends(ItemUpdateForm.as_form)],
+    edit_params: Annotated[ItemUpdate, Form()],
     db: DbSession,
 ) -> RedirectResponse:
-    edit_params = update_form.to_item_update()
     edit_result = edit_item(db, item_id, edit_params)
     return RedirectResponse('/items_view', status_code=edit_result)
 
@@ -357,13 +366,11 @@ def submit_add_submission_form(
 def items_lookup(
     request: Request,
     db: DbSession,
-    search_form: Annotated[ItemSearchForm, Depends(ItemSearchForm.as_query)],
+    search_data: SearchQuery,
     show_limit: int = 100,
     skip: int = 0,
     selection_mode: bool = True,
 ) -> Response:
-    search_data = search_form.to_item_search()
-
     if search_data.status is None:
         search_data.status = Status.STORAGE
     if search_data.intent is None:
@@ -383,7 +390,7 @@ def items_lookup(
         {
             'request': request,
             'items': items,
-            'form_data': search_form,
+            'form_data': search_data,
             'qualifier_enum': Qualifier,
             'category_enum': Category,
             'language_enum': Language,

@@ -362,25 +362,115 @@ def test_appropriate_status_based_on_intent_error_case(
     assert 'Item can not have status of SUBMITTED with intent of SELL' in error_msg
 
 
-def test_set_if_value_do_set() -> None:
-    input_dict: dict[str, int] = {}
-    key = 'a'
-    value = 1
-    schemas.set_if_value(input_dict, key, value)
-    assert input_dict[key] == value
+def test_item_create_parses_form_string_values() -> None:
+    item = schemas.ItemCreate.model_validate(
+        {
+            'name': 'Golem',
+            'set_name': 'Split Earth',
+            'category': 'CARD',
+            'language': 'JAPANESE',
+            'qualifiers': ['UNLIMITED', 'CRYSTAL'],
+            'details': '',
+            'purchase_date': '2025-05-05',
+            'purchase_price': '1000',
+            'status': 'STORAGE',
+            'intent': 'SELL',
+            'import_fee': '0',
+            'purchase_grading_company': 'RAW',
+            'purchase_grade': '',
+            'purchase_cert': '',
+            'list_price': '',
+            'list_type': 'NO_LIST',
+            'list_date': '',
+            'sale_total': '',
+            'sale_date': '',
+            'shipping': '',
+            'sale_fee': '',
+            'usd_to_jpy_rate': '',
+            'object_variant': 'STANDARD',
+            'audit_target': 'on',
+        },
+    )
+    assert item.category == item_enums.Category.CARD
+    assert item.language == item_enums.Language.JAPANESE
+    assert item.qualifiers == [item_enums.Qualifier.UNLIMITED, item_enums.Qualifier.CRYSTAL]
+    assert item.details is None
+    assert item.purchase_date == date(2025, 5, 5)
+    assert item.purchase_price == 1000
+    assert item.purchase_grade is None
+    assert item.audit_target is True
+    assert item.group_discount is False
 
 
-@pytest.mark.parametrize(
-    ('value'),
-    [
-        pytest.param(None, id='none_value'),
-        pytest.param('', id='empty_string'),
-        pytest.param([], id='empty_list'),
-        pytest.param({}, id='empty_dict'),
-    ],
-)
-def test_set_if_value_no_set(value: str | list[object] | dict[str, object] | None) -> None:
-    input_dict: dict[str, Any] = {}
-    key = 'a'
-    schemas.set_if_value(input_dict, key, value)
-    assert len(input_dict) == 0
+def test_item_create_qualifiers_default_to_empty(
+    item_create_factory: ItemCreateFactory,
+) -> None:
+    item = item_create_factory.get()
+    assert item.qualifiers == []
+
+
+def test_item_update_treats_empty_values_as_unset() -> None:
+    update = schemas.ItemUpdate.model_validate(
+        {
+            'name': 'Golem',
+            'set_name': '',
+            'status': 'STORAGE',
+            'purchase_grade': '',
+        },
+    )
+    assert update.to_model_kwargs() == {
+        'name': 'Golem',
+        'status': item_enums.Status.STORAGE,
+        'group_discount': False,
+        'audit_target': False,
+        'cracked_from_purchase': False,
+    }
+
+
+def test_item_update_checked_checkbox_sets_true() -> None:
+    update = schemas.ItemUpdate.model_validate({'audit_target': 'on'})
+    assert update.audit_target is True
+    assert update.group_discount is False
+    assert update.cracked_from_purchase is False
+
+
+def test_item_search_parses_query_string_values() -> None:
+    search = schemas.ItemSearch.model_validate(
+        {
+            'name': 'Golem',
+            'category': 'CARD',
+            'language': 'JAPANESE',
+            'qualifiers': ['UNLIMITED', 'CRYSTAL'],
+            'grading_company': 'PSA',
+            'purchase_date_min': '2025-05-05',
+            'purchase_price_max': '1000',
+            'cracked_from_purchase': 'true',
+            'net_percent_min': '50',
+        },
+    )
+    assert search.name == 'Golem'
+    assert search.category == item_enums.Category.CARD
+    assert search.language == item_enums.Language.JAPANESE
+    assert search.qualifiers == [item_enums.Qualifier.UNLIMITED, item_enums.Qualifier.CRYSTAL]
+    assert search.grading_company == item_enums.GradingCompany.PSA
+    assert search.purchase_date_min == date(2025, 5, 5)
+    assert search.purchase_price_max == 1000
+    assert search.cracked_from_purchase is True
+    assert search.net_percent_min == 50.0
+
+
+def test_item_search_treats_empty_values_as_unset() -> None:
+    search = schemas.ItemSearch.model_validate(
+        {
+            'name': '',
+            'set_name': 'Jungle',
+            'category': '',
+            'purchase_price_min': '',
+        },
+    )
+    assert search.model_dump(exclude_unset=True) == {'set_name': 'Jungle'}
+
+
+def test_item_search_invalid_enum_name() -> None:
+    with pytest.raises(ValidationError, match='Invalid Category: Bulbasaur'):
+        schemas.ItemSearch.model_validate({'category': 'Bulbasaur'})

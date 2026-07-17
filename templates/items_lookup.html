@@ -29,7 +29,7 @@
         <select name="category" id="category_search_select">
           <option value="">Any</option>
           {% for category in category_enum %}
-            <option value="{{ category.name }}" {% if form_data and form_data.category == category.name %}selected{% endif %}>
+            <option value="{{ category.name }}" {% if form_data and form_data.category == category %}selected{% endif %}>
               {{ category.name.title() }}
             </option>
           {% endfor %}
@@ -39,7 +39,7 @@
         <select name="language" id="language_search_select">
           <option value="">Any</option>
           {% for language in language_enum %}
-            <option value="{{ language.name }}" {% if form_data and form_data.language == language.name %}selected{% endif %}>
+            <option value="{{ language.name }}" {% if form_data and form_data.language == language %}selected{% endif %}>
               {{ language.name.title().replace('_', ' ') }}
             </option>
           {% endfor %}
@@ -51,7 +51,7 @@
           {% for intent in intent_enum %}
             <option
               value="{{ intent.name }}"
-              {% if form_data and form_data.intent == intent.name or (not form_data or not form_data.intent) and intent.name == 'GRADE' %}
+              {% if form_data and form_data.intent == intent or (not form_data or not form_data.intent) and intent.name == 'GRADE' %}
                 selected
               {% endif %}
             >
@@ -66,7 +66,7 @@
           {% for status in status_enum %}
             <option
               value="{{ status.name }}"
-              {% if form_data and form_data.status == status.name or (not form_data or not form_data.status) and status.name == 'STORAGE' %}
+              {% if form_data and form_data.status == status or (not form_data or not form_data.status) and status.name == 'STORAGE' %}
                 selected
               {% endif %}
             >
@@ -88,7 +88,7 @@
             <input
               type="checkbox"
               name="qualifiers"
-              value="{{ qualifier.name }}" {% if form_data and qualifier.name in form_data.qualifiers %}checked{% endif %}
+              value="{{ qualifier.name }}" {% if form_data and qualifier in form_data.qualifiers %}checked{% endif %}
             >
             {{ qualifier.name.title().replace('_', ' ') }}
           </label><br>
@@ -101,7 +101,7 @@
             <input
               type="checkbox"
               name="qualifiers"
-              value="{{ qualifier.name }}" {% if form_data and qualifier.name in form_data.qualifiers %}checked{% endif %}
+              value="{{ qualifier.name }}" {% if form_data and qualifier in form_data.qualifiers %}checked{% endif %}
             >
             {{ qualifier.name.title().replace('_', ' ') }}
           </label><br>
