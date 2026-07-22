@@ -56,7 +56,8 @@ def db_session(engine: Engine) -> Generator[Session, None, None]:
         yield db
     finally:
         db.close()
-        transaction.rollback()
+        if transaction.is_active:
+            transaction.rollback()
         connection.close()
 
 

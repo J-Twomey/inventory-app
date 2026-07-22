@@ -86,7 +86,7 @@ SearchQuery = Annotated[ItemSearch, Depends(item_search_from_query)]
 
 @router.get('/', response_class=HTMLResponse)
 def read_root(request: Request) -> Response:
-    return templates.TemplateResponse('index.html', {'request': request})
+    return templates.TemplateResponse(request, 'index.html')
 
 
 @router.get('/items_view', response_class=HTMLResponse)
@@ -120,9 +120,9 @@ def view_items(
         num_results=num_results,
     )
     return templates.TemplateResponse(
+        request,
         'items_view.html',
         {
-            'request': request,
             'items': items,
             'form_data': search_data,
             'qualifier_enum': Qualifier,
@@ -144,9 +144,9 @@ def view_items(
 @router.get('/add_item', response_class=HTMLResponse)
 def show_add_item_form(request: Request) -> Response:
     return templates.TemplateResponse(
+        request,
         'add_item.html',
         {
-            'request': request,
             'qualifier_enum': Qualifier,
             'category_enum': Category,
             'language_enum': Language,
@@ -189,9 +189,9 @@ def open_edit_item_form(
     if item is None:
         raise HTTPException(status_code=404, detail='Item not found')
     return templates.TemplateResponse(
+        request,
         'edit_item.html',
         {
-            'request': request,
             'item': item,
             'qualifier_enum': Qualifier,
             'category_enum': Category,
@@ -232,9 +232,9 @@ def view_submissions_summary(
         num_results=num_results,
     )
     return templates.TemplateResponse(
+        request,
         'submissions_summary_view.html',
         {
-            'request': request,
             'submission_summaries': submissions,
             'show_limit': show_limit,
             'prev_url': prev_url,
@@ -300,9 +300,9 @@ def view_grading_records(
         num_results=num_results,
     )
     return templates.TemplateResponse(
+        request,
         'grading_records_view.html',
         {
-            'request': request,
             'records': grading_records,
             'show_limit': show_limit,
             'prev_url': prev_url,
@@ -318,9 +318,9 @@ def show_add_submission_form(
 ) -> Response:
     current_max_sub_number = get_max_sub_number(db)
     return templates.TemplateResponse(
+        request,
         'add_submission.html',
         {
-            'request': request,
             'next_new_sub_num': current_max_sub_number + 1,
             'grading_company_enum': GradingCompany,
         },
@@ -353,9 +353,9 @@ def submit_add_submission_form(
             else str(e)
         )
         return templates.TemplateResponse(
+            request,
             'add_submission.html',
             {
-                'request': request,
                 'item_ids': item_ids,
                 'submission_number': submission_number,
                 'submission_company': submission_company,
@@ -390,9 +390,9 @@ def items_lookup(
         num_results=num_results,
     )
     return templates.TemplateResponse(
+        request,
         'items_lookup.html',
         {
-            'request': request,
             'items': items,
             'form_data': search_data,
             'qualifier_enum': Qualifier,
@@ -453,9 +453,9 @@ def open_edit_grading_record_form(
     if record is None:
         raise HTTPException(status_code=404, detail='Grading_record not found')
     return templates.TemplateResponse(
+        request,
         'edit_grading_record.html',
         {
-            'request': request,
             'record': record,
             'grading_company_enum': GradingCompany,
         },
@@ -476,9 +476,9 @@ def submit_edit_grading_record(
         if record is None:
             raise HTTPException(status_code=404, detail='Grading_record not found') from None
         return templates.TemplateResponse(
+            request,
             'edit_grading_record.html',
             {
-                'request': request,
                 'record': record,
                 'grading_company_enum': GradingCompany,
                 'error_message': str(e),
