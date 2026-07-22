@@ -211,6 +211,9 @@ def create_submission(
             perform_item_update(linked_item, item_update)
 
         db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise SubmissionNumberConflictError from None
     except Exception:
         db.rollback()
         raise

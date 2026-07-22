@@ -150,6 +150,84 @@ def test_submit_edit_grading_record(
     assert record.is_cracked is True
 
 
+def test_submit_edit_grading_record_partial_required_fields_shows_error(
+    client: TestClient,
+    item_with_submissions_factory: Callable[..., Item],
+) -> None:
+    item = item_with_submissions_factory()
+    record = item.submissions[0]
+    assert record.grading_fee is None
+    assert record.grade is None
+    assert record.cert is None
+
+    response = client.post(
+        f'/grading_record_edit/{record.id}',
+        data={'grading_fee': '', 'grade': '9.5', 'cert': ''},
+        follow_redirects=False,
+    )
+    assert response.status_code == 200
+    assert 'Updating a record from graded to graded requires setting all of' in response.text
+    assert record.grade is None
+
+
+def test_add_submission_duplicate_sub_number_shows_error(
+    client: TestClient,
+    db_session: Session,
+    item_factory: ItemFactory,
+) -> None:
+    first_item = item_factory.get(idx=1, intent=item_enums.Intent.GRADE)
+    second_item = item_factory.get(idx=2, intent=item_enums.Intent.GRADE)
+    db_session.add_all([first_item, second_item])
+    db_session.flush()
+
+    first = client.post(
+        '/add_submission',
+        data={
+            'submission_number': '5',
+            'submission_company': 'PSA',
+            'submission_date': '2025-06-01',
+            'item_ids': [str(first_item.id)],
+        },
+        follow_redirects=False,
+    )
+    assert first.status_code == 303
+
+    duplicate = client.post(
+        '/add_submission',
+        data={
+            'submission_number': '5',
+            'submission_company': 'PSA',
+            'submission_date': '2025-06-01',
+            'item_ids': [str(second_item.id)],
+        },
+        follow_redirects=False,
+    )
+    assert duplicate.status_code == 200
+    assert 'Submission number 5 is not valid' in duplicate.text
+
+
+def test_add_submission_negative_sub_number_shows_error(
+    client: TestClient,
+    db_session: Session,
+    item_factory: ItemFactory,
+) -> None:
+    item = item_factory.get(idx=1, intent=item_enums.Intent.GRADE)
+    db_session.add(item)
+    db_session.flush()
+
+    submission = client.post(
+        '/add_submission',
+        data={
+            'submission_number': '-1',
+            'submission_company': 'PSA',
+            'submission_date': '2025-06-01',
+            'item_ids': [str(item.id)],
+        },
+        follow_redirects=False,
+    )
+    assert submission.status_code == 200
+
+
 def test_submit_edit_grading_record_unchecked_checkbox_clears_is_cracked(
     client: TestClient,
     item_with_submissions_factory: Callable[..., Item],

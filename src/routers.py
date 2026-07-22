@@ -346,8 +346,12 @@ def submit_add_submission_form(
     )
     try:
         create_submission(db, submission_summary, item_ids)
-    except ValueError as e:
-        error_message = str(e)
+    except (ValueError, SubmissionNumberConflictError) as e:
+        error_message = (
+            f'Submission number {submission_number} is not valid'
+            if isinstance(e, SubmissionNumberConflictError)
+            else str(e)
+        )
         return templates.TemplateResponse(
             'add_submission.html',
             {
@@ -458,13 +462,28 @@ def open_edit_grading_record_form(
     )
 
 
-@router.post('/grading_record_edit/{grading_record_id}', response_class=RedirectResponse)
+@router.post('/grading_record_edit/{grading_record_id}')
 def submit_edit_grading_record(
     grading_record_id: int,
+    request: Request,
     edit_params: Annotated[GradingRecordUpdate, Form()],
     db: DbSession,
-) -> RedirectResponse:
-    edit_result = edit_grading_record(db, grading_record_id, edit_params)
+) -> Response:
+    try:
+        edit_result = edit_grading_record(db, grading_record_id, edit_params)
+    except ValueError as e:
+        record = get_grading_record(db, grading_record_id)
+        if record is None:
+            raise HTTPException(status_code=404, detail='Grading_record not found') from None
+        return templates.TemplateResponse(
+            'edit_grading_record.html',
+            {
+                'request': request,
+                'record': record,
+                'grading_company_enum': GradingCompany,
+                'error_message': str(e),
+            },
+        )
     return RedirectResponse('/grading_records_view', status_code=edit_result)
 
 
