@@ -160,13 +160,11 @@ def test_submission_return_date_not_before_submission_date() -> None:
 
 
 def test_submission_return_date_before_submission_date() -> None:
-    with pytest.raises(ValidationError) as e:
+    with pytest.raises(ValidationError, match='Return date cannot be before submission date'):
         schemas.SubmissionBase(
             submission_date=date(2026, 1, 10),
             return_date=date(2026, 1, 5),
         )
-    error_msg = e.value.errors()[0]['msg']
-    assert 'Return date cannot be before submission date' in error_msg
 
 
 def test_check_required_fields_based_on_status_no_error(
@@ -262,7 +260,10 @@ def test_appropriate_listing_type_no_error_is_closed(item_base_factory: ItemBase
 
 
 def test_appropriate_listing_type_listing_error(item_base_factory: ItemBaseFactory) -> None:
-    with pytest.raises(ValidationError) as e:
+    with pytest.raises(
+        ValidationError,
+        match='Item cannot have list_type of NO_LIST if listed or sold',
+    ):
         item_base_factory.get(
             purchase_date=date(2025, 5, 5),
             status=item_enums.Status.LISTED,
@@ -270,19 +271,18 @@ def test_appropriate_listing_type_listing_error(item_base_factory: ItemBaseFacto
             list_date=date(2025, 5, 6),
             list_price=1.0,
         )
-    error_msg = e.value.errors()[0]['msg']
-    assert 'Item cannot have list_type of NO_LIST if listed or sold' in error_msg
 
 
 def test_appropriate_listing_type_storage_error(item_base_factory: ItemBaseFactory) -> None:
-    with pytest.raises(ValidationError) as e:
+    with pytest.raises(
+        ValidationError,
+        match='Item cannot have a list_type other than NO_LIST if not listed or sold',
+    ):
         item_base_factory.get(
             purchase_date=date(2025, 5, 5),
             status=item_enums.Status.STORAGE,
             list_type=item_enums.ListingType.FIXED,
         )
-    error_msg = e.value.errors()[0]['msg']
-    assert 'Item cannot have a list_type other than NO_LIST if not listed or sold' in error_msg
 
 
 def test_appropriate_group_discount_no_discount(item_base_factory: ItemBaseFactory) -> None:
@@ -307,13 +307,14 @@ def test_appropriate_group_discount_no_error(item_base_factory: ItemBaseFactory)
 
 
 def test_appropriate_group_discount_error(item_base_factory: ItemBaseFactory) -> None:
-    with pytest.raises(ValidationError) as e:
+    with pytest.raises(
+        ValidationError,
+        match='Group discount cannot be assigned to an unsold item',
+    ):
         item_base_factory.get(
             status=item_enums.Status.STORAGE,
             group_discount=True,
         )
-    error_msg = e.value.errors()[0]['msg']
-    assert 'Group discount cannot be assigned to an unsold item' in error_msg
 
 
 def test_appropriate_audit_target_no_error(item_base_factory: ItemBaseFactory) -> None:
@@ -324,7 +325,10 @@ def test_appropriate_audit_target_no_error(item_base_factory: ItemBaseFactory) -
 
 
 def test_appropriate_audit_target_listing_error(item_base_factory: ItemBaseFactory) -> None:
-    with pytest.raises(ValidationError) as e:
+    with pytest.raises(
+        ValidationError,
+        match='Item assigned as an audit target can not be listed or closed',
+    ):
         item_base_factory.get(
             purchase_date=date(2025, 5, 5),
             status=item_enums.Status.LISTED,
@@ -334,12 +338,13 @@ def test_appropriate_audit_target_listing_error(item_base_factory: ItemBaseFacto
             list_price=1.0,
             audit_target=True,
         )
-    error_msg = e.value.errors()[0]['msg']
-    assert 'Item assigned as an audit target can not be listed or closed' in error_msg
 
 
 def test_appropriate_audit_target_closed_error(item_base_factory: ItemBaseFactory) -> None:
-    with pytest.raises(ValidationError) as e:
+    with pytest.raises(
+        ValidationError,
+        match='Item assigned as an audit target can not be listed or closed',
+    ):
         item_base_factory.get(
             purchase_date=date(2025, 5, 5),
             status=item_enums.Status.CLOSED,
@@ -354,8 +359,6 @@ def test_appropriate_audit_target_closed_error(item_base_factory: ItemBaseFactor
             usd_to_jpy_rate=150.0,
             audit_target=True,
         )
-    error_msg = e.value.errors()[0]['msg']
-    assert 'Item assigned as an audit target can not be listed or closed' in error_msg
 
 
 def test_appropriate_status_based_on_intent_no_error(
@@ -370,13 +373,14 @@ def test_appropriate_status_based_on_intent_no_error(
 def test_appropriate_status_based_on_intent_error_case(
     item_create_factory: ItemCreateFactory,
 ) -> None:
-    with pytest.raises(ValidationError) as e:
+    with pytest.raises(
+        ValidationError,
+        match='Item can not have status of SUBMITTED with intent of SELL',
+    ):
         item_create_factory.get(
             status=item_enums.Status.SUBMITTED,
             intent=item_enums.Intent.SELL,
         )
-    error_msg = e.value.errors()[0]['msg']
-    assert 'Item can not have status of SUBMITTED with intent of SELL' in error_msg
 
 
 def test_item_create_parses_form_string_values() -> None:
