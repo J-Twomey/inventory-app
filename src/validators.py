@@ -105,6 +105,5 @@ def check_valid_grading_record_update(
         )
         if any(changes) and not all(changes):
             raise ValueError(
-                'Updating a record from graded to graded requires setting all of grading_fee, '
-                'grade, and cert',
+                'Adding grading info to a record requires all of grading fee, grade, and cert',
             )

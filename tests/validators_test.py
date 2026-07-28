@@ -40,10 +40,7 @@ def test_check_valid_grading_record_update_changes_ng(
     update = GradingRecordUpdate(grading_fee=100, grade=9.5, cert=None)
     with pytest.raises(
         ValueError,
-        match=(
-            'Updating a record from graded to graded requires setting all of grading_fee, '
-            'grade, and cert'
-        ),
+        match=('Adding grading info to a record requires all of grading fee, grade, and cert'),
     ):
         validators.check_valid_grading_record_update(record, update)
 

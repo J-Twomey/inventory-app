@@ -166,7 +166,10 @@ def test_submit_edit_grading_record_partial_required_fields_shows_error(
         follow_redirects=False,
     )
     assert response.status_code == 200
-    assert 'Updating a record from graded to graded requires setting all of' in response.text
+    assert (
+        'Adding grading info to a record requires all of grading fee, grade, and cert'
+        in response.text
+    )
     assert record.grade is None
 
 
