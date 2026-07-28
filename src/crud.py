@@ -32,6 +32,7 @@ from .schemas import (
 )
 from .validators import (
     check_intent,
+    check_no_duplicate_items_in_submission,
     check_status,
     check_valid_grading_record_update,
     check_valid_intent_or_status_update,
@@ -182,6 +183,7 @@ def create_submission(
     submission_summary: SubmissionCreate,
     item_ids: list[int],
 ) -> None:
+    check_no_duplicate_items_in_submission(item_ids)
     linked_items: list[Item] = []
     for item_id in item_ids:
         linked_item = get_item(db, item_id)

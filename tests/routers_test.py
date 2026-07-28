@@ -3,7 +3,10 @@ from collections.abc import Callable
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from src import item_enums
+from src import (
+    crud,
+    item_enums,
+)
 from src.models import Item
 
 from .conftest import ItemFactory
@@ -207,6 +210,30 @@ def test_add_submission_duplicate_sub_number_shows_error(
     )
     assert duplicate.status_code == 200
     assert 'Submission number 5 is not valid' in duplicate.text
+
+
+def test_add_submission_duplicate_item_ids_shows_error(
+    client: TestClient,
+    db_session: Session,
+    item_factory: ItemFactory,
+) -> None:
+    item = item_factory.get(idx=1, intent=item_enums.Intent.GRADE)
+    db_session.add(item)
+    db_session.flush()
+
+    response = client.post(
+        '/add_submission',
+        data={
+            'submission_number': '5',
+            'submission_company': 'PSA',
+            'submission_date': '2025-06-01',
+            'item_ids': [str(item.id), str(item.id)],
+        },
+        follow_redirects=False,
+    )
+    assert response.status_code == 200
+    assert 'Cannot add the same item to a submission more than once' in response.text
+    assert crud.get_total_number_of_submissions(db_session) == 0
 
 
 def test_add_submission_negative_sub_number_shows_error(

@@ -96,3 +96,17 @@ def test_check_valid_merged_item_state_date_conflict(item_factory: ItemFactory) 
     update = ItemUpdate(sale_date=date(2025, 5, 20))
     with pytest.raises(ValueError, match='Sale date cannot be before listing date'):
         validators.check_valid_merged_item_state(item, update)
+
+
+def test_check_no_duplicate_items_in_submission_no_duplicate() -> None:
+    item_ids = [1, 2, 3]
+    validators.check_no_duplicate_items_in_submission(item_ids)
+
+
+def test_check_no_duplicate_items_in_submission_has_duplicate() -> None:
+    item_ids = [1, 2, 1]
+    with pytest.raises(
+        ValueError,
+        match='Cannot add the same item to a submission more than once',
+    ):
+        validators.check_no_duplicate_items_in_submission(item_ids)

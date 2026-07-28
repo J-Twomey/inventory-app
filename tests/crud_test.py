@@ -584,6 +584,30 @@ def test_get_max_sub_number_with_skipped_number(
     assert result == max(sub_nums)
 
 
+def test_create_submission_duplicate_item_ids_rejected(
+    db_session: Session,
+    item_factory: ItemFactory,
+) -> None:
+    item = item_factory.get(idx=1, intent=item_enums.Intent.GRADE)
+    db_session.add(item)
+    db_session.flush()
+
+    submission_summary = schemas.SubmissionCreate(
+        submission_number=1,
+        submission_company=item_enums.GradingCompany.PSA,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match='Cannot add the same item to a submission more than once',
+    ):
+        crud.create_submission(db_session, submission_summary, [item.id, item.id])
+
+    assert crud.get_max_sub_number(db_session) == 0
+    db_session.refresh(item)
+    assert item.status == item_enums.Status.STORAGE
+
+
 def test_edit_submission_return_date_before_submission_date_rejected(
     db_session: Session,
     submission_factory: SubmissionFactory,

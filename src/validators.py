@@ -89,6 +89,15 @@ def check_valid_merged_item_state(
     ItemCreate(**merged)
 
 
+def check_no_duplicate_items_in_submission(item_ids: list[int]) -> None:
+    duplicate_ids = sorted({i for i in item_ids if item_ids.count(i) > 1})
+    if duplicate_ids:
+        joined = ', '.join(str(i) for i in duplicate_ids)
+        raise ValueError(
+            f'Cannot add the same item to a submission more than once (item {joined})',
+        )
+
+
 def check_valid_submission_field_update(
     submission: Submission,
     field: str,
