@@ -152,6 +152,23 @@ def test_item_base_sale_date_before_list_date(item_base_factory: ItemBaseFactory
     ) in error_msg
 
 
+def test_submission_return_date_not_before_submission_date() -> None:
+    schemas.SubmissionBase(
+        submission_date=date(2026, 1, 10),
+        return_date=date(2026, 1, 10),
+    )
+
+
+def test_submission_return_date_before_submission_date() -> None:
+    with pytest.raises(ValidationError) as e:
+        schemas.SubmissionBase(
+            submission_date=date(2026, 1, 10),
+            return_date=date(2026, 1, 5),
+        )
+    error_msg = e.value.errors()[0]['msg']
+    assert 'Return date cannot be before submission date' in error_msg
+
+
 def test_check_required_fields_based_on_status_no_error(
     item_base_factory: ItemBaseFactory,
 ) -> None:

@@ -582,3 +582,62 @@ def test_get_max_sub_number_with_skipped_number(
 
     result = crud.get_max_sub_number(db_session)
     assert result == max(sub_nums)
+
+
+def test_edit_submission_return_date_before_submission_date_rejected(
+    db_session: Session,
+    submission_factory: SubmissionFactory,
+) -> None:
+    submission = submission_factory.get(submission_date=date(2026, 1, 10))
+    db_session.add(submission)
+    db_session.flush()
+
+    with pytest.raises(ValueError, match='Return date cannot be before submission date'):
+        crud.edit_submission_single_field(
+            db_session,
+            submission.id,
+            'return_date',
+            date(2026, 1, 5),
+        )
+
+    db_session.refresh(submission)
+    assert submission.return_date is None
+
+
+def test_edit_submission_submission_date_after_return_date_rejected(
+    db_session: Session,
+    submission_factory: SubmissionFactory,
+) -> None:
+    submission = submission_factory.get(return_date=date(2026, 1, 10))
+    db_session.add(submission)
+    db_session.flush()
+
+    with pytest.raises(ValueError, match='Return date cannot be before submission date'):
+        crud.edit_submission_single_field(
+            db_session,
+            submission.id,
+            'submission_date',
+            date(2026, 1, 20),
+        )
+
+    db_session.refresh(submission)
+    assert submission.submission_date is None
+
+
+def test_edit_submission_return_date_on_or_after_submission_date_allowed(
+    db_session: Session,
+    submission_factory: SubmissionFactory,
+) -> None:
+    submission = submission_factory.get(submission_date=date(2026, 1, 10))
+    db_session.add(submission)
+    db_session.flush()
+
+    crud.edit_submission_single_field(
+        db_session,
+        submission.id,
+        'return_date',
+        date(2026, 1, 10),
+    )
+
+    db_session.refresh(submission)
+    assert submission.return_date == date(2026, 1, 10)

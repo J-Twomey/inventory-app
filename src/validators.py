@@ -5,11 +5,13 @@ from .item_enums import (
 from .models import (
     GradingRecord,
     Item,
+    Submission,
 )
 from .schemas import (
     GradingRecordUpdate,
     ItemCreate,
     ItemUpdate,
+    SubmissionBase,
 )
 
 
@@ -85,6 +87,16 @@ def check_valid_merged_item_state(
     # mirror perform_item_update, which overwrites qualifiers even with an empty list
     merged['qualifiers'] = item_update.qualifiers
     ItemCreate(**merged)
+
+
+def check_valid_submission_field_update(
+    submission: Submission,
+    field: str,
+    update_value: object,
+) -> None:
+    merged = {f: getattr(submission, f) for f in SubmissionBase.model_fields}
+    merged[field] = update_value
+    SubmissionBase(**merged)
 
 
 def check_valid_grading_record_update(

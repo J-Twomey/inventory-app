@@ -36,6 +36,7 @@ from .validators import (
     check_valid_grading_record_update,
     check_valid_intent_or_status_update,
     check_valid_merged_item_state,
+    check_valid_submission_field_update,
 )
 
 
@@ -264,6 +265,7 @@ def edit_submission_single_field(
     submission = get_submission(db, submission_id)
     if submission is None:
         raise SubmissionNotFoundError
+    check_valid_submission_field_update(submission, field, update_value)
     try:
         setattr(submission, field, update_value)
         db.commit()

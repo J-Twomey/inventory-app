@@ -265,6 +265,14 @@ def update_submission_summary_field(
             status_code=200,
             content={'success': True},
         )
+    except ValueError as v:
+        return JSONResponse(
+            status_code=422,
+            content={
+                'success': False,
+                'error_message': str(v),
+            },
+        )
     except SubmissionNotFoundError:
         return JSONResponse(
             status_code=404,

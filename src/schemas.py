@@ -307,6 +307,20 @@ class SubmissionBase(BaseModel):
     return_date: date | None = None
     break_even_date: date | None = None
 
+    @model_validator(mode='after')
+    def return_date_not_before_submission_date(self) -> Self:
+        if (
+            self.submission_date is not None
+            and self.return_date is not None
+            and self.return_date < self.submission_date
+        ):
+            raise ValueError(
+                f'Return date cannot be before submission date '
+                f'(got return date: {self.return_date}, '
+                f'submission date: {self.submission_date})',
+            )
+        return self
+
 
 class SubmissionCreate(SubmissionBase):
     submission_number: int
