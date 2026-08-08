@@ -80,6 +80,10 @@ class ItemBase(BaseModel):
     audit_target: bool = False
     cracked_from_purchase: bool = False
 
+    @classmethod
+    def checkbox_fields(cls) -> set[str]:
+        return {f for f, info in cls.model_fields.items() if info.annotation is bool}
+
     @field_validator('*', mode='before')
     @classmethod
     def empty_str_to_none(
@@ -88,12 +92,7 @@ class ItemBase(BaseModel):
         info: ValidationInfo,
     ) -> T | None:
         # Empty string is handled differently for these fields
-        if info.field_name in {
-            'qualifiers',
-            'group_discount',
-            'audit_target',
-            'cracked_from_purchase',
-        }:
+        if info.field_name in {'qualifiers', *cls.checkbox_fields()}:
             return v
         if v == '':
             return None
@@ -219,8 +218,7 @@ class ItemUpdate(ItemBase):
     def default_unchecked_checkboxes(cls, data: object) -> object:
         if isinstance(data, dict):
             data = {k: v for k, v in data.items() if v is not None}
-            # an unchecked box is not submitted at all, so it has to be filled in as False
-            for checkbox in ('group_discount', 'audit_target', 'cracked_from_purchase'):
+            for checkbox in cls.checkbox_fields():
                 data.setdefault(checkbox, False)
         return data
 
@@ -354,6 +352,10 @@ class GradingRecordBase(BaseModel):
     cert: int | None = None
     is_cracked: bool = False
 
+    @classmethod
+    def checkbox_fields(cls) -> set[str]:
+        return {f for f, info in cls.model_fields.items() if info.annotation is bool}
+
 
 class GradingRecordCreate(GradingRecordBase):
     item_id: int
@@ -369,7 +371,8 @@ class GradingRecordUpdate(GradingRecordBase):
     def treat_empty_fields_as_unset(cls, data: object) -> object:
         if isinstance(data, dict):
             data = {k: v for k, v in data.items() if v is not None and v != ''}
-            data.setdefault('is_cracked', False)
+            for checkbox in cls.checkbox_fields():
+                data.setdefault(checkbox, False)
         return data
 
     def to_model_kwargs(self) -> dict[str, Any]:
