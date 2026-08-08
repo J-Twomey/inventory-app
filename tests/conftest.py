@@ -175,6 +175,22 @@ def item_factory() -> ItemFactory:
     return ItemFactory()
 
 
+def closed_item(item_factory: ItemFactory) -> Item:
+    return item_factory.get(
+        idx=1,
+        status=item_enums.Status.CLOSED,
+        intent=item_enums.Intent.SELL,
+        list_type=item_enums.ListingType.AUCTION,
+        list_price=2000.0,
+        list_date=date(2026, 1, 1),
+        sale_total=3000.0,
+        sale_date=date(2026, 2, 1),
+        shipping=500.0,
+        sale_fee=300.0,
+        usd_to_jpy_rate=150.0,
+    )
+
+
 class ItemBaseFactory:
     def get(
         self,

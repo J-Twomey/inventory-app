@@ -110,3 +110,14 @@ def test_check_no_duplicate_items_in_submission_has_duplicate() -> None:
         match='Cannot add the same item to a submission more than once',
     ):
         validators.check_no_duplicate_items_in_submission(item_ids)
+
+
+def test_check_required_fields_not_removed_no_removal() -> None:
+    update = ItemUpdate.model_validate({'name': 'Golem', 'purchase_grade': ''})
+    validators.check_required_fields_not_removed(update)
+
+
+def test_check_required_fields_not_removed_removal_rejected() -> None:
+    update = ItemUpdate.model_validate({'name': '', 'purchase_price': ''})
+    with pytest.raises(ValueError, match='The following fields cannot be removed'):
+        validators.check_required_fields_not_removed(update)

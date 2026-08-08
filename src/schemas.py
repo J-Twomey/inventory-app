@@ -138,16 +138,6 @@ class ItemBase(BaseModel):
         return self
 
     @model_validator(mode='after')
-    def check_required_fields_based_on_status(self) -> Self:
-        if self.status is not None:
-            missing = [f for f in self.status.required_fields if getattr(self, f) is None]
-            if len(missing) > 0:
-                raise ValueError(
-                    f'Status {self.status.name} requires the following missing fields: {missing}',
-                )
-        return self
-
-    @model_validator(mode='after')
     def check_required_null_fields_based_on_status(self) -> Self:
         if self.status is not None:
             not_null = [f for f in self.status.required_to_be_null if getattr(self, f) is not None]
@@ -205,6 +195,15 @@ class ItemCreate(ItemBase):
         return self.model_dump(exclude=exclude)
 
     @model_validator(mode='after')
+    def check_required_fields_based_on_status(self) -> Self:
+        missing = [f for f in self.status.required_fields if getattr(self, f) is None]
+        if len(missing) > 0:
+            raise ValueError(
+                f'Status {self.status.name} requires the following missing fields: {missing}',
+            )
+        return self
+
+    @model_validator(mode='after')
     def appropriate_status_based_on_intent(self) -> Self:
         if self.status not in self.intent.allowed_statuses:
             raise ValueError(
@@ -217,9 +216,10 @@ class ItemCreate(ItemBase):
 class ItemUpdate(ItemBase):
     @model_validator(mode='before')
     @classmethod
-    def treat_empty_fields_as_unset(cls, data: object) -> object:
+    def default_unchecked_checkboxes(cls, data: object) -> object:
         if isinstance(data, dict):
-            data = {k: v for k, v in data.items() if v is not None and v != ''}
+            data = {k: v for k, v in data.items() if v is not None}
+            # an unchecked box is not submitted at all, so it has to be filled in as False
             for checkbox in ('group_discount', 'audit_target', 'cracked_from_purchase'):
                 data.setdefault(checkbox, False)
         return data

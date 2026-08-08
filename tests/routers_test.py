@@ -9,7 +9,10 @@ from src import (
 )
 from src.models import Item
 
-from .conftest import ItemFactory
+from .conftest import (
+    ItemFactory,
+    closed_item,
+)
 
 
 def test_read_root(client: TestClient) -> None:
@@ -278,3 +281,125 @@ def test_submit_edit_grading_record_unchecked_checkbox_clears_is_cracked(
     )
     assert response.status_code == 303
     assert record.is_cracked is False
+
+
+def test_submit_edit_item_closed_status_change_shows_error(
+    client: TestClient,
+    db_session: Session,
+    item_factory: ItemFactory,
+) -> None:
+    item = closed_item(item_factory)
+    db_session.add(item)
+    db_session.flush()
+
+    response = client.post(
+        f'/edit/{item.id}',
+        data={'status': 'STORAGE'},
+        follow_redirects=False,
+    )
+    assert response.status_code == 200
+    assert 'requires the following fields to be null' in response.text
+    db_session.refresh(item)
+    assert item.status == item_enums.Status.CLOSED
+
+
+def test_submit_edit_item_closed_to_storage_clearing_sale_fields(
+    client: TestClient,
+    db_session: Session,
+    item_factory: ItemFactory,
+) -> None:
+    item = closed_item(item_factory)
+    db_session.add(item)
+    db_session.flush()
+
+    response = client.post(
+        f'/edit/{item.id}',
+        data={
+            'status': 'STORAGE',
+            'sale_total': '',
+            'sale_date': '',
+            'shipping': '',
+            'sale_fee': '',
+            'usd_to_jpy_rate': '',
+            'list_price': '',
+            'list_date': '',
+            'list_type': 'NO_LIST',
+        },
+        follow_redirects=False,
+    )
+    assert response.status_code == 303
+    db_session.refresh(item)
+    assert item.status == item_enums.Status.STORAGE
+    assert item.sale_total is None
+    assert item.sale_date is None
+    assert item.list_price is None
+
+
+def test_submit_edit_item_closed_to_listed_keeps_existing_list_fields(
+    client: TestClient,
+    db_session: Session,
+    item_factory: ItemFactory,
+) -> None:
+    item = closed_item(item_factory)
+    db_session.add(item)
+    db_session.flush()
+
+    response = client.post(
+        f'/edit/{item.id}',
+        data={
+            'status': 'LISTED',
+            'sale_total': '',
+            'sale_date': '',
+            'shipping': '',
+            'sale_fee': '',
+            'usd_to_jpy_rate': '',
+        },
+        follow_redirects=False,
+    )
+    assert response.status_code == 303
+    db_session.refresh(item)
+    assert item.status == item_enums.Status.LISTED
+    assert item.list_price == 2000.0
+    assert item.sale_total is None
+
+
+def test_submit_edit_item_invalid_intent_status_pair_shows_error(
+    client: TestClient,
+    db_session: Session,
+    item_factory: ItemFactory,
+) -> None:
+    item = closed_item(item_factory)
+    db_session.add(item)
+    db_session.flush()
+
+    response = client.post(
+        f'/edit/{item.id}',
+        data={'status': 'SUBMITTED'},
+        follow_redirects=False,
+    )
+    assert response.status_code == 200
+    assert 'Cannot update item with intent of SELL to have status of SUBMITTED' in response.text
+    db_session.refresh(item)
+    assert item.status == item_enums.Status.CLOSED
+
+
+def test_submit_edit_item_removing_required_field_shows_error(
+    client: TestClient,
+    db_session: Session,
+    item_factory: ItemFactory,
+) -> None:
+    item = item_factory.get(idx=1, name='KEEP_ME')
+    db_session.add(item)
+    db_session.flush()
+
+    response = client.post(
+        f'/edit/{item.id}',
+        data={'name': '', 'details': 'edited'},
+        follow_redirects=False,
+    )
+    assert response.status_code == 200
+    assert 'The following fields cannot be removed:' in response.text
+    assert 'name' in response.text
+    db_session.refresh(item)
+    assert item.name == 'KEEP_ME'
+    assert item.details is None

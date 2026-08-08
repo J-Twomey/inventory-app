@@ -33,6 +33,7 @@ from .schemas import (
 from .validators import (
     check_intent,
     check_no_duplicate_items_in_submission,
+    check_required_fields_not_removed,
     check_status,
     check_valid_grading_record_update,
     check_valid_intent_or_status_update,
@@ -153,6 +154,7 @@ def edit_item(
     item = get_item(db, item_id)
     if item is None:
         return 404
+    check_required_fields_not_removed(item_update)
     check_valid_intent_or_status_update(
         Intent(item.intent),
         Status(item.status),

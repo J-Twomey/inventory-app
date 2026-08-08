@@ -208,10 +208,32 @@ def open_edit_item_form(
 @router.post('/edit/{item_id}')
 def submit_edit_item(
     item_id: int,
+    request: Request,
     edit_params: Annotated[ItemUpdate, Form()],
     db: DbSession,
-) -> RedirectResponse:
-    edit_result = edit_item(db, item_id, edit_params)
+) -> Response:
+    try:
+        edit_result = edit_item(db, item_id, edit_params)
+    except ValueError as e:
+        item = get_item(db, item_id)
+        if item is None:
+            raise HTTPException(status_code=404, detail='Item not found') from None
+        return templates.TemplateResponse(
+            request,
+            'edit_item.html',
+            {
+                'item': item,
+                'qualifier_enum': Qualifier,
+                'category_enum': Category,
+                'language_enum': Language,
+                'status_enum': Status,
+                'intent_enum': Intent,
+                'grading_company_enum': GradingCompany,
+                'list_type_enum': ListingType,
+                'object_variant_enum': ObjectVariant,
+                'error_message': str(e),
+            },
+        )
     return RedirectResponse('/items_view', status_code=edit_result)
 
 

@@ -1,3 +1,5 @@
+from pydantic import ValidationError
+
 from .item_enums import (
     Intent,
     Status,
@@ -78,15 +80,31 @@ def check_valid_intent_or_status_update(
         )
 
 
+def check_required_fields_not_removed(item_update: ItemUpdate) -> None:
+    update_data = item_update.to_model_kwargs()
+    removed = [
+        field
+        for field, info in ItemCreate.model_fields.items()
+        if info.is_required() and field in update_data and update_data[field] is None
+    ]
+    if removed:
+        raise ValueError(f'The following fields cannot be removed: {removed}')
+
+
 def check_valid_merged_item_state(
     item: Item,
     item_update: ItemUpdate,
 ) -> None:
     merged = {f: getattr(item, f) for f in ItemCreate.model_fields}
     merged.update(item_update.to_model_kwargs())
-    # mirror perform_item_update, which overwrites qualifiers even with an empty list
+    # Mirror perform_item_update, which overwrites qualifiers even with an empty list
     merged['qualifiers'] = item_update.qualifiers
-    ItemCreate(**merged)
+    try:
+        ItemCreate(**merged)
+    except ValidationError as e:
+        # Unwrap pydantic's report
+        reasons = '; '.join(err['msg'].removeprefix('Value error, ') for err in e.errors())
+        raise ValueError(reasons) from None
 
 
 def check_no_duplicate_items_in_submission(item_ids: list[int]) -> None:

@@ -17,6 +17,7 @@ export function getOriginalFormValues(form) {
   return values;
 }
 
+// Checkboxes are always submitted, as an absent one is indistinguishable from an unchecked one
 export function disableUnchangedFields(form, originalValues) {
   for (const input of form.elements) {
     const name = input.name;
@@ -27,10 +28,6 @@ export function disableUnchangedFields(form, originalValues) {
       input.tagName.toLowerCase() === 'select'
     ) {
       if (input.value === originalValues[name]) {
-        input.disabled = true;
-      }
-    } else if (input.type === 'checkbox') {
-      if (input.checked === originalValues[name]) {
         input.disabled = true;
       }
     }

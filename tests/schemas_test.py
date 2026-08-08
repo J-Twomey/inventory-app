@@ -185,9 +185,9 @@ def test_submission_break_even_date_before_return_date() -> None:
 
 
 def test_check_required_fields_based_on_status_no_error(
-    item_base_factory: ItemBaseFactory,
+    item_create_factory: ItemCreateFactory,
 ) -> None:
-    item_base_factory.get(
+    item_create_factory.get(
         purchase_date=date(2025, 5, 5),
         status=item_enums.Status.CLOSED,
         list_date=date(2025, 5, 6),
@@ -202,10 +202,10 @@ def test_check_required_fields_based_on_status_no_error(
 
 
 def test_check_required_fields_based_on_status_error_case(
-    item_base_factory: ItemBaseFactory,
+    item_create_factory: ItemCreateFactory,
 ) -> None:
     with pytest.raises(ValidationError) as e:
-        item_base_factory.get(
+        item_create_factory.get(
             purchase_date=date(2025, 5, 5),
             status=item_enums.Status.CLOSED,
             list_date=date(2025, 5, 6),
@@ -447,18 +447,29 @@ def test_item_create_qualifiers_default_to_empty(
     assert item.qualifiers == []
 
 
-def test_item_update_treats_empty_values_as_unset() -> None:
+def test_item_update_empty_required_value_is_kept_as_none() -> None:
     update = schemas.ItemUpdate.model_validate(
         {
             'name': 'Golem',
             'set_name': '',
             'status': 'STORAGE',
-            'purchase_grade': '',
         },
     )
     assert update.to_model_kwargs() == {
         'name': 'Golem',
+        'set_name': None,
         'status': item_enums.Status.STORAGE,
+        'group_discount': False,
+        'audit_target': False,
+        'cracked_from_purchase': False,
+    }
+
+
+def test_item_update_empty_optional_value_clears_field() -> None:
+    update = schemas.ItemUpdate.model_validate({'purchase_grade': '', 'sale_total': ''})
+    assert update.to_model_kwargs() == {
+        'purchase_grade': None,
+        'sale_total': None,
         'group_discount': False,
         'audit_target': False,
         'cracked_from_purchase': False,
