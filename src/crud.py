@@ -325,9 +325,9 @@ def delete_grading_record_by_id(
     if linked_item is None:
         raise ValueError(f'Item with id {record.item_id} not found')
 
-    # Return item status to STORAGE
-    item_update = ItemUpdate(status=Status.STORAGE)
-    perform_item_update(linked_item, item_update)
+    if all(getattr(linked_item, f) is None for f in Status.STORAGE.required_to_be_null):
+        item_update = ItemUpdate(status=Status.STORAGE)
+        perform_item_update(linked_item, item_update)
     perform_delete_grading_record(db, record)
     db.commit()
     return True

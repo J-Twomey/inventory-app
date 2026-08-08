@@ -665,3 +665,96 @@ def test_edit_submission_return_date_on_or_after_submission_date_allowed(
 
     db_session.refresh(submission)
     assert submission.return_date == date(2026, 1, 10)
+
+
+def test_delete_grading_record_returns_unsold_item_to_storage(
+    db_session: Session,
+    item_factory: ItemFactory,
+    submission_factory: SubmissionFactory,
+    grading_record_factory: GradingRecordFactory,
+) -> None:
+    item = item_factory.get(idx=1, status=item_enums.Status.SUBMITTED)
+    submission = submission_factory.get(idx=1)
+    db_session.add_all([item, submission])
+    db_session.flush()
+    record = grading_record_factory.get(idx=1, item_id=item.id, submission_id=submission.id)
+    db_session.add(record)
+    db_session.flush()
+
+    assert crud.delete_grading_record_by_id(db_session, record.id) is True
+
+    db_session.refresh(item)
+    assert item.status == item_enums.Status.STORAGE
+
+
+def test_delete_grading_record_keeps_sold_item_closed(
+    db_session: Session,
+    item_factory: ItemFactory,
+    submission_factory: SubmissionFactory,
+    grading_record_factory: GradingRecordFactory,
+) -> None:
+    item = item_factory.get(
+        idx=1,
+        status=item_enums.Status.CLOSED,
+        list_type=item_enums.ListingType.AUCTION,
+        list_price=2000.0,
+        list_date=date(2026, 1, 1),
+        sale_total=3000.0,
+        sale_date=date(2026, 2, 1),
+        shipping=500.0,
+        sale_fee=300.0,
+        usd_to_jpy_rate=150.0,
+    )
+    submission = submission_factory.get(idx=1)
+    db_session.add_all([item, submission])
+    db_session.flush()
+    record = grading_record_factory.get(
+        idx=1,
+        item_id=item.id,
+        submission_id=submission.id,
+        grading_fee=1000,
+        grade=9.0,
+        cert=12345,
+    )
+    db_session.add(record)
+    db_session.flush()
+
+    assert crud.delete_grading_record_by_id(db_session, record.id) is True
+
+    db_session.refresh(item)
+    assert item.status == item_enums.Status.CLOSED
+    assert item.sale_total == 3000.0
+
+
+def test_delete_grading_record_keeps_listed_item_listed(
+    db_session: Session,
+    item_factory: ItemFactory,
+    submission_factory: SubmissionFactory,
+    grading_record_factory: GradingRecordFactory,
+) -> None:
+    item = item_factory.get(
+        idx=1,
+        status=item_enums.Status.LISTED,
+        list_type=item_enums.ListingType.AUCTION,
+        list_price=2000.0,
+        list_date=date(2026, 1, 1),
+    )
+    submission = submission_factory.get(idx=1)
+    db_session.add_all([item, submission])
+    db_session.flush()
+    record = grading_record_factory.get(
+        idx=1,
+        item_id=item.id,
+        submission_id=submission.id,
+        grading_fee=1000,
+        grade=9.0,
+        cert=12345,
+    )
+    db_session.add(record)
+    db_session.flush()
+
+    assert crud.delete_grading_record_by_id(db_session, record.id) is True
+
+    db_session.refresh(item)
+    assert item.status == item_enums.Status.LISTED
+    assert item.list_price == 2000.0
