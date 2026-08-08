@@ -18,6 +18,15 @@ function showInlineError(cell, message) {
   }, 2000);
 }
 
+// Keeps the cell shading in step with an edited value, matching what a page reload would render
+function applyDateCellStyle(cell, value) {
+  if (cell.dataset.type !== 'date') return;
+
+  cell.classList.toggle('gray', value === '');
+  const filledClass = cell.dataset.filledClass;
+  if (filledClass) cell.classList.toggle(filledClass, value !== '');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('td.editable').forEach(cell => {
     cell.addEventListener('click', () => {
@@ -62,6 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
       setTimeout(() => {
         cell.textContent = newValue;
       }, 0);
+      applyDateCellStyle(cell, newValue);
 
       if (newValue !== oldValue) {
         fetch(window.location.origin + '/submissions_summary_edit', {
@@ -79,6 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(data => {
           if (!data.success) {
             cell.textContent = oldValue;
+            applyDateCellStyle(cell, oldValue);
             showInlineError(cell, data.error_message);
           }
         })
