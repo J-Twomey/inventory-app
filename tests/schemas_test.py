@@ -167,6 +167,23 @@ def test_submission_return_date_before_submission_date() -> None:
         )
 
 
+def test_submission_break_even_date_not_before_return_date() -> None:
+    schemas.SubmissionBase(
+        submission_date=date(2026, 1, 10),
+        return_date=date(2026, 1, 10),
+        break_even_date=date(2026, 1, 10),
+    )
+
+
+def test_submission_break_even_date_before_return_date() -> None:
+    with pytest.raises(ValidationError, match='Break even date cannot be before return date'):
+        schemas.SubmissionBase(
+            submission_date=date(2026, 1, 10),
+            return_date=date(2026, 1, 10),
+            break_even_date=date(2026, 1, 5),
+        )
+
+
 def test_check_required_fields_based_on_status_no_error(
     item_base_factory: ItemBaseFactory,
 ) -> None:
