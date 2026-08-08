@@ -283,7 +283,7 @@ def test_submit_edit_grading_record_unchecked_checkbox_clears_is_cracked(
     assert record.is_cracked is False
 
 
-def test_submit_edit_item_closed_status_change_shows_error(
+def test_submit_edit_item_closed_to_non_closed_without_removing_sale_info_shows_error(
     client: TestClient,
     db_session: Session,
     item_factory: ItemFactory,
@@ -303,7 +303,7 @@ def test_submit_edit_item_closed_status_change_shows_error(
     assert item.status == item_enums.Status.CLOSED
 
 
-def test_submit_edit_item_closed_to_storage_clearing_sale_fields(
+def test_submit_edit_item_closed_to_non_closed_with_removing_sale_info(
     client: TestClient,
     db_session: Session,
     item_factory: ItemFactory,
