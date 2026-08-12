@@ -74,6 +74,23 @@ def test_create_item_multiple_qualifiers(
     assert db_item.qualifiers == input_qualifiers
 
 
+def test_create_item_with_submitted_status_rejected(
+    db_session: Session,
+    item_create_factory: ItemCreateFactory,
+) -> None:
+    item = item_create_factory.get(
+        status=item_enums.Status.SUBMITTED,
+        intent=item_enums.Intent.GRADE,
+    )
+    with pytest.raises(
+        ValueError,
+        match='A new item cannot be created with a status of SUBMITTED',
+    ):
+        crud.create_item(db_session, item)
+
+    assert db_session.query(models.Item).count() == 0
+
+
 def test_get_item_returns_correct_item(
     db_session: Session,
     item_factory: ItemFactory,
@@ -481,6 +498,25 @@ def test_edit_item_rejects_invalid_merged_state(
     assert unchanged_item.list_price == 10.0
 
 
+def test_edit_item_to_submitted_without_active_record_rejected(
+    db_session: Session,
+    item_factory: ItemFactory,
+) -> None:
+    item = item_factory.get(idx=1, intent=item_enums.Intent.GRADE)
+    db_session.add(item)
+    db_session.flush()
+
+    update = schemas.ItemUpdate(status=item_enums.Status.SUBMITTED)
+    with pytest.raises(
+        ValueError,
+        match='An item can only be set to SUBMITTED by adding it to a submission',
+    ):
+        crud.edit_item(db_session, item.id, update)
+
+    db_session.refresh(item)
+    assert item.status == item_enums.Status.STORAGE
+
+
 def test_build_search_filters_no_special_case() -> None:
     params = {'name': 'Unown', 'set_name': 'Base Set'}
     filters, post_filters = crud.build_search_filters(params)
@@ -606,6 +642,28 @@ def test_create_submission_duplicate_item_ids_rejected(
     assert crud.get_max_sub_number(db_session) == 0
     db_session.refresh(item)
     assert item.status == item_enums.Status.STORAGE
+
+
+def test_create_submission_sets_item_to_submitted(
+    db_session: Session,
+    item_factory: ItemFactory,
+) -> None:
+    item = item_factory.get(idx=1, intent=item_enums.Intent.GRADE)
+    db_session.add(item)
+    db_session.flush()
+
+    submission_summary = schemas.SubmissionCreate(
+        submission_number=1,
+        submission_company=item_enums.GradingCompany.PSA,
+        submission_date=date(2026, 1, 1),
+    )
+    crud.create_submission(db_session, submission_summary, [item.id])
+
+    db_session.refresh(item)
+    assert item.status == item_enums.Status.SUBMITTED
+    assert len(item.submissions) == 1
+    assert item.submissions[0].grade is None
+    assert item.submissions[0].is_cracked is False
 
 
 def test_edit_submission_return_date_before_submission_date_rejected(

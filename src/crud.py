@@ -32,9 +32,11 @@ from .schemas import (
 )
 from .validators import (
     check_intent,
+    check_new_item_not_submitted,
     check_no_duplicate_items_in_submission,
     check_required_fields_not_removed,
     check_status,
+    check_status_change_to_submitted_valid,
     check_valid_grading_record_update,
     check_valid_intent_or_status_update,
     check_valid_merged_item_state,
@@ -46,6 +48,7 @@ def create_item(
     db: Session,
     item: ItemCreate,
 ) -> Item:
+    check_new_item_not_submitted(item)
     item_data = item.to_model_kwargs(
         exclude={
             'total_cost',
@@ -161,6 +164,8 @@ def edit_item(
         item_update.intent,
         item_update.status,
     )
+    if item_update.status == Status.SUBMITTED:
+        check_status_change_to_submitted_valid(item)
     check_valid_merged_item_state(item, item_update)
     perform_item_update(item, item_update)
     db.commit()

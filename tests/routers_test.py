@@ -403,3 +403,23 @@ def test_submit_edit_item_removing_required_field_shows_error(
     db_session.refresh(item)
     assert item.name == 'KEEP_ME'
     assert item.details is None
+
+
+def test_submit_edit_item_to_submitted_shows_error(
+    client: TestClient,
+    db_session: Session,
+    item_factory: ItemFactory,
+) -> None:
+    item = item_factory.get(idx=1, intent=item_enums.Intent.GRADE)
+    db_session.add(item)
+    db_session.flush()
+
+    response = client.post(
+        f'/edit/{item.id}',
+        data={'status': 'SUBMITTED'},
+        follow_redirects=False,
+    )
+    assert response.status_code == 200
+    assert 'An item can only be set to SUBMITTED by adding it to a submission' in response.text
+    db_session.refresh(item)
+    assert item.status == item_enums.Status.STORAGE

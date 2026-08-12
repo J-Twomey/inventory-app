@@ -1,3 +1,4 @@
+from collections.abc import Callable
 from datetime import date
 
 import pytest
@@ -6,6 +7,7 @@ from src import (
     item_enums,
     validators,
 )
+from src.models import Item
 from src.schemas import (
     GradingRecordUpdate,
     ItemUpdate,
@@ -13,6 +15,7 @@ from src.schemas import (
 
 from .conftest import (
     GradingRecordFactory,
+    ItemCreateFactory,
     ItemFactory,
 )
 
@@ -121,3 +124,57 @@ def test_check_required_fields_not_removed_removal_rejected() -> None:
     update = ItemUpdate.model_validate({'name': '', 'purchase_price': ''})
     with pytest.raises(ValueError, match='The following fields cannot be removed'):
         validators.check_required_fields_not_removed(update)
+
+
+def test_check_status_change_to_submitted_valid_pending(
+    item_with_submissions_factory: Callable[..., Item],
+) -> None:
+    item = item_with_submissions_factory()
+    validators.check_status_change_to_submitted_valid(item)
+
+
+def test_check_status_change_to_submitted_valid_no_records(
+    item_factory: ItemFactory,
+) -> None:
+    item = item_factory.get()
+    with pytest.raises(ValueError, match='can only be set to SUBMITTED by adding it'):
+        validators.check_status_change_to_submitted_valid(item)
+
+
+def test_check_status_change_to_submitted_valid_already_graded(
+    item_with_submissions_factory: Callable[..., Item],
+) -> None:
+    item = item_with_submissions_factory(grading_fees=[1000], grades=[9.0], certs=[12345])
+    with pytest.raises(
+        ValueError,
+        match='An item can only be set to SUBMITTED by adding it to a submission',
+    ):
+        validators.check_status_change_to_submitted_valid(item)
+
+
+def test_check_status_change_to_submitted_valid_cracked_item(
+    item_with_submissions_factory: Callable[..., Item],
+) -> None:
+    item = item_with_submissions_factory(is_cracked_flags=[True])
+    with pytest.raises(
+        ValueError,
+        match='An item can only be set to SUBMITTED by adding it to a submission',
+    ):
+        validators.check_status_change_to_submitted_valid(item)
+
+
+def test_check_new_item_not_submitted_is_not_submitted(
+    item_create_factory: ItemCreateFactory,
+) -> None:
+    validators.check_new_item_not_submitted(item_create_factory.get())
+
+
+def test_check_new_item_not_submitted_is_submitted(
+    item_create_factory: ItemCreateFactory,
+) -> None:
+    item = item_create_factory.get(
+        status=item_enums.Status.SUBMITTED,
+        intent=item_enums.Intent.GRADE,
+    )
+    with pytest.raises(ValueError, match='cannot be created with a status of SUBMITTED'):
+        validators.check_new_item_not_submitted(item)

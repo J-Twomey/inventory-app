@@ -80,6 +80,17 @@ def check_valid_intent_or_status_update(
         )
 
 
+def check_status_change_to_submitted_valid(item: Item) -> None:
+    """A status change to SUBMITTED should only be valid if there is an open grading record"""
+    if not any(record.grade is None and not record.is_cracked for record in item.submissions):
+        raise ValueError('An item can only be set to SUBMITTED by adding it to a submission')
+
+
+def check_new_item_not_submitted(item: ItemCreate) -> None:
+    if item.status == Status.SUBMITTED:
+        raise ValueError('A new item cannot be created with a status of SUBMITTED')
+
+
 def check_required_fields_not_removed(item_update: ItemUpdate) -> None:
     update_data = item_update.to_model_kwargs()
     removed = [
