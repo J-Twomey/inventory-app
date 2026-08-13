@@ -151,8 +151,7 @@ def test_submit_edit_grading_record(
     assert response.status_code == 303
     assert record.grading_fee == 25
     assert record.grade == 9.5
-    # An empty form field means untouched, not cleared
-    assert record.cert == 111
+    assert record.cert is None
     assert record.is_cracked is True
 
 

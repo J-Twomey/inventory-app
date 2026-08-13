@@ -26,12 +26,13 @@ from .item_enums import (
     ListingType,
     ObjectVariant,
     Qualifier,
+    RefundReason,
     Status,
 )
 
 
 def enum_by_name(enum_cls: type[E]) -> BeforeValidator:
-    """HTML forms send enum member names (e.g. 'PSA'), not values, so parse by name."""
+    """HTML forms send enum member names, not values, so parse by name."""
 
     def parse(value: object) -> object:
         if isinstance(value, str):
@@ -356,6 +357,20 @@ class GradingRecordBase(BaseModel):
     def checkbox_fields(cls) -> set[str]:
         return {f for f, info in cls.model_fields.items() if info.annotation is bool}
 
+    @field_validator('*', mode='before')
+    @classmethod
+    def empty_str_to_none(
+        cls,
+        v: T,
+        info: ValidationInfo,
+    ) -> T | None:
+        # Empty string is handled differently for these fields
+        if info.field_name in cls.checkbox_fields():
+            return v
+        if v == '':
+            return None
+        return v
+
 
 class GradingRecordCreate(GradingRecordBase):
     item_id: int
@@ -368,12 +383,50 @@ class GradingRecordCreate(GradingRecordBase):
 class GradingRecordUpdate(GradingRecordBase):
     @model_validator(mode='before')
     @classmethod
-    def treat_empty_fields_as_unset(cls, data: object) -> object:
+    def default_unchecked_checkboxes(cls, data: object) -> object:
         if isinstance(data, dict):
-            data = {k: v for k, v in data.items() if v is not None and v != ''}
+            data = {k: v for k, v in data.items() if v is not None}
             for checkbox in cls.checkbox_fields():
                 data.setdefault(checkbox, False)
         return data
 
+    def to_model_kwargs(self) -> dict[str, Any]:
+        return self.model_dump(exclude_unset=True)
+
+
+class RefundBase(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+        from_attributes=True,
+    )
+
+    item_id: int | None = None
+    refund_amount_usd: float | None = None
+    refund_date: date | None = None
+    refund_reason: Annotated[RefundReason | None, enum_by_name(RefundReason)] = None
+    usd_to_jpy_rate: float | None = None
+
+    @field_validator('*', mode='before')
+    @classmethod
+    def empty_str_to_none(
+        cls,
+        v: T,
+    ) -> T | None:
+        if v == '':
+            return None
+        return v
+
+
+class RefundCreate(RefundBase):
+    refund_amount_usd: float
+    refund_date: date
+    refund_reason: Annotated[RefundReason, enum_by_name(RefundReason)]
+    usd_to_jpy_rate: float
+
+    def to_model_kwargs(self) -> dict[str, Any]:
+        return self.model_dump()
+
+
+class RefundUpdate(RefundBase):
     def to_model_kwargs(self) -> dict[str, Any]:
         return self.model_dump(exclude_unset=True)

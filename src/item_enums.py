@@ -126,6 +126,12 @@ class ListingType(Enum):
     AUCTION = 2
 
 
+class RefundReason(Enum):
+    LOSS = 0
+    DAMAGE = 1
+    OTHER = 2
+
+
 class EnumList(TypeDecorator[list[EInt]]):
     impl = TEXT
     cache_ok = True

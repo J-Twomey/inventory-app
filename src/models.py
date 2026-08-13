@@ -35,6 +35,7 @@ from .item_enums import (
     ListingType,
     ObjectVariant,
     Qualifier,
+    RefundReason,
     Status,
 )
 
@@ -505,3 +506,29 @@ class GradingRecord(Base):
             .where(Submission.id == cls.submission_id)
             .scalar_subquery()
         )
+
+
+class Refund(Base):
+    __tablename__ = 'refunds'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    item_id: NullableInt = mapped_column(
+        ForeignKey('items.id', ondelete='SET NULL'),
+        index=True,
+        nullable=True,
+    )
+    refund_amount_usd: Mapped[float] = mapped_column(Float)
+    refund_date: Mapped[date] = mapped_column(Date)
+    refund_reason: Mapped[RefundReason] = mapped_column(EnumInt(RefundReason), nullable=False)
+    usd_to_jpy_rate: Mapped[float] = mapped_column(Float)
+
+    item: Mapped[Item | None] = relationship(viewonly=True)
+
+    @hybrid_property
+    def refund_amount_jpy(self) -> int:
+        return round(self.refund_amount_usd * self.usd_to_jpy_rate)
+
+    @refund_amount_jpy.inplace.expression
+    @classmethod
+    def _refund_amount_jpy_expression(cls) -> ColumnElement[int]:
+        return cast(func.round(cls.refund_amount_usd * cls.usd_to_jpy_rate, 0), Integer)
