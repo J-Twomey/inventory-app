@@ -35,8 +35,12 @@
     <tbody>
       {% for refund in refunds %}
         <tr>
-          <td class="right-aligned">{{ refund.item_id if refund.item_id is not none else '' }}</td>
-          <td>{{ refund.item.name if refund.item is not none else '' }}</td>
+          <td class="right-aligned {{ 'faint' if refund.item_id is none else '' }}">
+            {{ refund.item_id if refund.item_id is not none else '' }}
+          </td>
+          <td class="{{ 'faint' if refund.item is none else '' }}">
+            {{ refund.item.name if refund.item is not none else '' }}
+          </td>
           <td class="centre-aligned">{{ refund.refund_date }}</td>
           <td>{{ refund.refund_reason.name }}</td>
           <td class="right-aligned">{{ refund.refund_amount_usd | dollar }}</td>
