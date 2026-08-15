@@ -38,11 +38,9 @@ from .schemas import (
 )
 from .validators import (
     check_intent,
-    check_item_required_fields_not_removed,
     check_new_item_not_submitted,
     check_no_duplicate_items_in_submission,
-    check_refund_required_fields_not_removed,
-    check_remuneration_required_fields_not_removed,
+    check_required_fields_not_removed,
     check_status,
     check_status_change_to_submitted_valid,
     check_valid_grading_record_update,
@@ -165,7 +163,7 @@ def edit_item(
     item = get_item(db, item_id)
     if item is None:
         return 404
-    check_item_required_fields_not_removed(item_update)
+    check_required_fields_not_removed(item_update, ItemCreate)
     check_valid_intent_or_status_update(
         Intent(item.intent),
         Status(item.status),
@@ -447,7 +445,7 @@ def edit_refund(
     refund = get_refund(db, refund_id)
     if refund is None:
         return 404
-    check_refund_required_fields_not_removed(refund_update)
+    check_required_fields_not_removed(refund_update, RefundCreate)
     perform_refund_update(refund, refund_update)
     db.commit()
     db.refresh(refund)
@@ -522,7 +520,7 @@ def edit_remuneration(
     remuneration = get_remuneration(db, remuneration_id)
     if remuneration is None:
         return 404
-    check_remuneration_required_fields_not_removed(remuneration_update)
+    check_required_fields_not_removed(remuneration_update, RemunerationCreate)
     perform_remuneration_update(remuneration, remuneration_update)
     db.commit()
     db.refresh(remuneration)

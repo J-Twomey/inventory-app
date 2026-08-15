@@ -1,4 +1,12 @@
-from pydantic import ValidationError
+from typing import (
+    Any,
+    Protocol,
+)
+
+from pydantic import (
+    BaseModel,
+    ValidationError,
+)
 
 from .item_enums import (
     Intent,
@@ -13,10 +21,6 @@ from .schemas import (
     GradingRecordUpdate,
     ItemCreate,
     ItemUpdate,
-    RefundCreate,
-    RefundUpdate,
-    RemunerationCreate,
-    RemunerationUpdate,
     SubmissionBase,
 )
 
@@ -95,35 +99,18 @@ def check_new_item_not_submitted(item: ItemCreate) -> None:
         raise ValueError('A new item cannot be created with a status of SUBMITTED')
 
 
-def check_item_required_fields_not_removed(item_update: ItemUpdate) -> None:
-    update_data = item_update.to_model_kwargs()
-    removed = [
-        field
-        for field, info in ItemCreate.model_fields.items()
-        if info.is_required() and field in update_data and update_data[field] is None
-    ]
-    if removed:
-        raise ValueError(f'The following fields cannot be removed: {removed}')
+class SupportsModelKwargs(Protocol):
+    def to_model_kwargs(self) -> dict[str, Any]: ...
 
 
-def check_refund_required_fields_not_removed(refund_update: RefundUpdate) -> None:
-    update_data = refund_update.to_model_kwargs()
-    removed = [
-        field
-        for field, info in RefundCreate.model_fields.items()
-        if info.is_required() and field in update_data and update_data[field] is None
-    ]
-    if removed:
-        raise ValueError(f'The following fields cannot be removed: {removed}')
-
-
-def check_remuneration_required_fields_not_removed(
-    remuneration_update: RemunerationUpdate,
+def check_required_fields_not_removed(
+    update: SupportsModelKwargs,
+    create_schema: type[BaseModel],
 ) -> None:
-    update_data = remuneration_update.to_model_kwargs()
+    update_data = update.to_model_kwargs()
     removed = [
         field
-        for field, info in RemunerationCreate.model_fields.items()
+        for field, info in create_schema.model_fields.items()
         if info.is_required() and field in update_data and update_data[field] is None
     ]
     if removed:

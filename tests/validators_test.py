@@ -2,6 +2,7 @@ from collections.abc import Callable
 from datetime import date
 
 import pytest
+from pydantic import BaseModel
 
 from src import (
     item_enums,
@@ -10,8 +11,11 @@ from src import (
 from src.models import Item
 from src.schemas import (
     GradingRecordUpdate,
+    ItemCreate,
     ItemUpdate,
+    RefundCreate,
     RefundUpdate,
+    RemunerationCreate,
     RemunerationUpdate,
 )
 
@@ -118,15 +122,92 @@ def test_check_no_duplicate_items_in_submission_has_duplicate() -> None:
         validators.check_no_duplicate_items_in_submission(item_ids)
 
 
-def test_check_item_required_fields_not_removed_no_removal() -> None:
-    update = ItemUpdate.model_validate({'name': 'Golem', 'purchase_grade': ''})
-    validators.check_item_required_fields_not_removed(update)
+@pytest.mark.parametrize(
+    ('update', 'create_schema'),
+    [
+        pytest.param(ItemUpdate(), ItemCreate, id='item'),
+        pytest.param(RefundUpdate(), RefundCreate, id='refund'),
+        pytest.param(RemunerationUpdate(), RemunerationCreate, id='remuneration'),
+    ],
+)
+def test_check_required_fields_not_removed_no_changes(
+    update: validators.SupportsModelKwargs,
+    create_schema: type[BaseModel],
+) -> None:
+    validators.check_required_fields_not_removed(update, create_schema)
 
 
-def test_check_item_required_fields_not_removed_removal_rejected() -> None:
-    update = ItemUpdate.model_validate({'name': '', 'purchase_price': ''})
+@pytest.mark.parametrize(
+    ('update', 'create_schema'),
+    [
+        pytest.param(
+            ItemUpdate.model_validate({'name': 'Golem', 'purchase_grade': ''}),
+            ItemCreate,
+            id='item_purchase_grade',
+        ),
+        pytest.param(RefundUpdate(item_id=None), RefundCreate, id='refund_item_id'),
+        pytest.param(
+            RemunerationUpdate(item_id=None),
+            RemunerationCreate,
+            id='remuneration_item_id',
+        ),
+    ],
+)
+def test_check_required_fields_not_removed_clearing_nullable_field(
+    update: validators.SupportsModelKwargs,
+    create_schema: type[BaseModel],
+) -> None:
+    validators.check_required_fields_not_removed(update, create_schema)
+
+
+@pytest.mark.parametrize(
+    ('update', 'create_schema'),
+    [
+        pytest.param(
+            ItemUpdate.model_validate({'name': ''}),
+            ItemCreate,
+            id='item_name',
+        ),
+        pytest.param(
+            ItemUpdate.model_validate({'name': '', 'purchase_price': ''}),
+            ItemCreate,
+            id='item_multiple_fields',
+        ),
+        pytest.param(
+            RefundUpdate(refund_amount_usd=None),
+            RefundCreate,
+            id='refund_amount_usd',
+        ),
+        pytest.param(RefundUpdate(refund_date=None), RefundCreate, id='refund_date'),
+        pytest.param(RefundUpdate(refund_reason=None), RefundCreate, id='refund_reason'),
+        pytest.param(
+            RefundUpdate(usd_to_jpy_rate=None),
+            RefundCreate,
+            id='refund_usd_to_jpy_rate',
+        ),
+        pytest.param(
+            RemunerationUpdate(remuneration_amount_jpy=None),
+            RemunerationCreate,
+            id='remuneration_amount_jpy',
+        ),
+        pytest.param(
+            RemunerationUpdate(remuneration_date=None),
+            RemunerationCreate,
+            id='remuneration_date',
+        ),
+        pytest.param(
+            RemunerationUpdate(remuneration_source=None),
+            RemunerationCreate,
+            id='remuneration_source',
+        ),
+    ],
+)
+def test_check_required_fields_not_removed_raises_on_required_field_removal(
+    update: validators.SupportsModelKwargs,
+    create_schema: type[BaseModel],
+) -> None:
     with pytest.raises(ValueError, match='The following fields cannot be removed'):
-        validators.check_item_required_fields_not_removed(update)
+        validators.check_required_fields_not_removed(update, create_schema)
 
 
 def test_check_status_change_to_submitted_valid_pending(
@@ -208,59 +289,3 @@ def test_check_valid_submission_field_update_invalid_date_order(
             'return_date',
             date(2025, 5, 1),
         )
-
-
-def test_check_refund_required_fields_not_removed_no_changes() -> None:
-    validators.check_refund_required_fields_not_removed(RefundUpdate())
-
-
-def test_check_refund_required_fields_not_removed_clearing_nullable_field() -> None:
-    validators.check_refund_required_fields_not_removed(RefundUpdate(item_id=None))
-
-
-@pytest.mark.parametrize(
-    'refund_update',
-    [
-        pytest.param(RefundUpdate(refund_amount_usd=None), id='removing_refund_amount_usd'),
-        pytest.param(RefundUpdate(refund_date=None), id='removing_refund_date'),
-        pytest.param(RefundUpdate(refund_reason=None), id='removing_refund_reason'),
-        pytest.param(RefundUpdate(usd_to_jpy_rate=None), id='removing_usd_to_jpy_rate'),
-    ],
-)
-def test_check_refund_required_fields_not_removed_clearing_required_field(
-    refund_update: RefundUpdate,
-) -> None:
-    with pytest.raises(ValueError, match='cannot be removed'):
-        validators.check_refund_required_fields_not_removed(refund_update)
-
-
-def test_check_remuneration_required_fields_not_removed_no_changes() -> None:
-    validators.check_remuneration_required_fields_not_removed(RemunerationUpdate())
-
-
-def test_check_remuneration_required_fields_not_removed_clearing_nullable_field() -> None:
-    validators.check_remuneration_required_fields_not_removed(RemunerationUpdate(item_id=None))
-
-
-@pytest.mark.parametrize(
-    'remuneration_update',
-    [
-        pytest.param(
-            RemunerationUpdate(remuneration_amount_jpy=None),
-            id='removing_remuneration_amount_jpy',
-        ),
-        pytest.param(
-            RemunerationUpdate(remuneration_date=None),
-            id='removing_remuneration_date',
-        ),
-        pytest.param(
-            RemunerationUpdate(remuneration_source=None),
-            id='removing_remuneration_source',
-        ),
-    ],
-)
-def test_check_remuneration_required_fields_not_removed_clearing_required_field(
-    remuneration_update: RemunerationUpdate,
-) -> None:
-    with pytest.raises(ValueError, match='cannot be removed'):
-        validators.check_remuneration_required_fields_not_removed(remuneration_update)
