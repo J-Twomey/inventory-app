@@ -3,13 +3,17 @@
 {% block title %}Index{% endblock %}
 
 {% block content %}
-  <div>
-    <a href="/items_view" class="btn btn-blue btn-large">View Page</a>
-    <a href="/add_item" class="btn btn-green btn-large">Add Entry</a>
-    <a href="/grading_records_view" class="btn btn-yellow btn-large">Grading Records</a>
+  <div class="landing-grid">
+    <a href="/items_view" class="btn btn-blue btn-large">Items</a>
+    <a href="/add_item" class="btn btn-green btn-large">Add Item</a>
+
+    <a href="/submissions_summary_view" class="btn btn-blue btn-large">Submissions</a>
     <a href="/add_submission" class="btn btn-green btn-large">Add Submission</a>
-    <a href="/submissions_summary_view" class="btn btn-red btn-large">Submissions Summary</a>
-    <a href="/add_refund" class="btn btn-orange btn-large">Add Refund</a>
-    <a href="/refunds_view" class="btn btn-blue btn-large">View Refunds</a>
+
+    <a href="/grading_records_view" class="btn btn-blue btn-large">Grading Records</a>
+    <span></span>
+
+    <a href="/refunds_view" class="btn btn-blue btn-large">Refunds</a>
+    <a href="/add_refund" class="btn btn-green btn-large">Add Refund</a>
   </div>
 {% endblock %}
