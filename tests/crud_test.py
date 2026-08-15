@@ -17,6 +17,8 @@ from .conftest import (
     ItemFactory,
     RefundCreateFactory,
     RefundFactory,
+    RemunerationCreateFactory,
+    RemunerationFactory,
     SubmissionFactory,
 )
 
@@ -923,7 +925,7 @@ def test_delete_refund_by_id_success(
     assert crud.get_refund(db_session, ids[0]) is not None
 
 
-def test_delete_refund_by_id_failure(
+def test_delete_refund_by_id_no_refund_failure(
     db_session: Session,
     refund_factory: RefundFactory,
 ) -> None:
@@ -1084,4 +1086,287 @@ def test_edit_refund_rejects_cleared_required_field(
             db_session,
             refund_id=refund.id,
             refund_update=schemas.RefundUpdate(refund_amount_usd=None),
+        )
+
+
+def test_create_remuneration_without_item(
+    db_session: Session,
+    remuneration_create_factory: RemunerationCreateFactory,
+) -> None:
+    remuneration = remuneration_create_factory.get()
+    db_remuneration = crud.create_remuneration(db_session, remuneration)
+
+    remuneration_from_db = db_session.query(models.Remuneration).first()
+    assert db_remuneration.id is not None
+    assert db_remuneration == remuneration_from_db
+    assert db_remuneration.item_id is None
+    assert db_remuneration.remuneration_amount_jpy == 15000
+
+
+def test_create_remuneration_linked_to_item(
+    db_session: Session,
+    item_factory: ItemFactory,
+    remuneration_create_factory: RemunerationCreateFactory,
+) -> None:
+    item = item_factory.get(idx=1)
+    db_session.add(item)
+    db_session.flush()
+
+    db_remuneration = crud.create_remuneration(
+        db_session,
+        remuneration_create_factory.get(item_id=item.id),
+    )
+    assert db_remuneration.item_id == item.id
+    assert db_remuneration.item == item
+
+
+def test_get_remuneration_returns_correct_remuneration(
+    db_session: Session,
+    remuneration_factory: RemunerationFactory,
+) -> None:
+    remunerations = [
+        remuneration_factory.get(idx=i, remuneration_amount_jpy=i * 1000) for i in (1, 2)
+    ]
+    db_session.add_all(remunerations)
+    db_session.flush()
+
+    result = crud.get_remuneration(db_session, remunerations[-1].id)
+    assert result == remunerations[-1]
+
+
+def test_get_remuneration_no_remuneration(
+    db_session: Session,
+    remuneration_factory: RemunerationFactory,
+) -> None:
+    remuneration = remuneration_factory.get(idx=1)
+    db_session.add(remuneration)
+    db_session.flush()
+
+    assert crud.get_remuneration(db_session, remuneration.id + 1) is None
+
+
+def test_get_newest_remunerations_orders_by_date_descending(
+    db_session: Session,
+    remuneration_factory: RemunerationFactory,
+) -> None:
+    remuneration_dates = [date(2026, 1, 1), date(2026, 3, 1), date(2026, 2, 1)]
+    remunerations = [
+        remuneration_factory.get(idx=i, remuneration_date=d)
+        for i, d in enumerate(remuneration_dates)
+    ]
+    db_session.add_all(remunerations)
+    db_session.flush()
+
+    result = crud.get_newest_remunerations(db_session)
+    assert [r.remuneration_date for r in result] == sorted(remuneration_dates)
+
+
+def test_get_newest_remunerations_skip_and_limit(
+    db_session: Session,
+    remuneration_factory: RemunerationFactory,
+) -> None:
+    remuneration_dates = [date(2026, 1, 1), date(2026, 2, 1), date(2026, 3, 1)]
+    remunerations = [
+        remuneration_factory.get(idx=i, remuneration_date=d)
+        for i, d in enumerate(remuneration_dates)
+    ]
+    db_session.add_all(remunerations)
+    db_session.flush()
+
+    result = crud.get_newest_remunerations(db_session, skip=1, limit=1)
+    assert [r.remuneration_date for r in result] == [date(2026, 2, 1)]
+
+
+def test_get_total_number_of_remunerations(
+    db_session: Session,
+    remuneration_factory: RemunerationFactory,
+) -> None:
+    remunerations = [remuneration_factory.get(idx=i) for i in (1, 2)]
+    db_session.add_all(remunerations)
+    db_session.flush()
+
+    assert crud.get_total_number_of_remunerations(db_session) == len(remunerations)
+
+
+def test_delete_remuneration_by_id_success(
+    db_session: Session,
+    remuneration_factory: RemunerationFactory,
+) -> None:
+    remunerations = [remuneration_factory.get(idx=i) for i in (1, 2)]
+    ids = [r.id for r in remunerations]
+    db_session.add_all(remunerations)
+    db_session.flush()
+
+    assert crud.delete_remuneration_by_id(db_session, ids[-1]) is True
+    assert crud.get_remuneration(db_session, ids[-1]) is None
+    assert crud.get_remuneration(db_session, ids[0]) is not None
+
+
+def test_delete_remuneration_by_id_no_remuneration_failure(
+    db_session: Session,
+    remuneration_factory: RemunerationFactory,
+) -> None:
+    remuneration = remuneration_factory.get(idx=1)
+    db_session.add(remuneration)
+    db_session.flush()
+
+    assert crud.delete_remuneration_by_id(db_session, remuneration.id + 1) is False
+    assert crud.get_remuneration(db_session, remuneration.id) is not None
+
+
+def test_delete_remuneration_leaves_linked_item(
+    db_session: Session,
+    item_factory: ItemFactory,
+    remuneration_factory: RemunerationFactory,
+) -> None:
+    item = item_factory.get(idx=1)
+    db_session.add(item)
+    db_session.flush()
+    remuneration = remuneration_factory.get(idx=1, item_id=item.id)
+    db_session.add(remuneration)
+    db_session.flush()
+
+    assert crud.delete_remuneration_by_id(db_session, remuneration.id) is True
+    assert crud.get_item(db_session, item.id) is not None
+
+
+def test_edit_remuneration_no_remuneration_found(
+    db_session: Session,
+    remuneration_factory: RemunerationFactory,
+) -> None:
+    remuneration = remuneration_factory.get(idx=1)
+    db_session.add(remuneration)
+    db_session.flush()
+
+    result = crud.edit_remuneration(
+        db_session,
+        remuneration_id=100,
+        remuneration_update=schemas.RemunerationUpdate(),
+    )
+    assert result == 404
+
+
+def test_edit_remuneration_no_changes(
+    db_session: Session,
+    remuneration_factory: RemunerationFactory,
+) -> None:
+    remuneration = remuneration_factory.get(idx=1)
+    db_session.add(remuneration)
+    db_session.flush()
+
+    result = crud.edit_remuneration(
+        db_session,
+        remuneration_id=remuneration.id,
+        remuneration_update=schemas.RemunerationUpdate(),
+    )
+    assert result == 303
+    assert crud.get_remuneration(db_session, remuneration.id) == remuneration
+
+
+def test_edit_remuneration_single_field(
+    db_session: Session,
+    remuneration_factory: RemunerationFactory,
+) -> None:
+    remuneration = remuneration_factory.get(idx=1)
+    db_session.add(remuneration)
+    db_session.flush()
+
+    result = crud.edit_remuneration(
+        db_session,
+        remuneration_id=remuneration.id,
+        remuneration_update=schemas.RemunerationUpdate(remuneration_amount_jpy=25000),
+    )
+    assert result == 303
+
+    changed_remuneration = crud.get_remuneration(db_session, remuneration.id)
+    assert changed_remuneration is not None
+    assert changed_remuneration.remuneration_amount_jpy == 25000
+    assert changed_remuneration.remuneration_date == date(2026, 3, 1)
+
+
+def test_edit_remuneration_enum_field(
+    db_session: Session,
+    remuneration_factory: RemunerationFactory,
+) -> None:
+    remuneration = remuneration_factory.get(idx=1)
+    db_session.add(remuneration)
+    db_session.flush()
+
+    result = crud.edit_remuneration(
+        db_session,
+        remuneration_id=remuneration.id,
+        remuneration_update=schemas.RemunerationUpdate(
+            remuneration_source=item_enums.RemunerationSource.JAPAN_POST,
+        ),
+    )
+    assert result == 303
+
+    changed_remuneration = crud.get_remuneration(db_session, remuneration.id)
+    assert changed_remuneration is not None
+    assert changed_remuneration.remuneration_source == item_enums.RemunerationSource.JAPAN_POST
+
+
+def test_edit_remuneration_multiple_changes(
+    db_session: Session,
+    remuneration_factory: RemunerationFactory,
+) -> None:
+    remuneration = remuneration_factory.get(idx=1)
+    db_session.add(remuneration)
+    db_session.flush()
+
+    result = crud.edit_remuneration(
+        db_session,
+        remuneration_id=remuneration.id,
+        remuneration_update=schemas.RemunerationUpdate(
+            remuneration_amount_jpy=32000,
+            remuneration_date=date(2026, 4, 2),
+            remuneration_source=item_enums.RemunerationSource.EBAY,
+        ),
+    )
+    assert result == 303
+
+    changed_remuneration = crud.get_remuneration(db_session, remuneration.id)
+    assert changed_remuneration is not None
+    assert changed_remuneration.remuneration_amount_jpy == 32000
+    assert changed_remuneration.remuneration_date == date(2026, 4, 2)
+    assert changed_remuneration.remuneration_source == item_enums.RemunerationSource.EBAY
+
+
+def test_edit_remuneration_clears_nullable_item_id(
+    db_session: Session,
+    item_factory: ItemFactory,
+    remuneration_factory: RemunerationFactory,
+) -> None:
+    item = item_factory.get(idx=1)
+    db_session.add(item)
+    db_session.flush()
+    remuneration = remuneration_factory.get(idx=1, item_id=item.id)
+    db_session.add(remuneration)
+    db_session.flush()
+
+    result = crud.edit_remuneration(
+        db_session,
+        remuneration_id=remuneration.id,
+        remuneration_update=schemas.RemunerationUpdate(item_id=None),
+    )
+    assert result == 303
+
+    changed_remuneration = crud.get_remuneration(db_session, remuneration.id)
+    assert changed_remuneration is not None
+    assert changed_remuneration.item_id is None
+
+
+def test_edit_remuneration_rejects_cleared_required_field(
+    db_session: Session,
+    remuneration_factory: RemunerationFactory,
+) -> None:
+    remuneration = remuneration_factory.get(idx=1)
+    db_session.add(remuneration)
+    db_session.flush()
+
+    with pytest.raises(ValueError, match='cannot be removed'):
+        crud.edit_remuneration(
+            db_session,
+            remuneration_id=remuneration.id,
+            remuneration_update=schemas.RemunerationUpdate(remuneration_amount_jpy=None),
         )

@@ -12,6 +12,7 @@ from src.schemas import (
     GradingRecordUpdate,
     ItemUpdate,
     RefundUpdate,
+    RemunerationUpdate,
 )
 
 from .conftest import (
@@ -231,3 +232,35 @@ def test_check_refund_required_fields_not_removed_clearing_required_field(
 ) -> None:
     with pytest.raises(ValueError, match='cannot be removed'):
         validators.check_refund_required_fields_not_removed(refund_update)
+
+
+def test_check_remuneration_required_fields_not_removed_no_changes() -> None:
+    validators.check_remuneration_required_fields_not_removed(RemunerationUpdate())
+
+
+def test_check_remuneration_required_fields_not_removed_clearing_nullable_field() -> None:
+    validators.check_remuneration_required_fields_not_removed(RemunerationUpdate(item_id=None))
+
+
+@pytest.mark.parametrize(
+    'remuneration_update',
+    [
+        pytest.param(
+            RemunerationUpdate(remuneration_amount_jpy=None),
+            id='removing_remuneration_amount_jpy',
+        ),
+        pytest.param(
+            RemunerationUpdate(remuneration_date=None),
+            id='removing_remuneration_date',
+        ),
+        pytest.param(
+            RemunerationUpdate(remuneration_source=None),
+            id='removing_remuneration_source',
+        ),
+    ],
+)
+def test_check_remuneration_required_fields_not_removed_clearing_required_field(
+    remuneration_update: RemunerationUpdate,
+) -> None:
+    with pytest.raises(ValueError, match='cannot be removed'):
+        validators.check_remuneration_required_fields_not_removed(remuneration_update)

@@ -29,12 +29,14 @@ from src.models import (
     GradingRecord,
     Item,
     Refund,
+    Remuneration,
     Submission,
 )
 from src.schemas import (
     ItemBase,
     ItemCreate,
     RefundCreate,
+    RemunerationCreate,
 )
 
 TEST_DATABASE_URL = 'sqlite:///:memory:'
@@ -425,6 +427,50 @@ class RefundCreateFactory:
 @pytest.fixture
 def refund_create_factory() -> RefundCreateFactory:
     return RefundCreateFactory()
+
+
+class RemunerationFactory:
+    def get(
+        self,
+        idx: int = 1,
+        item_id: int | None = None,
+        remuneration_amount_jpy: int = 15000,
+        remuneration_date: date = date(2026, 3, 1),
+        remuneration_source: item_enums.RemunerationSource = item_enums.RemunerationSource.OTHER,
+    ) -> Remuneration:
+        return Remuneration(
+            id=idx,
+            item_id=item_id,
+            remuneration_amount_jpy=remuneration_amount_jpy,
+            remuneration_date=remuneration_date,
+            remuneration_source=remuneration_source,
+        )
+
+
+@pytest.fixture
+def remuneration_factory() -> RemunerationFactory:
+    return RemunerationFactory()
+
+
+class RemunerationCreateFactory:
+    def get(
+        self,
+        item_id: int | None = None,
+        remuneration_amount_jpy: int = 15000,
+        remuneration_date: date = date(2026, 3, 1),
+        remuneration_source: item_enums.RemunerationSource = item_enums.RemunerationSource.OTHER,
+    ) -> RemunerationCreate:
+        return RemunerationCreate(
+            item_id=item_id,
+            remuneration_amount_jpy=remuneration_amount_jpy,
+            remuneration_date=remuneration_date,
+            remuneration_source=remuneration_source,
+        )
+
+
+@pytest.fixture
+def remuneration_create_factory() -> RemunerationCreateFactory:
+    return RemunerationCreateFactory()
 
 
 @pytest.fixture

@@ -27,13 +27,16 @@ from .crud import (
     SubmissionNumberConflictError,
     create_item,
     create_refund,
+    create_remuneration,
     create_submission,
     delete_grading_record_by_id,
     delete_item_by_id,
     delete_refund_by_id,
+    delete_remuneration_by_id,
     edit_grading_record,
     edit_item,
     edit_refund,
+    edit_remuneration,
     edit_submission_single_field,
     get_grading_record,
     get_item,
@@ -41,11 +44,14 @@ from .crud import (
     get_newest_grading_records,
     get_newest_items,
     get_newest_refunds,
+    get_newest_remunerations,
     get_newest_submissions,
     get_refund,
+    get_remuneration,
     get_total_number_of_grading_records,
     get_total_number_of_items,
     get_total_number_of_refunds,
+    get_total_number_of_remunerations,
     get_total_number_of_submissions,
     search_for_items,
 )
@@ -60,6 +66,7 @@ from .item_enums import (
     ObjectVariant,
     Qualifier,
     RefundReason,
+    RemunerationSource,
     Status,
 )
 from .models import Item
@@ -72,6 +79,8 @@ from .schemas import (
     ItemUpdate,
     RefundCreate,
     RefundUpdate,
+    RemunerationCreate,
+    RemunerationUpdate,
     SubmissionCreate,
 )
 
@@ -626,6 +635,108 @@ def submit_edit_refund(
             },
         )
     return RedirectResponse('/refunds_view', status_code=edit_result)
+
+
+@router.get('/remunerations_view', response_class=HTMLResponse)
+def view_remunerations(
+    request: Request,
+    db: DbSession,
+    show_limit: int = 500,
+    skip: int = 0,
+) -> Response:
+    show_limit = max(1, min(show_limit, 5000))
+    skip = max(0, skip)
+    num_results = get_total_number_of_remunerations(db)
+    remunerations = get_newest_remunerations(db, skip=skip, limit=show_limit)
+    prev_url, next_url = generate_page_urls(
+        request=request,
+        skip=skip,
+        show_limit=show_limit,
+        num_results=num_results,
+    )
+    return templates.TemplateResponse(
+        request,
+        'remunerations_view.html',
+        {
+            'remunerations': remunerations,
+            'show_limit': show_limit,
+            'prev_url': prev_url,
+            'next_url': next_url,
+        },
+    )
+
+
+@router.get('/add_remuneration', response_class=HTMLResponse)
+def show_add_remuneration_form(request: Request) -> Response:
+    return templates.TemplateResponse(
+        request,
+        'add_remuneration.html',
+        {'remuneration_source_enum': RemunerationSource},
+    )
+
+
+@router.post('/add_remuneration')
+def submit_add_remuneration_form(
+    remuneration: Annotated[RemunerationCreate, Form()],
+    db: DbSession,
+) -> RedirectResponse:
+    create_remuneration(db, remuneration)
+    return RedirectResponse(url='/', status_code=303)
+
+
+@router.get('/remuneration_delete/{remuneration_id}')
+def delete_remuneration(
+    remuneration_id: int,
+    db: DbSession,
+) -> RedirectResponse:
+    success = delete_remuneration_by_id(db, remuneration_id)
+    if not success:
+        raise HTTPException(status_code=404, detail='Remuneration not found')
+    return RedirectResponse(url='/remunerations_view', status_code=303)
+
+
+@router.get('/remuneration_edit/{remuneration_id}', response_class=HTMLResponse)
+def open_edit_remuneration_form(
+    remuneration_id: int,
+    request: Request,
+    db: DbSession,
+) -> Response:
+    remuneration = get_remuneration(db, remuneration_id)
+    if remuneration is None:
+        raise HTTPException(status_code=404, detail='Remuneration not found')
+    return templates.TemplateResponse(
+        request,
+        'edit_remuneration.html',
+        {
+            'remuneration': remuneration,
+            'remuneration_source_enum': RemunerationSource,
+        },
+    )
+
+
+@router.post('/remuneration_edit/{remuneration_id}')
+def submit_edit_remuneration(
+    remuneration_id: int,
+    request: Request,
+    edit_params: Annotated[RemunerationUpdate, Form()],
+    db: DbSession,
+) -> Response:
+    try:
+        edit_result = edit_remuneration(db, remuneration_id, edit_params)
+    except ValueError as e:
+        remuneration = get_remuneration(db, remuneration_id)
+        if remuneration is None:
+            raise HTTPException(status_code=404, detail='Remuneration not found') from None
+        return templates.TemplateResponse(
+            request,
+            'edit_remuneration.html',
+            {
+                'remuneration': remuneration,
+                'remuneration_source_enum': RemunerationSource,
+                'error_message': str(e),
+            },
+        )
+    return RedirectResponse('/remunerations_view', status_code=edit_result)
 
 
 def slice_items(

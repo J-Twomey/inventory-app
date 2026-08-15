@@ -21,6 +21,7 @@ from .models import (
     GradingRecord,
     Item,
     Refund,
+    Remuneration,
     Submission,
 )
 from .schemas import (
@@ -31,6 +32,8 @@ from .schemas import (
     ItemUpdate,
     RefundCreate,
     RefundUpdate,
+    RemunerationCreate,
+    RemunerationUpdate,
     SubmissionCreate,
 )
 from .validators import (
@@ -39,6 +42,7 @@ from .validators import (
     check_new_item_not_submitted,
     check_no_duplicate_items_in_submission,
     check_refund_required_fields_not_removed,
+    check_remuneration_required_fields_not_removed,
     check_status,
     check_status_change_to_submitted_valid,
     check_valid_grading_record_update,
@@ -456,3 +460,78 @@ def perform_refund_update(
 ) -> None:
     for key, value in refund_update.to_model_kwargs().items():
         setattr(refund, key, value)
+
+
+def create_remuneration(
+    db: Session,
+    remuneration: RemunerationCreate,
+) -> Remuneration:
+    db_remuneration = Remuneration(**remuneration.to_model_kwargs())
+    db.add(db_remuneration)
+    db.commit()
+    db.refresh(db_remuneration)
+    return db_remuneration
+
+
+def get_newest_remunerations(
+    db: Session,
+    skip: int = 0,
+    limit: int = 100,
+) -> Sequence[Remuneration]:
+    remunerations = (
+        db.query(Remuneration)
+        .order_by(
+            desc(Remuneration.remuneration_date),
+            desc(Remuneration.id),
+        )
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+    return list(reversed(remunerations))
+
+
+def get_total_number_of_remunerations(db: Session) -> int:
+    return db.query(Remuneration).count()
+
+
+def get_remuneration(
+    db: Session,
+    remuneration_id: int,
+) -> Remuneration | None:
+    return db.query(Remuneration).filter(Remuneration.id == remuneration_id).first()
+
+
+def delete_remuneration_by_id(
+    db: Session,
+    remuneration_id: int,
+) -> bool:
+    remuneration = get_remuneration(db, remuneration_id)
+    if remuneration is None:
+        return False
+    db.delete(remuneration)
+    db.commit()
+    return True
+
+
+def edit_remuneration(
+    db: Session,
+    remuneration_id: int,
+    remuneration_update: RemunerationUpdate,
+) -> int:
+    remuneration = get_remuneration(db, remuneration_id)
+    if remuneration is None:
+        return 404
+    check_remuneration_required_fields_not_removed(remuneration_update)
+    perform_remuneration_update(remuneration, remuneration_update)
+    db.commit()
+    db.refresh(remuneration)
+    return 303
+
+
+def perform_remuneration_update(
+    remuneration: Remuneration,
+    remuneration_update: RemunerationUpdate,
+) -> None:
+    for key, value in remuneration_update.to_model_kwargs().items():
+        setattr(remuneration, key, value)

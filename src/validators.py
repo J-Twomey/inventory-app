@@ -15,6 +15,8 @@ from .schemas import (
     ItemUpdate,
     RefundCreate,
     RefundUpdate,
+    RemunerationCreate,
+    RemunerationUpdate,
     SubmissionBase,
 )
 
@@ -109,6 +111,19 @@ def check_refund_required_fields_not_removed(refund_update: RefundUpdate) -> Non
     removed = [
         field
         for field, info in RefundCreate.model_fields.items()
+        if info.is_required() and field in update_data and update_data[field] is None
+    ]
+    if removed:
+        raise ValueError(f'The following fields cannot be removed: {removed}')
+
+
+def check_remuneration_required_fields_not_removed(
+    remuneration_update: RemunerationUpdate,
+) -> None:
+    update_data = remuneration_update.to_model_kwargs()
+    removed = [
+        field
+        for field, info in RemunerationCreate.model_fields.items()
         if info.is_required() and field in update_data and update_data[field] is None
     ]
     if removed:

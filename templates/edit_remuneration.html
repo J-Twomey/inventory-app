@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Remuneration{% endblock %}
+
+{% block content %}
+<h1>Remuneration Edit</h1>
+<div>
+  <a href="/" class="btn btn-purple btn-small margin-bottom-20 inline">Back To Landing Page</a>
+  <a href="/remunerations_view" class="btn btn-blue btn-small margin-bottom-20 inline">Back To Remunerations View Page</a>
+</div>
+
+<form method="post" action="/remuneration_edit/{{ remuneration.id }}">
+  <label>Item ID:</label>
+  <input type="number" name="item_id" value="{{ remuneration.item_id if remuneration.item_id is not none else '' }}"><br><br>
+
+  <label>Remuneration Amount (JPY):</label>
+  <input type="number" name="remuneration_amount_jpy" value="{{ remuneration.remuneration_amount_jpy }}" required><br><br>
+
+  <label>Remuneration Date:</label>
+  <input type="date" name="remuneration_date" value="{{ remuneration.remuneration_date }}" required><br><br>
+
+  <label>Remuneration Source:</label>
+  <select name="remuneration_source">
+    {% for remuneration_source in remuneration_source_enum %}
+      <option value="{{ remuneration_source.name }}" {% if remuneration.remuneration_source == remuneration_source %}selected{% endif %}>
+        {{ remuneration_source.name.title().replace('_', ' ') }}
+      </option>
+    {% endfor %}
+  </select><br><br>
+
+  <button type="submit">Save Changes</button>
+</form>
+
+{% if error_message %}
+  <div class="error-message" style="color: red; margin-top: 1em;">
+    {{ error_message }}
+  </div>
+{% endif %}
+{% endblock %}

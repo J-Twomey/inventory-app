@@ -132,6 +132,16 @@ class RefundReason(Enum):
     OTHER = 2
 
 
+class RemunerationSource(Enum):
+    JAPAN_POST = 0
+    YAMATO = 1
+    PSA = 2
+    FANATICS = 3
+    EBAY = 4
+    MERCARI = 5
+    OTHER = 6
+
+
 class EnumList(TypeDecorator[list[EInt]]):
     impl = TEXT
     cache_ok = True

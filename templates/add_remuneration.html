@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Remuneration{% endblock %}
+
+{% block content %}
+  <h1>Add New Remuneration</h1>
+  <a href="/" class="btn btn-purple btn-small margin-bottom-20 inline">Back To Landing Page</a>
+
+<form method="post" action="/add_remuneration" enctype="application/x-www-form-urlencoded">
+  <label>Item ID:</label>
+  <input type="number" name="item_id"><br><br>
+
+  <label>Remuneration Amount (JPY):</label>
+  <input type="number" name="remuneration_amount_jpy" required><br><br>
+
+  <label>Remuneration Date:</label>
+  <input type="date" name="remuneration_date" required><br><br>
+
+  <label>Remuneration Source:</label>
+  <select name="remuneration_source">
+    {% for remuneration_source in remuneration_source_enum %}
+      <option value="{{ remuneration_source.name }}">
+        {{ remuneration_source.name.title().replace('_', ' ') }}
+      </option>
+    {% endfor %}
+  </select><br><br>
+
+  <button type="submit">Add Remuneration</button>
+</form>
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}Remunerations List{% endblock %}
+
+{% block content %}
+<a href="/" class="btn btn-purple btn-small margin-bottom-20 inline">Back To Landing Page</a>
+
+<form method="get" style="float: right;">
+  <label>
+    Max Rows:
+    <input
+      type="number"
+      name="show_limit"
+      value="{{ show_limit }}"
+      min="1"
+      step="1"
+      style="width: 5em;"
+      onchange="this.form.submit()"
+    >
+  </label>
+</form>
+
+<div style="margin-top: 25px; font-size: 14px;">
+  <table border="1" cellpadding="6" cellspacing="0">
+    <thead>
+      <tr>
+        <th>Item ID</th>
+        <th>Item</th>
+        <th>Date</th>
+        <th>Source</th>
+        <th>Remuneration (JPY)</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for remuneration in remunerations %}
+        <tr>
+          <td class="right-aligned {{ 'faint' if remuneration.item_id is none else '' }}">
+            {{ remuneration.item_id if remuneration.item_id is not none else '' }}
+          </td>
+          <td class="{{ 'faint' if remuneration.item is none else '' }}">
+            {{ remuneration.item.name if remuneration.item is not none else '' }}
+          </td>
+          <td class="centre-aligned">{{ remuneration.remuneration_date }}</td>
+          <td>{{ remuneration.remuneration_source | enum }}</td>
+          <td class="right-aligned">{{ remuneration.remuneration_amount_jpy | yen }}</td>
+          <td>
+            <a href="/remuneration_delete/{{ remuneration.id }}"
+                    onclick="return confirm('Are you sure you want to delete this remuneration?')"
+                    style="color: red; margin-right: 10px;">
+              Del
+            </a>
+            <a href="/remuneration_edit/{{ remuneration.id }}" style="color: purple;">
+              Edit
+            </a>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+<br>
+
+<div class="pagination">
+  {% if prev_url != "none" %}
+    <a href="{{ prev_url }}" class="btn btn-black btn-small"><span>Previous</span></a>
+  {% else %}
+    <span class="btn btn-black-disabled btn-small"><span><<< End</span></span>
+  {% endif %}
+
+  {% if next_url != "none" %}
+    <a href="{{ next_url }}" class="btn btn-black btn-small"><span>Next</span></a>
+  {% else %}
+    <span class="btn btn-black-disabled btn-small"><span>End >>></span></span>
+  {% endif %}
+</div>
+
+{% if not remunerations %}
+  <p>No remunerations found.</p>
+{% endif %}
+{% endblock %}

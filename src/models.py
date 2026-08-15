@@ -36,6 +36,7 @@ from .item_enums import (
     ObjectVariant,
     Qualifier,
     RefundReason,
+    RemunerationSource,
     Status,
 )
 
@@ -532,3 +533,22 @@ class Refund(Base):
     @classmethod
     def _refund_amount_jpy_expression(cls) -> ColumnElement[int]:
         return cast(func.round(cls.refund_amount_usd * cls.usd_to_jpy_rate, 0), Integer)
+
+
+class Remuneration(Base):
+    __tablename__ = 'remunerations'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    item_id: NullableInt = mapped_column(
+        ForeignKey('items.id', ondelete='SET NULL'),
+        index=True,
+        nullable=True,
+    )
+    remuneration_amount_jpy: Mapped[int] = mapped_column(Integer)
+    remuneration_date: Mapped[date] = mapped_column(Date)
+    remuneration_source: Mapped[RemunerationSource] = mapped_column(
+        EnumInt(RemunerationSource),
+        nullable=False,
+    )
+
+    item: Mapped[Item | None] = relationship(viewonly=True)

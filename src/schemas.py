@@ -27,6 +27,7 @@ from .item_enums import (
     ObjectVariant,
     Qualifier,
     RefundReason,
+    RemunerationSource,
     Status,
 )
 
@@ -421,5 +422,44 @@ class RefundCreate(RefundBase):
 
 
 class RefundUpdate(RefundBase):
+    def to_model_kwargs(self) -> dict[str, Any]:
+        return self.model_dump(exclude_unset=True)
+
+
+class RemunerationBase(BaseModel):
+    model_config = ConfigDict(
+        extra='forbid',
+        from_attributes=True,
+    )
+
+    item_id: int | None = None
+    remuneration_amount_jpy: int | None = None
+    remuneration_date: date | None = None
+    remuneration_source: Annotated[
+        RemunerationSource | None,
+        enum_by_name(RemunerationSource),
+    ] = None
+
+    @field_validator('*', mode='before')
+    @classmethod
+    def empty_str_to_none(
+        cls,
+        v: T,
+    ) -> T | None:
+        if v == '':
+            return None
+        return v
+
+
+class RemunerationCreate(RemunerationBase):
+    remuneration_amount_jpy: int
+    remuneration_date: date
+    remuneration_source: Annotated[RemunerationSource, enum_by_name(RemunerationSource)]
+
+    def to_model_kwargs(self) -> dict[str, Any]:
+        return self.model_dump()
+
+
+class RemunerationUpdate(RemunerationBase):
     def to_model_kwargs(self) -> dict[str, Any]:
         return self.model_dump(exclude_unset=True)
