@@ -28,11 +28,13 @@ from src.database import (
 from src.models import (
     GradingRecord,
     Item,
+    Refund,
     Submission,
 )
 from src.schemas import (
     ItemBase,
     ItemCreate,
+    RefundCreate,
 )
 
 TEST_DATABASE_URL = 'sqlite:///:memory:'
@@ -375,6 +377,54 @@ class SubmissionFactory:
 @pytest.fixture
 def submission_factory() -> SubmissionFactory:
     return SubmissionFactory()
+
+
+class RefundFactory:
+    def get(
+        self,
+        idx: int = 1,
+        item_id: int | None = None,
+        refund_amount_usd: float = 100.0,
+        refund_date: date = date(2026, 3, 1),
+        refund_reason: item_enums.RefundReason = item_enums.RefundReason.OTHER,
+        usd_to_jpy_rate: float = 150.0,
+    ) -> Refund:
+        return Refund(
+            id=idx,
+            item_id=item_id,
+            refund_amount_usd=refund_amount_usd,
+            refund_date=refund_date,
+            refund_reason=refund_reason,
+            usd_to_jpy_rate=usd_to_jpy_rate,
+        )
+
+
+@pytest.fixture
+def refund_factory() -> RefundFactory:
+    return RefundFactory()
+
+
+class RefundCreateFactory:
+    def get(
+        self,
+        item_id: int | None = None,
+        refund_amount_usd: float = 100.0,
+        refund_date: date = date(2026, 3, 1),
+        refund_reason: item_enums.RefundReason = item_enums.RefundReason.OTHER,
+        usd_to_jpy_rate: float = 150.0,
+    ) -> RefundCreate:
+        return RefundCreate(
+            item_id=item_id,
+            refund_amount_usd=refund_amount_usd,
+            refund_date=refund_date,
+            refund_reason=refund_reason,
+            usd_to_jpy_rate=usd_to_jpy_rate,
+        )
+
+
+@pytest.fixture
+def refund_create_factory() -> RefundCreateFactory:
+    return RefundCreateFactory()
 
 
 @pytest.fixture

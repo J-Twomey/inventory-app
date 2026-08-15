@@ -30,13 +30,15 @@ from .schemas import (
     ItemSearch,
     ItemUpdate,
     RefundCreate,
+    RefundUpdate,
     SubmissionCreate,
 )
 from .validators import (
     check_intent,
+    check_item_required_fields_not_removed,
     check_new_item_not_submitted,
     check_no_duplicate_items_in_submission,
-    check_required_fields_not_removed,
+    check_refund_required_fields_not_removed,
     check_status,
     check_status_change_to_submitted_valid,
     check_valid_grading_record_update,
@@ -159,7 +161,7 @@ def edit_item(
     item = get_item(db, item_id)
     if item is None:
         return 404
-    check_required_fields_not_removed(item_update)
+    check_item_required_fields_not_removed(item_update)
     check_valid_intent_or_status_update(
         Intent(item.intent),
         Status(item.status),
@@ -412,3 +414,45 @@ def get_newest_refunds(
 
 def get_total_number_of_refunds(db: Session) -> int:
     return db.query(Refund).count()
+
+
+def get_refund(
+    db: Session,
+    refund_id: int,
+) -> Refund | None:
+    return db.query(Refund).filter(Refund.id == refund_id).first()
+
+
+def delete_refund_by_id(
+    db: Session,
+    refund_id: int,
+) -> bool:
+    refund = get_refund(db, refund_id)
+    if refund is None:
+        return False
+    db.delete(refund)
+    db.commit()
+    return True
+
+
+def edit_refund(
+    db: Session,
+    refund_id: int,
+    refund_update: RefundUpdate,
+) -> int:
+    refund = get_refund(db, refund_id)
+    if refund is None:
+        return 404
+    check_refund_required_fields_not_removed(refund_update)
+    perform_refund_update(refund, refund_update)
+    db.commit()
+    db.refresh(refund)
+    return 303
+
+
+def perform_refund_update(
+    refund: Refund,
+    refund_update: RefundUpdate,
+) -> None:
+    for key, value in refund_update.to_model_kwargs().items():
+        setattr(refund, key, value)

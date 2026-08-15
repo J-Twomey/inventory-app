@@ -30,6 +30,7 @@
         <th>Reason</th>
         <th>Refund (USD)</th>
         <th>Refund (JPY)</th>
+        <th>Actions</th>
       </tr>
     </thead>
     <tbody>
@@ -45,6 +46,16 @@
           <td>{{ refund.refund_reason.name }}</td>
           <td class="right-aligned">{{ refund.refund_amount_usd | dollar }}</td>
           <td class="right-aligned">{{ refund.refund_amount_jpy | yen }}</td>
+          <td>
+            <a href="/refund_delete/{{ refund.id }}"
+                    onclick="return confirm('Are you sure you want to delete this refund?')"
+                    style="color: red; margin-right: 10px;">
+              Del
+            </a>
+            <a href="/refund_edit/{{ refund.id }}" style="color: purple;">
+              Edit
+            </a>
+          </td>
         </tr>
       {% endfor %}
     </tbody>

@@ -11,6 +11,7 @@ from src.models import Item
 from src.schemas import (
     GradingRecordUpdate,
     ItemUpdate,
+    RefundUpdate,
 )
 
 from .conftest import (
@@ -116,15 +117,15 @@ def test_check_no_duplicate_items_in_submission_has_duplicate() -> None:
         validators.check_no_duplicate_items_in_submission(item_ids)
 
 
-def test_check_required_fields_not_removed_no_removal() -> None:
+def test_check_item_required_fields_not_removed_no_removal() -> None:
     update = ItemUpdate.model_validate({'name': 'Golem', 'purchase_grade': ''})
-    validators.check_required_fields_not_removed(update)
+    validators.check_item_required_fields_not_removed(update)
 
 
-def test_check_required_fields_not_removed_removal_rejected() -> None:
+def test_check_item_required_fields_not_removed_removal_rejected() -> None:
     update = ItemUpdate.model_validate({'name': '', 'purchase_price': ''})
     with pytest.raises(ValueError, match='The following fields cannot be removed'):
-        validators.check_required_fields_not_removed(update)
+        validators.check_item_required_fields_not_removed(update)
 
 
 def test_check_status_change_to_submitted_valid_pending(
@@ -206,3 +207,27 @@ def test_check_valid_submission_field_update_invalid_date_order(
             'return_date',
             date(2025, 5, 1),
         )
+
+
+def test_check_refund_required_fields_not_removed_no_changes() -> None:
+    validators.check_refund_required_fields_not_removed(RefundUpdate())
+
+
+def test_check_refund_required_fields_not_removed_clearing_nullable_field() -> None:
+    validators.check_refund_required_fields_not_removed(RefundUpdate(item_id=None))
+
+
+@pytest.mark.parametrize(
+    'refund_update',
+    [
+        pytest.param(RefundUpdate(refund_amount_usd=None), id='removing_refund_amount_usd'),
+        pytest.param(RefundUpdate(refund_date=None), id='removing_refund_date'),
+        pytest.param(RefundUpdate(refund_reason=None), id='removing_refund_reason'),
+        pytest.param(RefundUpdate(usd_to_jpy_rate=None), id='removing_usd_to_jpy_rate'),
+    ],
+)
+def test_check_refund_required_fields_not_removed_clearing_required_field(
+    refund_update: RefundUpdate,
+) -> None:
+    with pytest.raises(ValueError, match='cannot be removed'):
+        validators.check_refund_required_fields_not_removed(refund_update)

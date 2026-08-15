@@ -13,6 +13,8 @@ from .schemas import (
     GradingRecordUpdate,
     ItemCreate,
     ItemUpdate,
+    RefundCreate,
+    RefundUpdate,
     SubmissionBase,
 )
 
@@ -91,11 +93,22 @@ def check_new_item_not_submitted(item: ItemCreate) -> None:
         raise ValueError('A new item cannot be created with a status of SUBMITTED')
 
 
-def check_required_fields_not_removed(item_update: ItemUpdate) -> None:
+def check_item_required_fields_not_removed(item_update: ItemUpdate) -> None:
     update_data = item_update.to_model_kwargs()
     removed = [
         field
         for field, info in ItemCreate.model_fields.items()
+        if info.is_required() and field in update_data and update_data[field] is None
+    ]
+    if removed:
+        raise ValueError(f'The following fields cannot be removed: {removed}')
+
+
+def check_refund_required_fields_not_removed(refund_update: RefundUpdate) -> None:
+    update_data = refund_update.to_model_kwargs()
+    removed = [
+        field
+        for field, info in RefundCreate.model_fields.items()
         if info.is_required() and field in update_data and update_data[field] is None
     ]
     if removed:

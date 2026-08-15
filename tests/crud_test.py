@@ -15,6 +15,8 @@ from .conftest import (
     GradingRecordFactory,
     ItemCreateFactory,
     ItemFactory,
+    RefundCreateFactory,
+    RefundFactory,
     SubmissionFactory,
 )
 
@@ -816,3 +818,270 @@ def test_delete_grading_record_keeps_listed_item_listed(
     db_session.refresh(item)
     assert item.status == item_enums.Status.LISTED
     assert item.list_price == 2000.0
+
+
+def test_create_refund_without_item(
+    db_session: Session,
+    refund_create_factory: RefundCreateFactory,
+) -> None:
+    refund = refund_create_factory.get()
+    db_refund = crud.create_refund(db_session, refund)
+
+    refund_from_db = db_session.query(models.Refund).first()
+    assert db_refund.id is not None
+    assert db_refund == refund_from_db
+    assert db_refund.item_id is None
+    assert db_refund.refund_amount_usd == 100.0
+    assert db_refund.refund_amount_jpy == 15000
+
+
+def test_create_refund_linked_to_item(
+    db_session: Session,
+    item_factory: ItemFactory,
+    refund_create_factory: RefundCreateFactory,
+) -> None:
+    item = item_factory.get(idx=1)
+    db_session.add(item)
+    db_session.flush()
+
+    db_refund = crud.create_refund(db_session, refund_create_factory.get(item_id=item.id))
+    assert db_refund.item_id == item.id
+    assert db_refund.item == item
+
+
+def test_get_refund_returns_correct_refund(
+    db_session: Session,
+    refund_factory: RefundFactory,
+) -> None:
+    refunds = [refund_factory.get(idx=i, refund_amount_usd=float(i)) for i in (1, 2)]
+    db_session.add_all(refunds)
+    db_session.flush()
+
+    result = crud.get_refund(db_session, refunds[-1].id)
+    assert result == refunds[-1]
+
+
+def test_get_refund_no_refund(
+    db_session: Session,
+    refund_factory: RefundFactory,
+) -> None:
+    refund = refund_factory.get(idx=1)
+    db_session.add(refund)
+    db_session.flush()
+
+    assert crud.get_refund(db_session, refund.id + 1) is None
+
+
+def test_get_newest_refunds_orders_by_date_descending(
+    db_session: Session,
+    refund_factory: RefundFactory,
+) -> None:
+    refund_dates = [date(2026, 1, 1), date(2026, 3, 1), date(2026, 2, 1)]
+    refunds = [refund_factory.get(idx=i, refund_date=d) for i, d in enumerate(refund_dates)]
+    db_session.add_all(refunds)
+    db_session.flush()
+
+    result = crud.get_newest_refunds(db_session)
+    assert [r.refund_date for r in result] == sorted(refund_dates)
+
+
+def test_get_newest_refunds_skip_and_limit(
+    db_session: Session,
+    refund_factory: RefundFactory,
+) -> None:
+    refund_dates = [date(2026, 1, 1), date(2026, 2, 1), date(2026, 3, 1)]
+    refunds = [refund_factory.get(idx=i, refund_date=d) for i, d in enumerate(refund_dates)]
+    db_session.add_all(refunds)
+    db_session.flush()
+
+    result = crud.get_newest_refunds(db_session, skip=1, limit=1)
+    assert [r.refund_date for r in result] == [date(2026, 2, 1)]
+
+
+def test_get_total_number_of_refunds(
+    db_session: Session,
+    refund_factory: RefundFactory,
+) -> None:
+    refunds = [refund_factory.get(idx=i) for i in (1, 2)]
+    db_session.add_all(refunds)
+    db_session.flush()
+
+    assert crud.get_total_number_of_refunds(db_session) == len(refunds)
+
+
+def test_delete_refund_by_id_success(
+    db_session: Session,
+    refund_factory: RefundFactory,
+) -> None:
+    refunds = [refund_factory.get(idx=i) for i in (1, 2)]
+    ids = [r.id for r in refunds]
+    db_session.add_all(refunds)
+    db_session.flush()
+
+    assert crud.delete_refund_by_id(db_session, ids[-1]) is True
+    assert crud.get_refund(db_session, ids[-1]) is None
+    assert crud.get_refund(db_session, ids[0]) is not None
+
+
+def test_delete_refund_by_id_failure(
+    db_session: Session,
+    refund_factory: RefundFactory,
+) -> None:
+    refund = refund_factory.get(idx=1)
+    db_session.add(refund)
+    db_session.flush()
+
+    assert crud.delete_refund_by_id(db_session, refund.id + 1) is False
+    assert crud.get_refund(db_session, refund.id) is not None
+
+
+def test_delete_refund_leaves_linked_item(
+    db_session: Session,
+    item_factory: ItemFactory,
+    refund_factory: RefundFactory,
+) -> None:
+    item = item_factory.get(idx=1)
+    db_session.add(item)
+    db_session.flush()
+    refund = refund_factory.get(idx=1, item_id=item.id)
+    db_session.add(refund)
+    db_session.flush()
+
+    assert crud.delete_refund_by_id(db_session, refund.id) is True
+    assert crud.get_item(db_session, item.id) is not None
+
+
+def test_edit_refund_no_refund_found(
+    db_session: Session,
+    refund_factory: RefundFactory,
+) -> None:
+    refund = refund_factory.get(idx=1)
+    db_session.add(refund)
+    db_session.flush()
+
+    result = crud.edit_refund(db_session, refund_id=100, refund_update=schemas.RefundUpdate())
+    assert result == 404
+
+
+def test_edit_refund_no_changes(
+    db_session: Session,
+    refund_factory: RefundFactory,
+) -> None:
+    refund = refund_factory.get(idx=1)
+    db_session.add(refund)
+    db_session.flush()
+
+    result = crud.edit_refund(
+        db_session,
+        refund_id=refund.id,
+        refund_update=schemas.RefundUpdate(),
+    )
+    assert result == 303
+    assert crud.get_refund(db_session, refund.id) == refund
+
+
+def test_edit_refund_single_field(
+    db_session: Session,
+    refund_factory: RefundFactory,
+) -> None:
+    refund = refund_factory.get(idx=1)
+    db_session.add(refund)
+    db_session.flush()
+
+    result = crud.edit_refund(
+        db_session,
+        refund_id=refund.id,
+        refund_update=schemas.RefundUpdate(refund_amount_usd=250.0),
+    )
+    assert result == 303
+
+    changed_refund = crud.get_refund(db_session, refund.id)
+    assert changed_refund is not None
+    assert changed_refund.refund_amount_usd == 250.0
+    assert changed_refund.refund_date == date(2026, 3, 1)
+
+
+def test_edit_refund_enum_field(
+    db_session: Session,
+    refund_factory: RefundFactory,
+) -> None:
+    refund = refund_factory.get(idx=1)
+    db_session.add(refund)
+    db_session.flush()
+
+    result = crud.edit_refund(
+        db_session,
+        refund_id=refund.id,
+        refund_update=schemas.RefundUpdate(refund_reason=item_enums.RefundReason.DAMAGE),
+    )
+    assert result == 303
+
+    changed_refund = crud.get_refund(db_session, refund.id)
+    assert changed_refund is not None
+    assert changed_refund.refund_reason == item_enums.RefundReason.DAMAGE
+
+
+def test_edit_refund_multiple_changes(
+    db_session: Session,
+    refund_factory: RefundFactory,
+) -> None:
+    refund = refund_factory.get(idx=1)
+    db_session.add(refund)
+    db_session.flush()
+
+    result = crud.edit_refund(
+        db_session,
+        refund_id=refund.id,
+        refund_update=schemas.RefundUpdate(
+            refund_amount_usd=200.0,
+            refund_date=date(2026, 4, 2),
+            usd_to_jpy_rate=160.0,
+        ),
+    )
+    assert result == 303
+
+    changed_refund = crud.get_refund(db_session, refund.id)
+    assert changed_refund is not None
+    assert changed_refund.refund_amount_usd == 200.0
+    assert changed_refund.refund_date == date(2026, 4, 2)
+    assert changed_refund.refund_amount_jpy == 32000
+
+
+def test_edit_refund_clears_nullable_item_id(
+    db_session: Session,
+    item_factory: ItemFactory,
+    refund_factory: RefundFactory,
+) -> None:
+    item = item_factory.get(idx=1)
+    db_session.add(item)
+    db_session.flush()
+    refund = refund_factory.get(idx=1, item_id=item.id)
+    db_session.add(refund)
+    db_session.flush()
+
+    result = crud.edit_refund(
+        db_session,
+        refund_id=refund.id,
+        refund_update=schemas.RefundUpdate(item_id=None),
+    )
+    assert result == 303
+
+    changed_refund = crud.get_refund(db_session, refund.id)
+    assert changed_refund is not None
+    assert changed_refund.item_id is None
+
+
+def test_edit_refund_rejects_cleared_required_field(
+    db_session: Session,
+    refund_factory: RefundFactory,
+) -> None:
+    refund = refund_factory.get(idx=1)
+    db_session.add(refund)
+    db_session.flush()
+
+    with pytest.raises(ValueError, match='cannot be removed'):
+        crud.edit_refund(
+            db_session,
+            refund_id=refund.id,
+            refund_update=schemas.RefundUpdate(refund_amount_usd=None),
+        )

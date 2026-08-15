@@ -30,8 +30,10 @@ from .crud import (
     create_submission,
     delete_grading_record_by_id,
     delete_item_by_id,
+    delete_refund_by_id,
     edit_grading_record,
     edit_item,
+    edit_refund,
     edit_submission_single_field,
     get_grading_record,
     get_item,
@@ -40,6 +42,7 @@ from .crud import (
     get_newest_items,
     get_newest_refunds,
     get_newest_submissions,
+    get_refund,
     get_total_number_of_grading_records,
     get_total_number_of_items,
     get_total_number_of_refunds,
@@ -68,6 +71,7 @@ from .schemas import (
     ItemSearch,
     ItemUpdate,
     RefundCreate,
+    RefundUpdate,
     SubmissionCreate,
 )
 
@@ -567,6 +571,61 @@ def submit_add_refund_form(
 ) -> RedirectResponse:
     create_refund(db, refund)
     return RedirectResponse(url='/', status_code=303)
+
+
+@router.get('/refund_delete/{refund_id}')
+def delete_refund(
+    refund_id: int,
+    db: DbSession,
+) -> RedirectResponse:
+    success = delete_refund_by_id(db, refund_id)
+    if not success:
+        raise HTTPException(status_code=404, detail='Refund not found')
+    return RedirectResponse(url='/refunds_view', status_code=303)
+
+
+@router.get('/refund_edit/{refund_id}', response_class=HTMLResponse)
+def open_edit_refund_form(
+    refund_id: int,
+    request: Request,
+    db: DbSession,
+) -> Response:
+    refund = get_refund(db, refund_id)
+    if refund is None:
+        raise HTTPException(status_code=404, detail='Refund not found')
+    return templates.TemplateResponse(
+        request,
+        'edit_refund.html',
+        {
+            'refund': refund,
+            'refund_reason_enum': RefundReason,
+        },
+    )
+
+
+@router.post('/refund_edit/{refund_id}')
+def submit_edit_refund(
+    refund_id: int,
+    request: Request,
+    edit_params: Annotated[RefundUpdate, Form()],
+    db: DbSession,
+) -> Response:
+    try:
+        edit_result = edit_refund(db, refund_id, edit_params)
+    except ValueError as e:
+        refund = get_refund(db, refund_id)
+        if refund is None:
+            raise HTTPException(status_code=404, detail='Refund not found') from None
+        return templates.TemplateResponse(
+            request,
+            'edit_refund.html',
+            {
+                'refund': refund,
+                'refund_reason_enum': RefundReason,
+                'error_message': str(e),
+            },
+        )
+    return RedirectResponse('/refunds_view', status_code=edit_result)
 
 
 def slice_items(
