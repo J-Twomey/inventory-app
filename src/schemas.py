@@ -45,7 +45,26 @@ def enum_by_name(enum_cls: type[E]) -> BeforeValidator:
     return BeforeValidator(parse)
 
 
-class ItemBase(BaseModel):
+class CheckboxFieldsMixin(BaseModel):
+    @classmethod
+    def checkbox_fields(cls) -> set[str]:
+        return {f for f, info in cls.model_fields.items() if info.annotation is bool}
+
+
+class UncheckedCheckboxDefaultsMixin(CheckboxFieldsMixin):
+    """Unchecked HTML checkboxes are omitted from the form post rather than sent as false."""
+
+    @model_validator(mode='before')
+    @classmethod
+    def default_unchecked_checkboxes(cls, data: object) -> object:
+        if isinstance(data, dict):
+            data = {k: v for k, v in data.items() if v is not None}
+            for checkbox in cls.checkbox_fields():
+                data.setdefault(checkbox, False)
+        return data
+
+
+class ItemBase(CheckboxFieldsMixin):
     model_config = ConfigDict(
         extra='forbid',
         from_attributes=True,
@@ -80,10 +99,6 @@ class ItemBase(BaseModel):
     object_variant: Annotated[ObjectVariant | None, enum_by_name(ObjectVariant)] = None
     audit_target: bool = False
     cracked_from_purchase: bool = False
-
-    @classmethod
-    def checkbox_fields(cls) -> set[str]:
-        return {f for f, info in cls.model_fields.items() if info.annotation is bool}
 
     @field_validator('*', mode='before')
     @classmethod
@@ -213,16 +228,7 @@ class ItemCreate(ItemBase):
         return self
 
 
-class ItemUpdate(ItemBase):
-    @model_validator(mode='before')
-    @classmethod
-    def default_unchecked_checkboxes(cls, data: object) -> object:
-        if isinstance(data, dict):
-            data = {k: v for k, v in data.items() if v is not None}
-            for checkbox in cls.checkbox_fields():
-                data.setdefault(checkbox, False)
-        return data
-
+class ItemUpdate(UncheckedCheckboxDefaultsMixin, ItemBase):
     def to_model_kwargs(self) -> dict[str, Any]:
         return self.model_dump(exclude_unset=True)
 
@@ -343,7 +349,7 @@ class SubmissionCreate(SubmissionBase):
         return self.model_dump()
 
 
-class GradingRecordBase(BaseModel):
+class GradingRecordBase(CheckboxFieldsMixin):
     model_config = ConfigDict(extra='forbid')
 
     item_id: int | None = None
@@ -352,10 +358,6 @@ class GradingRecordBase(BaseModel):
     grade: float | None = None
     cert: int | None = None
     is_cracked: bool = False
-
-    @classmethod
-    def checkbox_fields(cls) -> set[str]:
-        return {f for f, info in cls.model_fields.items() if info.annotation is bool}
 
     @field_validator('*', mode='before')
     @classmethod
@@ -380,16 +382,7 @@ class GradingRecordCreate(GradingRecordBase):
         return self.model_dump()
 
 
-class GradingRecordUpdate(GradingRecordBase):
-    @model_validator(mode='before')
-    @classmethod
-    def default_unchecked_checkboxes(cls, data: object) -> object:
-        if isinstance(data, dict):
-            data = {k: v for k, v in data.items() if v is not None}
-            for checkbox in cls.checkbox_fields():
-                data.setdefault(checkbox, False)
-        return data
-
+class GradingRecordUpdate(UncheckedCheckboxDefaultsMixin, GradingRecordBase):
     def to_model_kwargs(self) -> dict[str, Any]:
         return self.model_dump(exclude_unset=True)
 
