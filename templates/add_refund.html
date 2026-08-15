@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Refund{% endblock %}
+
+{% block content %}
+  <h1>Add New Refund</h1>
+  <a href="/" class="btn btn-purple btn-small margin-bottom-20 inline">Back To Landing Page</a>
+
+<form method="post" action="/add_refund" enctype="application/x-www-form-urlencoded">
+  <label>Item ID:</label>
+  <input type="number" name="item_id"><br><br>
+
+  <label>Refund Amount (USD):</label>
+  <input type="number" name="refund_amount_usd" step="any" required><br><br>
+
+  <label>Refund Date:</label>
+  <input type="date" name="refund_date" required><br><br>
+
+  <label>Refund Reason:</label>
+  <select name="refund_reason">
+    {% for refund_reason in refund_reason_enum %}
+      <option value="{{ refund_reason.name }}">
+        {{ refund_reason.name.title().replace('_', ' ') }}
+      </option>
+    {% endfor %}
+  </select><br><br>
+
+  <label>USD to JPY Rate:</label>
+  <input type="number" name="usd_to_jpy_rate" step="any" required><br><br>
+
+  <button type="submit">Add Refund</button>
+</form>
+{% endblock %}

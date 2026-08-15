@@ -1,4 +1,5 @@
 from collections.abc import Callable
+from datetime import date
 
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
@@ -7,7 +8,10 @@ from src import (
     crud,
     item_enums,
 )
-from src.models import Item
+from src.models import (
+    Item,
+    Refund,
+)
 
 from .conftest import (
     ItemFactory,
@@ -422,3 +426,109 @@ def test_submit_edit_item_to_submitted_shows_error(
     assert 'An item can only be set to SUBMITTED by adding it to a submission' in response.text
     db_session.refresh(item)
     assert item.status == item_enums.Status.STORAGE
+
+
+def test_show_add_refund_form(client: TestClient) -> None:
+    response = client.get('/add_refund')
+    assert response.status_code == 200
+    assert 'Add New Refund' in response.text
+
+
+def test_submit_add_refund_form(
+    client: TestClient,
+    db_session: Session,
+) -> None:
+    response = client.post(
+        '/add_refund',
+        data={
+            'item_id': '',
+            'refund_amount_usd': '12.50',
+            'refund_date': '2025-06-01',
+            'refund_reason': 'DAMAGE',
+            'usd_to_jpy_rate': '150',
+        },
+        follow_redirects=False,
+    )
+    assert response.status_code == 303
+    assert response.headers['location'] == '/'
+
+    refund = db_session.query(Refund).one()
+    assert refund.item_id is None
+    assert refund.refund_amount_usd == 12.50
+    assert refund.refund_reason == item_enums.RefundReason.DAMAGE
+    assert refund.refund_amount_jpy == 1875
+
+
+def test_submit_add_refund_form_linked_to_item(
+    client: TestClient,
+    db_session: Session,
+    item_factory: ItemFactory,
+) -> None:
+    item = item_factory.get()
+    db_session.add(item)
+    db_session.flush()
+
+    response = client.post(
+        '/add_refund',
+        data={
+            'item_id': str(item.id),
+            'refund_amount_usd': '20',
+            'refund_date': '2025-06-01',
+            'refund_reason': 'LOSS',
+            'usd_to_jpy_rate': '150',
+        },
+        follow_redirects=False,
+    )
+    assert response.status_code == 303
+
+    refund = db_session.query(Refund).one()
+    assert refund.item_id == item.id
+    assert refund.item is not None
+    assert refund.item.id == item.id
+
+
+def test_submit_add_refund_form_missing_required_field(client: TestClient) -> None:
+    response = client.post(
+        '/add_refund',
+        data={
+            'refund_amount_usd': '',
+            'refund_date': '2025-06-01',
+            'refund_reason': 'OTHER',
+            'usd_to_jpy_rate': '150',
+        },
+        follow_redirects=False,
+    )
+    assert response.status_code == 422
+
+
+def test_view_refunds_no_refunds(client: TestClient) -> None:
+    response = client.get('/refunds_view')
+    assert response.status_code == 200
+    assert 'No refunds found.' in response.text
+
+
+def test_view_refunds_shows_refund(
+    client: TestClient,
+    db_session: Session,
+    item_factory: ItemFactory,
+) -> None:
+    item = item_factory.get(name='REFUNDED_ITEM')
+    db_session.add(item)
+    db_session.flush()
+    db_session.add(
+        Refund(
+            item_id=item.id,
+            refund_amount_usd=12.50,
+            refund_date=date(2025, 6, 1),
+            refund_reason=item_enums.RefundReason.DAMAGE,
+            usd_to_jpy_rate=150.0,
+        ),
+    )
+    db_session.flush()
+
+    response = client.get('/refunds_view')
+    assert response.status_code == 200
+    assert 'REFUNDED_ITEM' in response.text
+    assert '$12.50' in response.text
+    assert 'DAMAGE' in response.text
+    assert 'No refunds found.' not in response.text

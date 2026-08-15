@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Refunds List{% endblock %}
+
+{% block content %}
+<a href="/" class="btn btn-purple btn-small margin-bottom-20 inline">Back To Landing Page</a>
+
+<form method="get" style="float: right;">
+  <label>
+    Max Rows:
+    <input
+      type="number"
+      name="show_limit"
+      value="{{ show_limit }}"
+      min="1"
+      step="1"
+      style="width: 5em;"
+      onchange="this.form.submit()"
+    >
+  </label>
+</form>
+
+<div style="margin-top: 25px; font-size: 14px;">
+  <table border="1" cellpadding="6" cellspacing="0">
+    <thead>
+      <tr>
+        <th>Item ID</th>
+        <th>Item</th>
+        <th>Date</th>
+        <th>Reason</th>
+        <th>Refund (USD)</th>
+        <th>Refund (JPY)</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for refund in refunds %}
+        <tr>
+          <td class="right-aligned">{{ refund.item_id if refund.item_id is not none else '' }}</td>
+          <td>{{ refund.item.name if refund.item is not none else '' }}</td>
+          <td class="centre-aligned">{{ refund.refund_date }}</td>
+          <td>{{ refund.refund_reason.name }}</td>
+          <td class="right-aligned">{{ refund.refund_amount_usd | dollar }}</td>
+          <td class="right-aligned">{{ refund.refund_amount_jpy | yen }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+<br>
+
+<div class="pagination">
+  {% if prev_url != "none" %}
+    <a href="{{ prev_url }}" class="btn btn-black btn-small"><span>Previous</span></a>
+  {% else %}
+    <span class="btn btn-black-disabled btn-small"><span><<< End</span></span>
+  {% endif %}
+
+  {% if next_url != "none" %}
+    <a href="{{ next_url }}" class="btn btn-black btn-small"><span>Next</span></a>
+  {% else %}
+    <span class="btn btn-black-disabled btn-small"><span>End >>></span></span>
+  {% endif %}
+</div>
+
+{% if not refunds %}
+  <p>No refunds found.</p>
+{% endif %}
+{% endblock %}

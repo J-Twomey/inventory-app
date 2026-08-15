@@ -26,6 +26,7 @@ from .crud import (
     SubmissionNotFoundError,
     SubmissionNumberConflictError,
     create_item,
+    create_refund,
     create_submission,
     delete_grading_record_by_id,
     delete_item_by_id,
@@ -37,9 +38,11 @@ from .crud import (
     get_max_sub_number,
     get_newest_grading_records,
     get_newest_items,
+    get_newest_refunds,
     get_newest_submissions,
     get_total_number_of_grading_records,
     get_total_number_of_items,
+    get_total_number_of_refunds,
     get_total_number_of_submissions,
     search_for_items,
 )
@@ -53,6 +56,7 @@ from .item_enums import (
     ListingType,
     ObjectVariant,
     Qualifier,
+    RefundReason,
     Status,
 )
 from .models import Item
@@ -63,6 +67,7 @@ from .schemas import (
     ItemForSubmissionForm,
     ItemSearch,
     ItemUpdate,
+    RefundCreate,
     SubmissionCreate,
 )
 
@@ -515,6 +520,53 @@ def submit_edit_grading_record(
             },
         )
     return RedirectResponse('/grading_records_view', status_code=edit_result)
+
+
+@router.get('/refunds_view', response_class=HTMLResponse)
+def view_refunds(
+    request: Request,
+    db: DbSession,
+    show_limit: int = 500,
+    skip: int = 0,
+) -> Response:
+    show_limit = max(1, min(show_limit, 5000))
+    skip = max(0, skip)
+    num_results = get_total_number_of_refunds(db)
+    refunds = get_newest_refunds(db, skip=skip, limit=show_limit)
+    prev_url, next_url = generate_page_urls(
+        request=request,
+        skip=skip,
+        show_limit=show_limit,
+        num_results=num_results,
+    )
+    return templates.TemplateResponse(
+        request,
+        'refunds_view.html',
+        {
+            'refunds': refunds,
+            'show_limit': show_limit,
+            'prev_url': prev_url,
+            'next_url': next_url,
+        },
+    )
+
+
+@router.get('/add_refund', response_class=HTMLResponse)
+def show_add_refund_form(request: Request) -> Response:
+    return templates.TemplateResponse(
+        request,
+        'add_refund.html',
+        {'refund_reason_enum': RefundReason},
+    )
+
+
+@router.post('/add_refund')
+def submit_add_refund_form(
+    refund: Annotated[RefundCreate, Form()],
+    db: DbSession,
+) -> RedirectResponse:
+    create_refund(db, refund)
+    return RedirectResponse(url='/', status_code=303)
 
 
 def slice_items(

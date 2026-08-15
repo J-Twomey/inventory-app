@@ -20,6 +20,7 @@ from .item_enums import (
 from .models import (
     GradingRecord,
     Item,
+    Refund,
     Submission,
 )
 from .schemas import (
@@ -28,6 +29,7 @@ from .schemas import (
     ItemCreate,
     ItemSearch,
     ItemUpdate,
+    RefundCreate,
     SubmissionCreate,
 )
 from .validators import (
@@ -377,3 +379,36 @@ def edit_grading_record(
 
 def get_max_sub_number(db: Session) -> int:
     return db.scalar(select(func.max(Submission.submission_number))) or 0
+
+
+def create_refund(
+    db: Session,
+    refund: RefundCreate,
+) -> Refund:
+    db_refund = Refund(**refund.to_model_kwargs())
+    db.add(db_refund)
+    db.commit()
+    db.refresh(db_refund)
+    return db_refund
+
+
+def get_newest_refunds(
+    db: Session,
+    skip: int = 0,
+    limit: int = 100,
+) -> Sequence[Refund]:
+    refunds = (
+        db.query(Refund)
+        .order_by(
+            desc(Refund.refund_date),
+            desc(Refund.id),
+        )
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+    return list(reversed(refunds))
+
+
+def get_total_number_of_refunds(db: Session) -> int:
+    return db.query(Refund).count()
