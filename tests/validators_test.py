@@ -17,6 +17,7 @@ from .conftest import (
     GradingRecordFactory,
     ItemCreateFactory,
     ItemFactory,
+    SubmissionFactory,
 )
 
 
@@ -178,3 +179,30 @@ def test_check_new_item_not_submitted_is_submitted(
     )
     with pytest.raises(ValueError, match='cannot be created with a status of SUBMITTED'):
         validators.check_new_item_not_submitted(item)
+
+
+def test_check_valid_submission_field_update_clearing_required_field(
+    submission_factory: SubmissionFactory,
+) -> None:
+    submission = submission_factory.get()
+    with pytest.raises(ValueError, match='Submission number cannot be empty'):
+        validators.check_valid_submission_field_update(submission, 'submission_number', None)
+
+
+def test_check_valid_submission_field_update_clearing_nullable_field(
+    submission_factory: SubmissionFactory,
+) -> None:
+    submission = submission_factory.get(return_date=date(2025, 6, 1))
+    validators.check_valid_submission_field_update(submission, 'return_date', None)
+
+
+def test_check_valid_submission_field_update_invalid_date_order(
+    submission_factory: SubmissionFactory,
+) -> None:
+    submission = submission_factory.get(submission_date=date(2025, 6, 1))
+    with pytest.raises(ValueError, match='Return date cannot be before submission date'):
+        validators.check_valid_submission_field_update(
+            submission,
+            'return_date',
+            date(2025, 5, 1),
+        )

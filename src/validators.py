@@ -132,6 +132,10 @@ def check_valid_submission_field_update(
     field: str,
     update_value: object,
 ) -> None:
+    column = Submission.__table__.columns.get(field)
+    if column is not None and not column.nullable and update_value is None:
+        raise ValueError(f'{field.replace("_", " ").capitalize()} cannot be empty')
+
     merged = {f: getattr(submission, f) for f in SubmissionBase.model_fields}
     merged[field] = update_value
     SubmissionBase(**merged)
