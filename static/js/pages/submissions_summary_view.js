@@ -93,6 +93,11 @@ document.addEventListener('DOMContentLoaded', () => {
             showInlineError(cell, data.error_message);
           }
         })
+        .catch(() => {
+          cell.textContent = oldValue;
+          applyDateCellStyle(cell, oldValue);
+          showInlineError(cell, 'Could not reach the server - change was not saved');
+        })
       }
     };
 
