@@ -50,9 +50,88 @@ def test_check_valid_grading_record_update_changes_ng(
     update = GradingRecordUpdate(grading_fee=100, grade=9.5, cert=None)
     with pytest.raises(
         ValueError,
-        match=('Adding grading info to a record requires all of grading fee, grade, and cert'),
+        match=(
+            'A grading record requires grading fee, grade, and cert to all be set, or all be none'
+        ),
     ):
         validators.check_valid_grading_record_update(record, update)
+
+
+def test_check_valid_grading_record_update_full_removal_ok(
+    grading_record_factory: GradingRecordFactory,
+) -> None:
+    record = grading_record_factory.get(grading_fee=1000, grade=9.0, cert=10000)
+    update = GradingRecordUpdate.model_validate({'grading_fee': '', 'grade': '', 'cert': ''})
+    validators.check_valid_grading_record_update(record, update)
+
+
+@pytest.mark.parametrize(
+    'form_data',
+    [
+        pytest.param(
+            {'grading_fee': '1000', 'grade': '9.0', 'cert': ''},
+            id='removes_cert',
+        ),
+        pytest.param(
+            {'grading_fee': '1000', 'grade': '', 'cert': '10000'},
+            id='removes_grade',
+        ),
+        pytest.param(
+            {'grading_fee': '', 'grade': '9.0', 'cert': '10000'},
+            id='removes_grading_fee',
+        ),
+        pytest.param(
+            {'cert': ''},
+            id='removes_cert_only_field_sent',
+        ),
+    ],
+)
+def test_check_valid_grading_record_update_partial_removal_ng(
+    grading_record_factory: GradingRecordFactory,
+    form_data: dict[str, str],
+) -> None:
+    record = grading_record_factory.get(grading_fee=1000, grade=9.0, cert=10000)
+    update = GradingRecordUpdate.model_validate(form_data)
+    with pytest.raises(
+        ValueError,
+        match=(
+            'A grading record requires grading fee, grade, and cert to all be set, or all be none'
+        ),
+    ):
+        validators.check_valid_grading_record_update(record, update)
+
+
+def test_check_item_can_return_to_submitted_ok(item_factory: ItemFactory) -> None:
+    item = item_factory.get(
+        status=item_enums.Status.STORAGE,
+        intent=item_enums.Intent.GRADE,
+    )
+    validators.check_item_can_return_to_submitted(item)
+
+
+def test_check_item_can_return_to_submitted_ng_bad_intent(item_factory: ItemFactory) -> None:
+    item = item_factory.get(
+        status=item_enums.Status.STORAGE,
+        intent=item_enums.Intent.SELL,
+    )
+    with pytest.raises(
+        ValueError, match='has an intent of SELL, which does not allow a status of SUBMITTED'
+    ):
+        validators.check_item_can_return_to_submitted(item)
+
+
+def test_check_item_can_return_to_submitted_ng_populated_fields(
+    item_factory: ItemFactory,
+) -> None:
+    item = item_factory.get(
+        status=item_enums.Status.LISTED,
+        intent=item_enums.Intent.GRADE,
+        list_price=2000.0,
+        list_type=item_enums.ListingType.AUCTION,
+        list_date=date(2026, 1, 1),
+    )
+    with pytest.raises(ValueError, match='must have the following fields cleared first'):
+        validators.check_item_can_return_to_submitted(item)
 
 
 def test_check_valid_merged_item_state_ok(item_factory: ItemFactory) -> None:

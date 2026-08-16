@@ -24,6 +24,8 @@ from .schemas import (
     SubmissionBase,
 )
 
+GRADING_INFO_FIELDS = ('grading_fee', 'grade', 'cert')
+
 
 def check_intent(
     item: Item,
@@ -160,19 +162,25 @@ def check_valid_grading_record_update(
     record: GradingRecord,
     update: GradingRecordUpdate,
 ) -> None:
-    if all(
-        (
-            record.grading_fee is None,
-            record.grade is None,
-            record.cert is None,
-        ),
-    ):
-        changes = (
-            update.grading_fee is not None,
-            update.grade is not None,
-            update.cert is not None,
+    update_data = update.to_model_kwargs()
+    merged = [
+        update_data.get(field, getattr(record, field)) is not None for field in GRADING_INFO_FIELDS
+    ]
+    if any(merged) and not all(merged):
+        raise ValueError(
+            'A grading record requires grading fee, grade, and cert to all be set, or all be none',
         )
-        if any(changes) and not all(changes):
-            raise ValueError(
-                'Adding grading info to a record requires all of grading fee, grade, and cert',
-            )
+
+
+def check_item_can_return_to_submitted(item: Item) -> None:
+    if Status.SUBMITTED not in item.intent.allowed_statuses:
+        raise ValueError(
+            f'Cannot remove grading info: item {item.id} has an intent of {item.intent.name}, '
+            f'which does not allow a status of SUBMITTED',
+        )
+    populated = [f for f in Status.SUBMITTED.required_to_be_null if getattr(item, f) is not None]
+    if populated:
+        raise ValueError(
+            f'Cannot remove grading info: item {item.id} must have the following fields cleared '
+            f'first: {populated}',
+        )

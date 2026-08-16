@@ -149,13 +149,13 @@ def test_submit_edit_grading_record(
 
     response = client.post(
         f'/grading_record_edit/{record.id}',
-        data={'grading_fee': '25', 'grade': '9.5', 'cert': '', 'is_cracked': 'on'},
+        data={'grading_fee': '25', 'grade': '9.5', 'cert': '222', 'is_cracked': 'on'},
         follow_redirects=False,
     )
     assert response.status_code == 303
     assert record.grading_fee == 25
     assert record.grade == 9.5
-    assert record.cert is None
+    assert record.cert == 222
     assert record.is_cracked is True
 
 
@@ -176,10 +176,60 @@ def test_submit_edit_grading_record_partial_required_fields_shows_error(
     )
     assert response.status_code == 200
     assert (
-        'Adding grading info to a record requires all of grading fee, grade, and cert'
+        'A grading record requires grading fee, grade, and cert to all be set, or all be none'
         in response.text
     )
     assert record.grade is None
+
+
+def test_submit_edit_grading_record_partial_removal_shows_error(
+    client: TestClient,
+    item_with_submissions_factory: Callable[..., Item],
+) -> None:
+    item = item_with_submissions_factory(
+        grading_fees=[10],
+        grades=[9.0],
+        certs=[111],
+        intent=item_enums.Intent.GRADE,
+    )
+    record = item.submissions[0]
+
+    response = client.post(
+        f'/grading_record_edit/{record.id}',
+        data={'grading_fee': '10', 'grade': '9.0', 'cert': ''},
+        follow_redirects=False,
+    )
+    assert response.status_code == 200
+    assert (
+        'A grading record requires grading fee, grade, and cert to all be set, or all be none'
+        in response.text
+    )
+    assert record.cert == 111
+
+
+def test_submit_edit_grading_record_removing_grading_info_sets_item_status_to_submitted(
+    client: TestClient,
+    item_with_submissions_factory: Callable[..., Item],
+) -> None:
+    item = item_with_submissions_factory(
+        grading_fees=[10],
+        grades=[9.0],
+        certs=[111],
+        intent=item_enums.Intent.GRADE,
+        status=item_enums.Status.STORAGE,
+    )
+    record = item.submissions[0]
+
+    response = client.post(
+        f'/grading_record_edit/{record.id}',
+        data={'grading_fee': '', 'grade': '', 'cert': ''},
+        follow_redirects=False,
+    )
+    assert response.status_code == 303
+    assert record.grading_fee is None
+    assert record.grade is None
+    assert record.cert is None
+    assert item.status == item_enums.Status.SUBMITTED
 
 
 def test_add_submission_duplicate_sub_number_shows_error(
@@ -273,6 +323,7 @@ def test_submit_edit_grading_record_unchecked_checkbox_clears_is_cracked(
         grades=[9.0],
         certs=[111],
         is_cracked_flags=[True],
+        intent=item_enums.Intent.GRADE,
     )
     record = item.submissions[0]
 

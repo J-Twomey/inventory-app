@@ -38,6 +38,7 @@ from .schemas import (
 )
 from .validators import (
     check_intent,
+    check_item_can_return_to_submitted,
     check_new_item_not_submitted,
     check_no_duplicate_items_in_submission,
     check_required_fields_not_removed,
@@ -353,6 +354,21 @@ def perform_delete_grading_record(
     db.delete(record)
 
 
+def get_item_status_after_record_edit(
+    record: GradingRecord,
+    update_data: dict[str, Any],
+) -> Status | None:
+    """The item's status follows its record closing (returned from grading) or re-opening"""
+    if record.grade is None and update_data.get('grade') is not None:
+        return Status.STORAGE
+    grade_removed = (
+        record.grade is not None and 'grade' in update_data and update_data['grade'] is None
+    )
+    if grade_removed and not update_data.get('is_cracked', record.is_cracked):
+        return Status.SUBMITTED
+    return None
+
+
 def edit_grading_record(
     db: Session,
     record_id: int,
@@ -363,16 +379,16 @@ def edit_grading_record(
         return 404
     check_valid_grading_record_update(record, record_update)
 
-    # Item is returning from being submitted so update status
-    if record.grade is None and record_update.grade is not None:
-        linked_item = get_item(db, record.item_id)
-        if linked_item is not None:
-            item_update = ItemUpdate(status=Status.STORAGE)
-            perform_item_update(linked_item, item_update)
-        else:
-            raise ValueError(f'Linked item not found for item #{record.item_id}')
-
     update_data = record_update.to_model_kwargs()
+    new_status = get_item_status_after_record_edit(record, update_data)
+    if new_status is not None:
+        linked_item = get_item(db, record.item_id)
+        if linked_item is None:
+            raise ValueError(f'Linked item not found for item #{record.item_id}')
+        if new_status == Status.SUBMITTED:
+            check_item_can_return_to_submitted(linked_item)
+        perform_item_update(linked_item, ItemUpdate(status=new_status))
+
     for key, value in update_data.items():
         setattr(record, key, value)
 
