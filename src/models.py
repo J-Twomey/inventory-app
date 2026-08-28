@@ -156,12 +156,18 @@ class Item(Base):
             (
                 latest_company.is_(None),
                 case(
-                    (cls.cracked_from_purchase.is_(true()), literal(GradingCompany.RAW)),
+                    (
+                        cls.cracked_from_purchase.is_(true()),
+                        literal(GradingCompany.RAW, type_=cls.purchase_grading_company.type),
+                    ),
                     else_=cls.purchase_grading_company,
                 ),
             ),
             else_=case(
-                (latest_cracked.is_(true()), literal(GradingCompany.RAW)),
+                (
+                    latest_cracked.is_(true()),
+                    literal(GradingCompany.RAW, type_=cls.purchase_grading_company.type),
+                ),
                 else_=latest_company,
             ),
         )

@@ -1,3 +1,4 @@
+from collections.abc import Callable
 from datetime import date
 
 import pytest
@@ -355,6 +356,55 @@ def test_search_for_items_cracked_from_purchase(
     assert all(item.cracked_from_purchase is False for item in result)
 
 
+@pytest.mark.parametrize(
+    ('company', 'expected_ids'),
+    [
+        pytest.param(item_enums.GradingCompany.RAW, [1, 4], id='raw'),
+        pytest.param(item_enums.GradingCompany.PSA, [3], id='psa'),
+        pytest.param(item_enums.GradingCompany.CGC, [2], id='cgc'),
+        pytest.param(item_enums.GradingCompany.BGS, [], id='bgs_no_matches'),
+    ],
+)
+def test_search_for_items_grading_company(
+    db_session: Session,
+    item_factory: ItemFactory,
+    item_with_submissions_factory: Callable[..., models.Item],
+    company: item_enums.GradingCompany,
+    expected_ids: list[int],
+) -> None:
+    raw_item = item_factory.get(idx=1)
+    graded_cgc = item_with_submissions_factory(
+        idx=2,
+        intent=item_enums.Intent.GRADE,
+        submission_companies=[item_enums.GradingCompany.CGC],
+    )
+    graded_psa = item_with_submissions_factory(
+        idx=3,
+        grading_record_ids=[2],
+        submission_ids=[2],
+        submission_numbers=[2],
+        intent=item_enums.Intent.GRADE,
+        submission_companies=[item_enums.GradingCompany.PSA],
+    )
+    cracked = item_with_submissions_factory(
+        idx=4,
+        grading_record_ids=[3],
+        submission_ids=[3],
+        submission_numbers=[3],
+        intent=item_enums.Intent.GRADE,
+        submission_companies=[item_enums.GradingCompany.PSA],
+        is_cracked_flags=[True],
+    )
+    db_session.add_all([raw_item, graded_cgc, graded_psa, cracked])
+    db_session.flush()
+
+    search_params = schemas.ItemSearch(grading_company=company)
+    result = crud.search_for_items(db_session, search_params)
+
+    assert sorted(item.id for item in result) == expected_ids
+    assert all(item.grading_company == company for item in result)
+
+
 def test_edit_item_no_item_found(
     db_session: Session,
     item_factory: ItemFactory,
@@ -534,15 +584,35 @@ def test_build_search_filters_no_special_case() -> None:
     assert post_filters == []
 
 
-def test_build_search_features_with_post_filter() -> None:
+def test_build_search_filters_grading_company_is_sql_filter() -> None:
     params = {'name': 'Unown', 'grading_company': item_enums.GradingCompany.PSA}
-    expected_post_filters = [('grading_company', item_enums.GradingCompany.PSA)]
     filters, post_filters = crud.build_search_filters(params)
 
     assert filters[0].left.key == 'name'
     assert filters[0].right.value == 'Unown'
     assert filters[0].operator is eq
-    assert post_filters == expected_post_filters
+    assert len(filters) == 2
+    assert post_filters == []
+
+
+def test_build_search_filters_qualifiers_is_post_filter(
+    item_factory: ItemFactory,
+) -> None:
+    params = {'qualifiers': [item_enums.Qualifier.FIRST_EDITION]}
+    filters, post_filters = crud.build_search_filters(params)
+
+    assert filters == []
+    assert len(post_filters) == 1
+
+    keep = post_filters[0]
+    assert keep(item_factory.get(qualifiers=[item_enums.Qualifier.FIRST_EDITION]))
+    assert keep(
+        item_factory.get(
+            qualifiers=[item_enums.Qualifier.FIRST_EDITION, item_enums.Qualifier.REVERSE_HOLO]
+        )
+    )
+    assert not keep(item_factory.get(qualifiers=[]))
+    assert not keep(item_factory.get(qualifiers=[item_enums.Qualifier.REVERSE_HOLO]))
 
 
 def test_get_total_number_of_submissions_no_subs(db_session: Session) -> None:

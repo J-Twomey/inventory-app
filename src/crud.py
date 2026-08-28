@@ -1,4 +1,4 @@
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from datetime import date
 from typing import Any
 
@@ -10,11 +10,12 @@ from sqlalchemy import (
 )
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
-from sqlalchemy.sql.elements import BinaryExpression
+from sqlalchemy.sql.elements import ColumnElement
 
 from .item_enums import (
     GradingCompany,
     Intent,
+    Qualifier,
     Status,
 )
 from .models import (
@@ -116,30 +117,26 @@ def search_for_items(
         statement = statement.where(and_(*filters))
     results = db.execute(statement).scalars().all()
 
-    # Post filtering (for qualifiers and grading_company)
-    for field, value in post_filters:
-        if field == 'qualifiers':
-            qualifier_values = list(value)
-            results = [
-                item for item in results if all(q in item.qualifiers for q in qualifier_values)
-            ]
-        elif field == 'grading_company':
-            results = [item for item in results if item.grading_company == value]
+    if len(post_filters) > 0:
+        results = [item for item in results if all(keep(item) for keep in post_filters)]
     return results
+
+
+def qualifiers_filter(qualifiers: list[Qualifier]) -> Callable[[Item], bool]:
+    return lambda item: all(q in item.qualifiers for q in qualifiers)
 
 
 def build_search_filters(
     search_params: dict[str, Any],
-) -> tuple[list[BinaryExpression[Any]], list[tuple[str, Any]]]:
-    filters: list[BinaryExpression[Any]] = []
-    post_filters: list[tuple[str, Any]] = []
+) -> tuple[list[ColumnElement[bool]], list[Callable[[Item], bool]]]:
+    filters: list[ColumnElement[bool]] = []
+    post_filters: list[Callable[[Item], bool]] = []
     for field, value in search_params.items():
         if value is None or value == []:
             continue
 
-        # Filter qualifiers and grading_company after the sql search
-        if field in ['qualifiers', 'grading_company']:
-            post_filters.append((field, value))
+        if field == 'qualifiers':
+            post_filters.append(qualifiers_filter(value))
         elif field == 'submission_number':
             raise NotImplementedError
         elif field.endswith('_min'):
