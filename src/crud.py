@@ -137,8 +137,6 @@ def build_search_filters(
 
         if field == 'qualifiers':
             post_filters.append(qualifiers_filter(value))
-        elif field == 'submission_number':
-            raise NotImplementedError
         elif field.endswith('_min'):
             base_field = field.removesuffix('_min')
             column = getattr(Item, base_field)
