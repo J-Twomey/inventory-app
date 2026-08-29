@@ -53,7 +53,11 @@ class CheckboxFieldsMixin(BaseModel):
 
 
 class UncheckedCheckboxDefaultsMixin(CheckboxFieldsMixin):
-    """Unchecked HTML checkboxes are omitted from the form post rather than sent as false."""
+    """
+    Unchecked HTML checkboxes are omitted from the form post rather than sent as false.
+    A side effect of this is that a value set as None gets stripped (so None doesn't pass through)
+    When you want to set a value as None, an empty string should be passed instead.
+    """
 
     @model_validator(mode='before')
     @classmethod
