@@ -13,6 +13,7 @@ from sqlalchemy import (
     func,
     literal,
     null,
+    or_,
     select,
     true,
 )
@@ -131,7 +132,7 @@ class Item(Base):
             if self.cracked_from_purchase:
                 return GradingCompany.RAW
             return self.purchase_grading_company
-        if latest_submission.is_cracked:
+        if latest_submission.is_cracked or latest_submission.grade is None:
             return GradingCompany.RAW
         return latest_submission.submission.submission_company
 
@@ -152,6 +153,13 @@ class Item(Base):
             .limit(1)
             .scalar_subquery()
         )
+        latest_grade = (
+            select(GradingRecord.grade)
+            .where(GradingRecord.item_id == cls.id)
+            .order_by(GradingRecord.submission_number.desc())
+            .limit(1)
+            .scalar_subquery()
+        )
         return case(
             (
                 latest_company.is_(None),
@@ -165,7 +173,7 @@ class Item(Base):
             ),
             else_=case(
                 (
-                    latest_cracked.is_(true()),
+                    or_(latest_cracked.is_(true()), latest_grade.is_(None)),
                     literal(GradingCompany.RAW, type_=cls.purchase_grading_company.type),
                 ),
                 else_=latest_company,

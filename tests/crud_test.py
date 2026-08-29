@@ -359,7 +359,7 @@ def test_search_for_items_cracked_from_purchase(
 @pytest.mark.parametrize(
     ('company', 'expected_ids'),
     [
-        pytest.param(item_enums.GradingCompany.RAW, [1, 4], id='raw'),
+        pytest.param(item_enums.GradingCompany.RAW, [1, 4, 5], id='raw'),
         pytest.param(item_enums.GradingCompany.PSA, [3], id='psa'),
         pytest.param(item_enums.GradingCompany.CGC, [2], id='cgc'),
         pytest.param(item_enums.GradingCompany.BGS, [], id='bgs_no_matches'),
@@ -377,6 +377,7 @@ def test_search_for_items_grading_company(
         idx=2,
         intent=item_enums.Intent.GRADE,
         submission_companies=[item_enums.GradingCompany.CGC],
+        grades=[9.5],
     )
     graded_psa = item_with_submissions_factory(
         idx=3,
@@ -385,6 +386,7 @@ def test_search_for_items_grading_company(
         submission_numbers=[2],
         intent=item_enums.Intent.GRADE,
         submission_companies=[item_enums.GradingCompany.PSA],
+        grades=[10.0],
     )
     cracked = item_with_submissions_factory(
         idx=4,
@@ -393,9 +395,18 @@ def test_search_for_items_grading_company(
         submission_numbers=[3],
         intent=item_enums.Intent.GRADE,
         submission_companies=[item_enums.GradingCompany.PSA],
+        grades=[8.0],
         is_cracked_flags=[True],
     )
-    db_session.add_all([raw_item, graded_cgc, graded_psa, cracked])
+    awaiting_return = item_with_submissions_factory(
+        idx=5,
+        grading_record_ids=[4],
+        submission_ids=[4],
+        submission_numbers=[4],
+        intent=item_enums.Intent.GRADE,
+        submission_companies=[item_enums.GradingCompany.PSA],
+    )
+    db_session.add_all([raw_item, graded_cgc, graded_psa, cracked, awaiting_return])
     db_session.flush()
 
     search_params = schemas.ItemSearch(grading_company=company)

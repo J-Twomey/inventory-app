@@ -38,11 +38,11 @@
         <td class="
           centre-aligned
           {{ 'faint' if item.grade is none else '' }}
-          {% if item.grading_company == grading_company_enum.PSA and item.status != status_enum.SUBMITTED %}
+          {% if item.grading_company == grading_company_enum.PSA %}
             grade-psa
-          {% elif item.grading_company == grading_company_enum.CGC and item.status != status_enum.SUBMITTED %}
+          {% elif item.grading_company == grading_company_enum.CGC %}
             grade-cgc
-          {% elif item.grading_company == grading_company_enum.BGS and item.status != status_enum.SUBMITTED %}
+          {% elif item.grading_company == grading_company_enum.BGS %}
             grade-bgs
           {% endif %}
         ">
