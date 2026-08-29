@@ -125,6 +125,24 @@
             {% endfor %}
           </select>
         </div>
+
+        <div class="label-row">
+          <label for="total_grading_fees_min">Grading Fees (Min):</label>
+          <input
+            type="number"
+            name="total_grading_fees_min"
+            placeholder="Min"
+            value="{{ form_data.total_grading_fees_min if form_data else '' }}"
+          >
+
+          <label for="total_grading_fees_max">Grading Fees (Max):</label>
+          <input
+            type="number"
+            name="total_grading_fees_max"
+            placeholder="Max"
+            value="{{ form_data.total_grading_fees_max if form_data else '' }}"
+          >
+        </div>
       </div>
 
       <div class="label-block qualifiers">

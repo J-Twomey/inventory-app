@@ -416,6 +416,50 @@ def test_search_for_items_grading_company(
     assert all(item.grading_company == company for item in result)
 
 
+@pytest.mark.parametrize(
+    ('fees_min', 'fees_max', 'expected_ids'),
+    [
+        pytest.param(2000, None, [2, 3], id='min_only'),
+        pytest.param(None, 2000, [1, 2], id='max_only'),
+        pytest.param(1000, 2000, [2], id='min_and_max'),
+        pytest.param(6000, None, [], id='no_matches'),
+        pytest.param(None, 0, [1], id='unsubmitted_has_zero_fees'),
+    ],
+)
+def test_search_for_items_total_grading_fees(
+    db_session: Session,
+    item_factory: ItemFactory,
+    item_with_submissions_factory: Callable[..., models.Item],
+    fees_min: int | None,
+    fees_max: int | None,
+    expected_ids: list[int],
+) -> None:
+    no_submission = item_factory.get(idx=1)
+    single_fee = item_with_submissions_factory(
+        idx=2,
+        intent=item_enums.Intent.GRADE,
+        grading_fees=[2000],
+    )
+    two_submissions = item_with_submissions_factory(
+        idx=3,
+        grading_record_ids=[2, 3],
+        submission_ids=[2, 3],
+        submission_numbers=[2, 3],
+        intent=item_enums.Intent.GRADE,
+        grading_fees=[1500, 3000],
+    )
+    db_session.add_all([no_submission, single_fee, two_submissions])
+    db_session.flush()
+
+    search_params = schemas.ItemSearch(
+        total_grading_fees_min=fees_min,
+        total_grading_fees_max=fees_max,
+    )
+    result = crud.search_for_items(db_session, search_params)
+
+    assert sorted(item.id for item in result) == expected_ids
+
+
 def test_edit_item_no_item_found(
     db_session: Session,
     item_factory: ItemFactory,

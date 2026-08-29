@@ -257,6 +257,8 @@ class ItemSearch(BaseModel):
     grading_company: Annotated[GradingCompany | None, enum_by_name(GradingCompany)] = None
     grade: float | None = None
     cert: int | None = None
+    total_grading_fees_min: int | None = None
+    total_grading_fees_max: int | None = None
     list_type: Annotated[ListingType | None, enum_by_name(ListingType)] = None
     list_date_min: date | None = None
     list_date_max: date | None = None
