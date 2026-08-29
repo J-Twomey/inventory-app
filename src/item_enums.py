@@ -8,7 +8,7 @@ from sqlalchemy.types import (
     TypeDecorator,
 )
 
-from .helper_types import EInt
+from .helper_types import E
 
 
 class Category(Enum):
@@ -142,20 +142,20 @@ class RemunerationSource(Enum):
     OTHER = 6
 
 
-class EnumList(TypeDecorator[list[EInt]]):
+class EnumList(TypeDecorator[list[E]]):
     impl = TEXT
     cache_ok = True
 
     def __init__(
         self,
-        enum_class: type[EInt],
+        enum_class: type[E],
     ) -> None:
         self.enum_class = enum_class
         super().__init__()
 
     def process_bind_param(
         self,
-        value: list[EInt] | list[int] | None,
+        value: list[E] | list[int] | None,
         _dialect: Dialect,
     ) -> str | None:
         if value is None:
@@ -174,38 +174,38 @@ class EnumList(TypeDecorator[list[EInt]]):
         self,
         value: str | None,
         _dialect: Dialect,
-    ) -> list[EInt] | None:
+    ) -> list[E] | None:
         if value is None:
             return None
         raw: list[int] = json.loads(value)
         return [self.enum_class(v) for v in raw]
 
 
-class EnumInt(TypeDecorator[EInt]):
+class EnumInt(TypeDecorator[E]):
     impl = Integer
     cache_ok = True
 
     def __init__(
         self,
-        enum_cls: type[EInt],
+        enum_cls: type[E],
     ) -> None:
         self.enum_cls = enum_cls
         super().__init__()
 
     def process_bind_param(
         self,
-        value: EInt | None,
+        value: E | None,
         _dialect: Dialect,
     ) -> int | None:
         if value is None:
             return None
-        return value.value
+        return int(value.value)
 
     def process_result_value(
         self,
         value: int | None,
         _dialect: Dialect,
-    ) -> EInt | None:
+    ) -> E | None:
         if value is None:
             return None
         return self.enum_cls(value)
