@@ -180,9 +180,6 @@ def perform_item_update(
     item_update: ItemUpdate,
 ) -> None:
     update_data = item_update.to_model_kwargs()
-    # always add qualifiers even if it is an empty list
-    update_data['qualifiers'] = item_update.qualifiers
-
     for key, value in update_data.items():
         setattr(item, key, value)
 

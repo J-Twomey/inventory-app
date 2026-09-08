@@ -9,7 +9,6 @@ from pydantic import (
     BaseModel,
     BeforeValidator,
     ConfigDict,
-    ValidationInfo,
     field_validator,
     model_validator,
 )
@@ -46,30 +45,7 @@ def enum_by_name(enum_cls: type[E]) -> BeforeValidator:
     return BeforeValidator(parse)
 
 
-class CheckboxFieldsMixin(BaseModel):
-    @classmethod
-    def checkbox_fields(cls) -> set[str]:
-        return {f for f, info in cls.model_fields.items() if info.annotation is bool}
-
-
-class UncheckedCheckboxDefaultsMixin(CheckboxFieldsMixin):
-    """
-    Unchecked HTML checkboxes are omitted from the form post rather than sent as false.
-    A side effect of this is that a value set as None gets stripped (so None doesn't pass through)
-    When you want to set a value as None, an empty string should be passed instead.
-    """
-
-    @model_validator(mode='before')
-    @classmethod
-    def default_unchecked_checkboxes(cls, data: object) -> object:
-        if isinstance(data, dict):
-            data = {k: v for k, v in data.items() if v is not None}
-            for checkbox in cls.checkbox_fields():
-                data.setdefault(checkbox, False)
-        return data
-
-
-class ItemBase(CheckboxFieldsMixin):
+class ItemBase(BaseModel):
     model_config = ConfigDict(
         extra='forbid',
         from_attributes=True,
@@ -110,11 +86,7 @@ class ItemBase(CheckboxFieldsMixin):
     def empty_str_to_none(
         cls,
         v: T,
-        info: ValidationInfo,
     ) -> T | None:
-        # Empty string is handled differently for these fields
-        if info.field_name in {'qualifiers', *cls.checkbox_fields()}:
-            return v
         if v == '':
             return None
         return v
@@ -125,6 +97,7 @@ class ItemBase(CheckboxFieldsMixin):
         cls,
         v: object,
     ) -> object:
+        # Runs ahead of the '*' empty_str_to_none, so '' arrives here rather than as None
         if isinstance(v, str):
             return [x.strip() for x in v.split(',') if x.strip()]
         if isinstance(v, list):
@@ -233,7 +206,7 @@ class ItemCreate(ItemBase):
         return self
 
 
-class ItemUpdate(UncheckedCheckboxDefaultsMixin, ItemBase):
+class ItemUpdate(ItemBase):
     def to_model_kwargs(self) -> dict[str, Any]:
         return self.model_dump(exclude_unset=True)
 
@@ -356,7 +329,7 @@ class SubmissionCreate(SubmissionBase):
         return self.model_dump()
 
 
-class GradingRecordBase(CheckboxFieldsMixin):
+class GradingRecordBase(BaseModel):
     model_config = ConfigDict(extra='forbid')
 
     item_id: int | None = None
@@ -371,11 +344,7 @@ class GradingRecordBase(CheckboxFieldsMixin):
     def empty_str_to_none(
         cls,
         v: T,
-        info: ValidationInfo,
     ) -> T | None:
-        # Empty string is handled differently for these fields
-        if info.field_name in cls.checkbox_fields():
-            return v
         if v == '':
             return None
         return v
@@ -389,7 +358,7 @@ class GradingRecordCreate(GradingRecordBase):
         return self.model_dump()
 
 
-class GradingRecordUpdate(UncheckedCheckboxDefaultsMixin, GradingRecordBase):
+class GradingRecordUpdate(GradingRecordBase):
     def to_model_kwargs(self) -> dict[str, Any]:
         return self.model_dump(exclude_unset=True)
 

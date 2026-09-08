@@ -558,6 +558,30 @@ def test_edit_item_add_new_qualifier(
     assert changed_item.qualifiers == [item_enums.Qualifier.CRYSTAL]
 
 
+def test_edit_item_leaves_unsupplied_fields_untouched(
+    db_session: Session,
+    item_factory: ItemFactory,
+) -> None:
+    item = item_factory.get(
+        qualifiers=[item_enums.Qualifier.CRYSTAL],
+        audit_target=True,
+        cracked_from_purchase=True,
+    )
+    db_session.add(item)
+    db_session.flush()
+    item_changes = schemas.ItemUpdate(name='new_name')
+
+    result = crud.edit_item(db_session, item_id=item.id, item_update=item_changes)
+    assert result == 303
+
+    changed_item = crud.get_item(db_session, item.id)
+    assert changed_item is not None
+    assert changed_item.name == 'new_name'
+    assert changed_item.qualifiers == [item_enums.Qualifier.CRYSTAL]
+    assert changed_item.audit_target is True
+    assert changed_item.cracked_from_purchase is True
+
+
 def test_edit_item_add_extra_qualifier_to_existing(
     db_session: Session,
     item_factory: ItemFactory,

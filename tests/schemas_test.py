@@ -459,9 +459,6 @@ def test_item_update_empty_required_value_is_kept_as_none() -> None:
         'name': 'Golem',
         'set_name': None,
         'status': item_enums.Status.STORAGE,
-        'group_discount': False,
-        'audit_target': False,
-        'cracked_from_purchase': False,
     }
 
 
@@ -470,10 +467,17 @@ def test_item_update_empty_optional_value_clears_field() -> None:
     assert update.to_model_kwargs() == {
         'purchase_grade': None,
         'sale_total': None,
-        'group_discount': False,
-        'audit_target': False,
-        'cracked_from_purchase': False,
     }
+
+
+def test_item_update_omits_fields_that_were_not_supplied() -> None:
+    update = schemas.ItemUpdate(status=item_enums.Status.SUBMITTED)
+    assert update.to_model_kwargs() == {'status': item_enums.Status.SUBMITTED}
+
+
+def test_item_update_none_clears_field() -> None:
+    update = schemas.ItemUpdate(list_price=None)
+    assert update.to_model_kwargs() == {'list_price': None}
 
 
 def test_item_update_checked_checkbox_sets_true() -> None:
