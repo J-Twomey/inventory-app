@@ -134,7 +134,7 @@ def test_check_item_can_return_to_submitted_ng_populated_fields(
         validators.check_item_can_return_to_submitted(item)
 
 
-def test_check_valid_merged_item_state_ok(item_factory: ItemFactory) -> None:
+def test_check_item_valid_after_update_ok(item_factory: ItemFactory) -> None:
     item = item_factory.get(
         status=item_enums.Status.LISTED,
         intent=item_enums.Intent.SELL,
@@ -150,10 +150,10 @@ def test_check_valid_merged_item_state_ok(item_factory: ItemFactory) -> None:
         sale_fee=1.0,
         usd_to_jpy_rate=140.0,
     )
-    validators.check_valid_merged_item_state(item, update)
+    validators.check_item_valid_after_update(item, update)
 
 
-def test_check_valid_merged_item_state_stale_listing_fields(item_factory: ItemFactory) -> None:
+def test_check_item_valid_after_update_stale_listing_fields(item_factory: ItemFactory) -> None:
     item = item_factory.get(
         status=item_enums.Status.LISTED,
         intent=item_enums.Intent.SELL,
@@ -166,10 +166,10 @@ def test_check_valid_merged_item_state_stale_listing_fields(item_factory: ItemFa
         list_type=item_enums.ListingType.NO_LIST,
     )
     with pytest.raises(ValueError, match='requires the following fields to be null'):
-        validators.check_valid_merged_item_state(item, update)
+        validators.check_item_valid_after_update(item, update)
 
 
-def test_check_valid_merged_item_state_date_conflict(item_factory: ItemFactory) -> None:
+def test_check_item_valid_after_update_date_conflict(item_factory: ItemFactory) -> None:
     item = item_factory.get(
         status=item_enums.Status.CLOSED,
         intent=item_enums.Intent.SELL,
@@ -184,7 +184,7 @@ def test_check_valid_merged_item_state_date_conflict(item_factory: ItemFactory) 
     )
     update = ItemUpdate(sale_date=date(2025, 5, 20))
     with pytest.raises(ValueError, match='Sale date cannot be before listing date'):
-        validators.check_valid_merged_item_state(item, update)
+        validators.check_item_valid_after_update(item, update)
 
 
 def test_check_no_duplicate_items_in_submission_no_duplicate() -> None:

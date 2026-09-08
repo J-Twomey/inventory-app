@@ -119,14 +119,12 @@ def check_required_fields_not_removed(
         raise ValueError(f'The following fields cannot be removed: {removed}')
 
 
-def check_valid_merged_item_state(
+def check_item_valid_after_update(
     item: Item,
     item_update: ItemUpdate,
 ) -> None:
     merged = {f: getattr(item, f) for f in ItemCreate.model_fields}
     merged.update(item_update.to_model_kwargs())
-    # Mirror perform_item_update, which overwrites qualifiers even with an empty list
-    merged['qualifiers'] = item_update.qualifiers
     try:
         ItemCreate(**merged)
     except ValidationError as e:

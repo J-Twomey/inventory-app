@@ -1,3 +1,4 @@
+import re
 from collections.abc import (
     Callable,
     Generator,
@@ -575,3 +576,8 @@ def item_with_submissions_factory(
         return item
 
     return get
+
+
+def form_field_names(html: str) -> set[str]:
+    form = html[html.index('<form method="post"') : html.index('</form>')]
+    return set(re.findall(r'<(?:input|select|textarea)[^>]*name="(\w+)"', form))

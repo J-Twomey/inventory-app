@@ -40,6 +40,7 @@ from .schemas import (
 from .validators import (
     check_intent,
     check_item_can_return_to_submitted,
+    check_item_valid_after_update,
     check_new_item_not_submitted,
     check_no_duplicate_items_in_submission,
     check_required_fields_not_removed,
@@ -47,7 +48,6 @@ from .validators import (
     check_status_change_to_submitted_valid,
     check_valid_grading_record_update,
     check_valid_intent_or_status_update,
-    check_valid_merged_item_state,
     check_valid_submission_field_update,
 )
 
@@ -168,7 +168,7 @@ def edit_item(
     )
     if item_update.status == Status.SUBMITTED:
         check_status_change_to_submitted_valid(item)
-    check_valid_merged_item_state(item, item_update)
+    check_item_valid_after_update(item, item_update)
     perform_item_update(item, item_update)
     db.commit()
     db.refresh(item)

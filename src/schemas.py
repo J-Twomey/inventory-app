@@ -104,68 +104,6 @@ class ItemBase(BaseModel):
             return v
         raise ValueError('Qualifiers must be provided as str or list[Qualifier]')
 
-    @model_validator(mode='after')
-    def list_date_not_before_purchase_date(self) -> Self:
-        if (
-            self.list_date is not None
-            and self.purchase_date is not None
-            and self.list_date < self.purchase_date
-        ):
-            raise ValueError(
-                f'Listing date cannot be before purchase date '
-                f'(got listing date: {self.list_date}, purchase date: {self.purchase_date})',
-            )
-        return self
-
-    @model_validator(mode='after')
-    def sale_date_not_before_list_date(self) -> Self:
-        if (
-            self.list_date is not None
-            and self.sale_date is not None
-            and self.sale_date < self.list_date
-        ):
-            raise ValueError(
-                f'Sale date cannot be before listing date '
-                f'(got sale date: {self.sale_date}, listing date: {self.list_date})',
-            )
-        return self
-
-    @model_validator(mode='after')
-    def check_required_null_fields_based_on_status(self) -> Self:
-        if self.status is not None:
-            not_null = [f for f in self.status.required_to_be_null if getattr(self, f) is not None]
-            if len(not_null) > 0:
-                raise ValueError(
-                    f'Status {self.status.name} requires the following fields to be null: '
-                    f'{not_null}',
-                )
-        return self
-
-    @model_validator(mode='after')
-    def appropriate_listing_type(self) -> Self:
-        if self.list_type is None:
-            return self
-        if self.list_type == ListingType.NO_LIST:
-            if self.status in (Status.LISTED, Status.CLOSED):
-                raise ValueError('Item cannot have list_type of NO_LIST if listed or sold')
-        elif self.status not in (Status.LISTED, Status.CLOSED):
-            raise ValueError(
-                'Item cannot have a list_type other than NO_LIST if not listed or sold',
-            )
-        return self
-
-    @model_validator(mode='after')
-    def appropriate_group_discount(self) -> Self:
-        if self.group_discount and self.status != Status.CLOSED:
-            raise ValueError('Group discount cannot be assigned to an unsold item')
-        return self
-
-    @model_validator(mode='after')
-    def appropriate_audit_target(self) -> Self:
-        if self.audit_target and self.status in (Status.CLOSED, Status.LISTED):
-            raise ValueError('Item assigned as an audit target can not be listed or closed')
-        return self
-
 
 class ItemCreate(ItemBase):
     name: str
@@ -203,6 +141,64 @@ class ItemCreate(ItemBase):
                 f'Item can not have status of {self.status.name} with intent of '
                 f'{self.intent.name}',
             )
+        return self
+
+    @model_validator(mode='after')
+    def list_date_not_before_purchase_date(self) -> Self:
+        if (
+            self.list_date is not None
+            and self.purchase_date is not None
+            and self.list_date < self.purchase_date
+        ):
+            raise ValueError(
+                f'Listing date cannot be before purchase date '
+                f'(got listing date: {self.list_date}, purchase date: {self.purchase_date})',
+            )
+        return self
+
+    @model_validator(mode='after')
+    def sale_date_not_before_list_date(self) -> Self:
+        if (
+            self.list_date is not None
+            and self.sale_date is not None
+            and self.sale_date < self.list_date
+        ):
+            raise ValueError(
+                f'Sale date cannot be before listing date '
+                f'(got sale date: {self.sale_date}, listing date: {self.list_date})',
+            )
+        return self
+
+    @model_validator(mode='after')
+    def check_required_null_fields_based_on_status(self) -> Self:
+        not_null = [f for f in self.status.required_to_be_null if getattr(self, f) is not None]
+        if len(not_null) > 0:
+            raise ValueError(
+                f'Status {self.status.name} requires the following fields to be null: {not_null}',
+            )
+        return self
+
+    @model_validator(mode='after')
+    def appropriate_listing_type(self) -> Self:
+        if self.list_type == ListingType.NO_LIST:
+            if self.status in (Status.LISTED, Status.CLOSED):
+                raise ValueError('Item cannot have list_type of NO_LIST if listed or sold')
+        elif self.status not in (Status.LISTED, Status.CLOSED):
+            raise ValueError(
+                'Item cannot have a list_type other than NO_LIST if not listed or sold',
+            )
+        return self
+
+    @model_validator(mode='after')
+    def appropriate_group_discount(self) -> Self:
+        if self.group_discount and self.status != Status.CLOSED:
+            raise ValueError('Group discount cannot be assigned to an unsold item')
+        return self
+
+    @model_validator(mode='after')
+    def appropriate_audit_target(self) -> Self:
+        if self.audit_target and self.status in (Status.CLOSED, Status.LISTED):
+            raise ValueError('Item assigned as an audit target can not be listed or closed')
         return self
 
 

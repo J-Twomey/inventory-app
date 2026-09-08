@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from src import (
     crud,
     item_enums,
+    schemas,
 )
 from src.models import (
     Item,
@@ -16,6 +17,7 @@ from src.models import (
 from .conftest import (
     ItemFactory,
     closed_item,
+    form_field_names,
 )
 
 
@@ -60,6 +62,104 @@ def test_submit_edit_item(
     assert response.status_code == 303
     assert response.headers['location'] == '/items_view'
     assert item.name == 'AFTER_EDIT'
+
+
+def test_edit_item_form_field_names_match_schema(
+    client: TestClient,
+    db_session: Session,
+    item_factory: ItemFactory,
+) -> None:
+    item = item_factory.get()
+    db_session.add(item)
+    db_session.flush()
+
+    response = client.get(f'/edit/{item.id}')
+    assert form_field_names(response.text) <= set(schemas.ItemUpdate.model_fields)
+
+
+def test_submit_edit_item_purchase_grading_fields(
+    client: TestClient,
+    db_session: Session,
+    item_factory: ItemFactory,
+) -> None:
+    item = item_factory.get(purchase_grading_company=item_enums.GradingCompany.RAW)
+    db_session.add(item)
+    db_session.flush()
+
+    response = client.post(
+        f'/edit/{item.id}',
+        data={
+            'purchase_grading_company': 'PSA',
+            'purchase_grade': '9',
+            'purchase_cert': '12345',
+        },
+        follow_redirects=False,
+    )
+    assert response.status_code == 303
+    assert item.purchase_grading_company == item_enums.GradingCompany.PSA
+    assert item.purchase_grade == 9.0
+    assert item.purchase_cert == 12345
+
+
+def test_submit_edit_item_group_discount_on_sold_item(
+    client: TestClient,
+    db_session: Session,
+    item_factory: ItemFactory,
+) -> None:
+    item = closed_item(item_factory)
+    db_session.add(item)
+    db_session.flush()
+
+    response = client.post(
+        f'/edit/{item.id}',
+        data={'group_discount': 'on'},
+        follow_redirects=False,
+    )
+    assert response.status_code == 303
+    assert item.group_discount is True
+
+
+def test_submit_edit_item_group_discount_on_unsold_item_shows_error(
+    client: TestClient,
+    db_session: Session,
+    item_factory: ItemFactory,
+) -> None:
+    item = item_factory.get(status=item_enums.Status.STORAGE)
+    db_session.add(item)
+    db_session.flush()
+
+    response = client.post(
+        f'/edit/{item.id}',
+        data={'group_discount': 'on'},
+        follow_redirects=False,
+    )
+    assert response.status_code == 200
+    assert 'Group discount cannot be assigned to an unsold item' in response.text
+    assert item.group_discount is False
+
+
+def test_submit_edit_item_list_type_on_listed_item(
+    client: TestClient,
+    db_session: Session,
+    item_factory: ItemFactory,
+) -> None:
+    item = item_factory.get(
+        status=item_enums.Status.LISTED,
+        intent=item_enums.Intent.SELL,
+        list_type=item_enums.ListingType.FIXED,
+        list_price=2000.0,
+        list_date=date(2026, 1, 1),
+    )
+    db_session.add(item)
+    db_session.flush()
+
+    response = client.post(
+        f'/edit/{item.id}',
+        data={'list_type': 'AUCTION'},
+        follow_redirects=False,
+    )
+    assert response.status_code == 303
+    assert item.list_type == item_enums.ListingType.AUCTION
 
 
 def test_submit_add_item_form(

@@ -90,8 +90,10 @@ def test_item_base_parse_qualifiers_wrong_type_input(item_base_factory: ItemBase
     assert 'Qualifiers must be provided as str or list[Qualifier]' in error_msg
 
 
-def test_item_base_list_date_not_before_purchase_date(item_base_factory: ItemBaseFactory) -> None:
-    item_base_factory.get(
+def test_item_create_list_date_not_before_purchase_date(
+    item_create_factory: ItemCreateFactory,
+) -> None:
+    item_create_factory.get(
         purchase_date=date(2025, 5, 5),
         status=item_enums.Status.LISTED,
         list_date=date(2025, 5, 6),
@@ -100,9 +102,11 @@ def test_item_base_list_date_not_before_purchase_date(item_base_factory: ItemBas
     )
 
 
-def test_item_base_list_date_before_purchase_date(item_base_factory: ItemBaseFactory) -> None:
+def test_item_create_list_date_before_purchase_date(
+    item_create_factory: ItemCreateFactory,
+) -> None:
     with pytest.raises(ValidationError) as e:
-        item_base_factory.get(
+        item_create_factory.get(
             purchase_date=date(2025, 5, 5),
             status=item_enums.Status.LISTED,
             list_date=date(2025, 5, 4),
@@ -116,8 +120,10 @@ def test_item_base_list_date_before_purchase_date(item_base_factory: ItemBaseFac
     ) in error_msg
 
 
-def test_item_base_sale_date_not_before_list_date(item_base_factory: ItemBaseFactory) -> None:
-    item_base_factory.get(
+def test_item_create_sale_date_not_before_list_date(
+    item_create_factory: ItemCreateFactory,
+) -> None:
+    item_create_factory.get(
         purchase_date=date(2025, 5, 5),
         status=item_enums.Status.CLOSED,
         list_date=date(2025, 5, 6),
@@ -131,9 +137,9 @@ def test_item_base_sale_date_not_before_list_date(item_base_factory: ItemBaseFac
     )
 
 
-def test_item_base_sale_date_before_list_date(item_base_factory: ItemBaseFactory) -> None:
+def test_item_create_sale_date_before_list_date(item_create_factory: ItemCreateFactory) -> None:
     with pytest.raises(ValidationError) as e:
-        item_base_factory.get(
+        item_create_factory.get(
             purchase_date=date(2025, 5, 5),
             status=item_enums.Status.CLOSED,
             list_date=date(2025, 5, 6),
@@ -222,37 +228,43 @@ def test_check_required_fields_based_on_status_error_case(
 
 
 def test_check_required_null_fields_based_on_status_no_error(
-    item_base_factory: ItemBaseFactory,
+    item_create_factory: ItemCreateFactory,
 ) -> None:
-    item_base_factory.get(
+    item_create_factory.get(
         purchase_date=date(2025, 5, 5),
         status=item_enums.Status.SUBMITTED,
+        intent=item_enums.Intent.GRADE,
     )
 
 
 def test_check_required_null_fields_based_on_status_error_case(
-    item_base_factory: ItemBaseFactory,
+    item_create_factory: ItemCreateFactory,
 ) -> None:
     with pytest.raises(ValidationError) as e:
-        item_base_factory.get(
+        item_create_factory.get(
             purchase_date=date(2025, 5, 5),
             status=item_enums.Status.SUBMITTED,
+            intent=item_enums.Intent.GRADE,
             list_date=date(2025, 5, 6),
         )
     error_msg = e.value.errors()[0]['msg']
     assert "Status SUBMITTED requires the following fields to be null: ['list_date']" in error_msg
 
 
-def test_appropriate_listing_type_no_error_no_listing(item_base_factory: ItemBaseFactory) -> None:
-    item_base_factory.get(
+def test_appropriate_listing_type_no_error_no_listing(
+    item_create_factory: ItemCreateFactory,
+) -> None:
+    item_create_factory.get(
         purchase_date=date(2025, 5, 5),
         status=item_enums.Status.STORAGE,
         list_type=item_enums.ListingType.NO_LIST,
     )
 
 
-def test_appropriate_listing_type_no_error_is_listed(item_base_factory: ItemBaseFactory) -> None:
-    item_base_factory.get(
+def test_appropriate_listing_type_no_error_is_listed(
+    item_create_factory: ItemCreateFactory,
+) -> None:
+    item_create_factory.get(
         purchase_date=date(2025, 5, 5),
         status=item_enums.Status.LISTED,
         list_type=item_enums.ListingType.FIXED,
@@ -261,8 +273,10 @@ def test_appropriate_listing_type_no_error_is_listed(item_base_factory: ItemBase
     )
 
 
-def test_appropriate_listing_type_no_error_is_closed(item_base_factory: ItemBaseFactory) -> None:
-    item_base_factory.get(
+def test_appropriate_listing_type_no_error_is_closed(
+    item_create_factory: ItemCreateFactory,
+) -> None:
+    item_create_factory.get(
         purchase_date=date(2025, 5, 5),
         status=item_enums.Status.CLOSED,
         list_type=item_enums.ListingType.AUCTION,
@@ -276,12 +290,12 @@ def test_appropriate_listing_type_no_error_is_closed(item_base_factory: ItemBase
     )
 
 
-def test_appropriate_listing_type_listing_error(item_base_factory: ItemBaseFactory) -> None:
+def test_appropriate_listing_type_listing_error(item_create_factory: ItemCreateFactory) -> None:
     with pytest.raises(
         ValidationError,
         match='Item cannot have list_type of NO_LIST if listed or sold',
     ):
-        item_base_factory.get(
+        item_create_factory.get(
             purchase_date=date(2025, 5, 5),
             status=item_enums.Status.LISTED,
             list_type=item_enums.ListingType.NO_LIST,
@@ -290,24 +304,24 @@ def test_appropriate_listing_type_listing_error(item_base_factory: ItemBaseFacto
         )
 
 
-def test_appropriate_listing_type_storage_error(item_base_factory: ItemBaseFactory) -> None:
+def test_appropriate_listing_type_storage_error(item_create_factory: ItemCreateFactory) -> None:
     with pytest.raises(
         ValidationError,
         match='Item cannot have a list_type other than NO_LIST if not listed or sold',
     ):
-        item_base_factory.get(
+        item_create_factory.get(
             purchase_date=date(2025, 5, 5),
             status=item_enums.Status.STORAGE,
             list_type=item_enums.ListingType.FIXED,
         )
 
 
-def test_appropriate_group_discount_no_discount(item_base_factory: ItemBaseFactory) -> None:
-    item_base_factory.get(group_discount=False)
+def test_appropriate_group_discount_no_discount(item_create_factory: ItemCreateFactory) -> None:
+    item_create_factory.get(group_discount=False)
 
 
-def test_appropriate_group_discount_no_error(item_base_factory: ItemBaseFactory) -> None:
-    item_base_factory.get(
+def test_appropriate_group_discount_no_error(item_create_factory: ItemCreateFactory) -> None:
+    item_create_factory.get(
         purchase_date=date(2025, 5, 5),
         status=item_enums.Status.CLOSED,
         intent=item_enums.Intent.SELL,
@@ -323,30 +337,30 @@ def test_appropriate_group_discount_no_error(item_base_factory: ItemBaseFactory)
     )
 
 
-def test_appropriate_group_discount_error(item_base_factory: ItemBaseFactory) -> None:
+def test_appropriate_group_discount_error(item_create_factory: ItemCreateFactory) -> None:
     with pytest.raises(
         ValidationError,
         match='Group discount cannot be assigned to an unsold item',
     ):
-        item_base_factory.get(
+        item_create_factory.get(
             status=item_enums.Status.STORAGE,
             group_discount=True,
         )
 
 
-def test_appropriate_audit_target_no_error(item_base_factory: ItemBaseFactory) -> None:
-    item_base_factory.get(
+def test_appropriate_audit_target_no_error(item_create_factory: ItemCreateFactory) -> None:
+    item_create_factory.get(
         status=item_enums.Status.VAULT,
         audit_target=True,
     )
 
 
-def test_appropriate_audit_target_listing_error(item_base_factory: ItemBaseFactory) -> None:
+def test_appropriate_audit_target_listing_error(item_create_factory: ItemCreateFactory) -> None:
     with pytest.raises(
         ValidationError,
         match='Item assigned as an audit target can not be listed or closed',
     ):
-        item_base_factory.get(
+        item_create_factory.get(
             purchase_date=date(2025, 5, 5),
             status=item_enums.Status.LISTED,
             intent=item_enums.Intent.SELL,
@@ -357,12 +371,12 @@ def test_appropriate_audit_target_listing_error(item_base_factory: ItemBaseFacto
         )
 
 
-def test_appropriate_audit_target_closed_error(item_base_factory: ItemBaseFactory) -> None:
+def test_appropriate_audit_target_closed_error(item_create_factory: ItemCreateFactory) -> None:
     with pytest.raises(
         ValidationError,
         match='Item assigned as an audit target can not be listed or closed',
     ):
-        item_base_factory.get(
+        item_create_factory.get(
             purchase_date=date(2025, 5, 5),
             status=item_enums.Status.CLOSED,
             intent=item_enums.Intent.SELL,
