@@ -3,7 +3,6 @@ from datetime import date
 
 import pytest
 from sqlalchemy.orm import Session
-from sqlalchemy.sql.operators import eq
 
 from src import (
     crud,
@@ -988,50 +987,6 @@ def test_edit_grading_record_changing_grade_leaves_intent(
     assert item.intent == item_enums.Intent.SELL
 
 
-def test_build_search_filters_no_special_case() -> None:
-    params = {'name': 'Unown', 'set_name': 'Base Set'}
-    filters, post_filters = crud.build_search_filters(params)
-
-    assert filters[0].left.key == 'name'
-    assert filters[0].right.value == 'Unown'
-    assert filters[0].operator is eq
-    assert filters[1].left.key == 'set_name'
-    assert filters[1].right.value == 'Base Set'
-    assert filters[1].operator is eq
-    assert post_filters == []
-
-
-def test_build_search_filters_grading_company_is_sql_filter() -> None:
-    params = {'name': 'Unown', 'grading_company': item_enums.GradingCompany.PSA}
-    filters, post_filters = crud.build_search_filters(params)
-
-    assert filters[0].left.key == 'name'
-    assert filters[0].right.value == 'Unown'
-    assert filters[0].operator is eq
-    assert len(filters) == 2
-    assert post_filters == []
-
-
-def test_build_search_filters_qualifiers_is_post_filter(
-    item_factory: ItemFactory,
-) -> None:
-    params = {'qualifiers': [item_enums.Qualifier.FIRST_EDITION]}
-    filters, post_filters = crud.build_search_filters(params)
-
-    assert filters == []
-    assert len(post_filters) == 1
-
-    keep = post_filters[0]
-    assert keep(item_factory.get(qualifiers=[item_enums.Qualifier.FIRST_EDITION]))
-    assert keep(
-        item_factory.get(
-            qualifiers=[item_enums.Qualifier.FIRST_EDITION, item_enums.Qualifier.REVERSE_HOLO]
-        )
-    )
-    assert not keep(item_factory.get(qualifiers=[]))
-    assert not keep(item_factory.get(qualifiers=[item_enums.Qualifier.REVERSE_HOLO]))
-
-
 def test_get_total_number_of_submissions_no_subs(db_session: Session) -> None:
     result = crud.get_total_number_of_submissions(db_session)
     assert result == 0
@@ -1414,6 +1369,41 @@ def test_delete_grading_record_keeps_listed_item_listed(
     db_session.refresh(item)
     assert item.status == item_enums.Status.LISTED
     assert item.list_price == 2000.0
+
+
+@pytest.mark.parametrize(
+    'status',
+    [
+        pytest.param(item_enums.Status.VAULT, id='vault'),
+        pytest.param(item_enums.Status.ORDER, id='order'),
+    ],
+)
+def test_delete_grading_record_leaves_status(
+    db_session: Session,
+    item_factory: ItemFactory,
+    submission_factory: SubmissionFactory,
+    grading_record_factory: GradingRecordFactory,
+    status: item_enums.Status,
+) -> None:
+    item = item_factory.get(idx=1, status=status, intent=item_enums.Intent.KEEP)
+    submission = submission_factory.get(idx=1)
+    db_session.add_all([item, submission])
+    db_session.flush()
+    record = grading_record_factory.get(
+        idx=1,
+        item_id=item.id,
+        submission_id=submission.id,
+        grading_fee=1000,
+        grade=9.0,
+        cert=12345,
+    )
+    db_session.add(record)
+    db_session.flush()
+
+    crud.delete_grading_record_by_id(db_session, record.id)
+
+    db_session.refresh(item)
+    assert item.status == status
 
 
 def test_create_refund_without_item(

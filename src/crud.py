@@ -1,6 +1,5 @@
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from datetime import date
-from typing import Any
 
 from sqlalchemy import (
     and_,
@@ -10,12 +9,10 @@ from sqlalchemy import (
 )
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
-from sqlalchemy.sql.elements import ColumnElement
 
 from .item_enums import (
     GradingCompany,
     Intent,
-    Qualifier,
     Status,
 )
 from .models import (
@@ -36,6 +33,12 @@ from .schemas import (
     RemunerationCreate,
     RemunerationUpdate,
     SubmissionCreate,
+)
+from .search_filters import build_search_filters
+from .state_rules import (
+    get_item_intent_change_after_record_edit,
+    get_item_status_change_after_record_delete,
+    get_item_status_change_after_record_edit,
 )
 from .validators import (
     check_all_grading_records_are_cracked,
@@ -123,35 +126,6 @@ def search_for_items(
     if len(post_filters) > 0:
         results = [item for item in results if all(keep(item) for keep in post_filters)]
     return results
-
-
-def qualifiers_filter(qualifiers: list[Qualifier]) -> Callable[[Item], bool]:
-    return lambda item: all(q in item.qualifiers for q in qualifiers)
-
-
-def build_search_filters(
-    search_params: dict[str, Any],
-) -> tuple[list[ColumnElement[bool]], list[Callable[[Item], bool]]]:
-    filters: list[ColumnElement[bool]] = []
-    post_filters: list[Callable[[Item], bool]] = []
-    for field, value in search_params.items():
-        if value is None or value == []:
-            continue
-
-        if field == 'qualifiers':
-            post_filters.append(qualifiers_filter(value))
-        elif field.endswith('_min'):
-            base_field = field.removesuffix('_min')
-            column = getattr(Item, base_field)
-            filters.append(column >= value)
-        elif field.endswith('_max'):
-            base_field = field.removesuffix('_max')
-            column = getattr(Item, base_field)
-            filters.append(column <= value)
-        else:
-            column = getattr(Item, field)
-            filters.append(column == value)
-    return filters, post_filters
 
 
 def edit_item(
@@ -336,9 +310,9 @@ def delete_grading_record_by_id(
     if linked_item is None:
         raise ValueError(f'Item with id {record.item_id} not found')
 
-    if all(getattr(linked_item, f) is None for f in Status.STORAGE.required_to_be_null):
-        item_update = ItemUpdate(status=Status.STORAGE)
-        perform_item_update(linked_item, item_update)
+    new_status = get_item_status_change_after_record_delete(linked_item)
+    if new_status is not None:
+        perform_item_update(linked_item, ItemUpdate(status=new_status))
     perform_delete_grading_record(db, record)
     db.commit()
     return True
@@ -349,84 +323,6 @@ def perform_delete_grading_record(
     record: GradingRecord,
 ) -> None:
     db.delete(record)
-
-
-def get_item_status_change_after_record_edit(
-    record: GradingRecord,
-    update_data: dict[str, Any],
-) -> Status | None:
-    """The item's status follows its record closing (returned from grading) or re-opening.
-
-    Returns None if the edit doesn't change the item's status.
-    """
-    # Adding a grade -> return from submission -> status is STORAGE
-    if update_is_adding_grade(record, update_data):
-        return Status.STORAGE
-
-    # isn't cracked + has no grade -> status is SUBMITTED
-    if update_is_removing_grade_from_non_cracked_record(record, update_data):
-        return Status.SUBMITTED
-
-    # No change
-    return None
-
-
-def get_item_intent_change_after_record_edit(
-    record: GradingRecord,
-    update_data: dict[str, Any],
-    item: Item,
-) -> Intent | None:
-    """Returns None if the edit doesn't change the item's intent."""
-    # Adding a grade -> return from submission -> default to KEEP
-    if update_is_adding_grade(record, update_data):
-        return Intent.KEEP
-
-    # Removing grade from record that isn't cracked -> not returned from submission -> intent GRADE
-    if update_is_removing_grade_from_non_cracked_record(record, update_data):
-        return Intent.GRADE
-
-    # is_cracked=False and item graded -> in possession -> default to KEEP
-    if (
-        update_is_setting_is_cracked_to_false_on_graded_record(record, update_data)
-        and item.intent == Intent.GRADE
-    ):
-        return Intent.KEEP
-
-    # No change
-    return None
-
-
-def update_is_adding_grade(record: GradingRecord, update_data: dict[str, Any]) -> bool:
-    return record.grade is None and update_data.get('grade') is not None
-
-
-def update_is_removing_grade_from_non_cracked_record(
-    record: GradingRecord,
-    update_data: dict[str, Any],
-) -> bool:
-    # Is the update removing the grade from the record
-    grade_removed = (
-        record.grade is not None and 'grade' in update_data and update_data['grade'] is None
-    )
-    # Is the record cracked after the update is performed
-    is_cracked_after_update = update_data.get('is_cracked', record.is_cracked)
-
-    # True if and only if a grade is removed from a record that hasn't been cracked
-    return grade_removed and not is_cracked_after_update
-
-
-def update_is_setting_is_cracked_to_false_on_graded_record(
-    record: GradingRecord,
-    update_data: dict[str, Any],
-) -> bool:
-    currently_cracked = record.is_cracked
-    update_assigns_is_cracked_to_false = update_data.get('is_cracked') is False
-    record_still_has_grade_after_update = update_data.get('grade', record.grade) is not None
-    return (
-        currently_cracked
-        and update_assigns_is_cracked_to_false
-        and record_still_has_grade_after_update
-    )
 
 
 def edit_grading_record(
