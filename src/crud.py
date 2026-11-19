@@ -10,6 +10,7 @@ from sqlalchemy import (
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from .database import Base
 from .item_enums import (
     GradingCompany,
     Intent,
@@ -41,6 +42,7 @@ from .state_rules import (
     get_item_status_change_after_record_edit,
 )
 from .validators import (
+    SupportsModelKwargs,
     check_all_grading_records_are_cracked,
     check_grade_intent_allowed,
     check_intent,
@@ -147,19 +149,18 @@ def edit_item(
         check_status_change_to_submitted_valid(item)
     check_grade_intent_allowed(item, item_update.intent)
     check_item_valid_after_update(item, item_update)
-    perform_item_update(item, item_update)
+    perform_update(item, item_update)
     db.commit()
     db.refresh(item)
     return 303
 
 
-def perform_item_update(
-    item: Item,
-    item_update: ItemUpdate,
+def perform_update(
+    model: Base,
+    update: SupportsModelKwargs,
 ) -> None:
-    update_data = item_update.to_model_kwargs()
-    for key, value in update_data.items():
-        setattr(item, key, value)
+    for key, value in update.to_model_kwargs().items():
+        setattr(model, key, value)
 
 
 def create_submission(
@@ -196,7 +197,7 @@ def create_submission(
 
             # Update item to SUBMITTED
             item_update = ItemUpdate(status=Status.SUBMITTED)
-            perform_item_update(linked_item, item_update)
+            perform_update(linked_item, item_update)
 
         db.commit()
     except IntegrityError:
@@ -312,7 +313,7 @@ def delete_grading_record_by_id(
 
     new_status = get_item_status_change_after_record_delete(linked_item)
     if new_status is not None:
-        perform_item_update(linked_item, ItemUpdate(status=new_status))
+        perform_update(linked_item, ItemUpdate(status=new_status))
     perform_delete_grading_record(db, record)
     db.commit()
     return True
@@ -351,7 +352,7 @@ def edit_grading_record(
         item_changes['status'] = new_status
     if new_intent is not None:
         item_changes['intent'] = new_intent
-    perform_item_update(linked_item, ItemUpdate.model_validate(item_changes))
+    perform_update(linked_item, ItemUpdate.model_validate(item_changes))
 
     for key, value in update_data.items():
         setattr(record, key, value)
@@ -426,18 +427,10 @@ def edit_refund(
     if refund is None:
         return 404
     check_required_fields_not_removed(refund_update, RefundCreate)
-    perform_refund_update(refund, refund_update)
+    perform_update(refund, refund_update)
     db.commit()
     db.refresh(refund)
     return 303
-
-
-def perform_refund_update(
-    refund: Refund,
-    refund_update: RefundUpdate,
-) -> None:
-    for key, value in refund_update.to_model_kwargs().items():
-        setattr(refund, key, value)
 
 
 def create_remuneration(
@@ -501,15 +494,7 @@ def edit_remuneration(
     if remuneration is None:
         return 404
     check_required_fields_not_removed(remuneration_update, RemunerationCreate)
-    perform_remuneration_update(remuneration, remuneration_update)
+    perform_update(remuneration, remuneration_update)
     db.commit()
     db.refresh(remuneration)
     return 303
-
-
-def perform_remuneration_update(
-    remuneration: Remuneration,
-    remuneration_update: RemunerationUpdate,
-) -> None:
-    for key, value in remuneration_update.to_model_kwargs().items():
-        setattr(remuneration, key, value)
