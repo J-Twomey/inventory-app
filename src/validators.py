@@ -170,12 +170,45 @@ def check_valid_grading_record_update(
         )
 
 
-def check_item_can_return_to_submitted(item: Item) -> None:
-    if Status.SUBMITTED not in item.intent.allowed_statuses:
+def check_older_record_stays_cracked(
+    record: GradingRecord,
+    update: GradingRecordUpdate,
+    item: Item,
+) -> None:
+    latest_record = max(item.submissions, key=lambda s: s.submission_number)
+    # check status of cracked after the edit is performed
+    is_cracked_after_update = update.to_model_kwargs().get('is_cracked', record.is_cracked)
+    if record is not latest_record and not is_cracked_after_update:
         raise ValueError(
-            f'Cannot remove grading info: item {item.id} has an intent of {item.intent.name}, '
-            f'which does not allow a status of SUBMITTED',
+            f'Grading record {record.id} is not the latest for item {item.id}, so it must stay '
+            f'marked as cracked',
         )
+
+
+def check_all_grading_records_are_cracked(item: Item) -> None:
+    if any(not record.is_cracked for record in item.submissions):
+        raise ValueError(
+            f'Item {item.id} has a grading record that is not marked as cracked, so it cannot be '
+            f'added to a new submission',
+        )
+
+
+def check_grade_intent_allowed(item: Item, intent: Intent | None) -> None:
+    if intent != Intent.GRADE:
+        return
+    latest_record = max(item.submissions, key=lambda s: s.submission_number, default=None)
+    if (
+        latest_record is not None
+        and latest_record.grade is not None
+        and not latest_record.is_cracked
+    ):
+        raise ValueError(
+            f'Item {item.id} has been graded, so it cannot have an intent of GRADE unless its '
+            f'latest grading record is cracked',
+        )
+
+
+def check_item_can_return_to_submitted(item: Item) -> None:
     populated = [f for f in Status.SUBMITTED.required_to_be_null if getattr(item, f) is not None]
     if populated:
         raise ValueError(

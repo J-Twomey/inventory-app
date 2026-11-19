@@ -650,6 +650,344 @@ def test_edit_item_to_submitted_without_active_record_rejected(
     assert item.status == item_enums.Status.STORAGE
 
 
+def test_edit_item_graded_item_to_grade_intent_rejected(
+    db_session: Session,
+    item_with_submissions_factory: Callable[..., models.Item],
+) -> None:
+    item = item_with_submissions_factory(
+        grading_fees=[1000],
+        grades=[9.0],
+        certs=[12345],
+        intent=item_enums.Intent.KEEP,
+    )
+
+    update = schemas.ItemUpdate(intent=item_enums.Intent.GRADE)
+    with pytest.raises(ValueError, match='cannot have an intent of GRADE'):
+        crud.edit_item(db_session, item.id, update)
+
+
+def test_edit_item_graded_item_to_grade_intent_leaves_intent(
+    db_session: Session,
+    item_with_submissions_factory: Callable[..., models.Item],
+) -> None:
+    item = item_with_submissions_factory(
+        grading_fees=[1000],
+        grades=[9.0],
+        certs=[12345],
+        intent=item_enums.Intent.KEEP,
+    )
+
+    update = schemas.ItemUpdate(intent=item_enums.Intent.GRADE)
+    with pytest.raises(ValueError, match='cannot have an intent of GRADE'):
+        crud.edit_item(db_session, item.id, update)
+
+    db_session.refresh(item)
+    assert item.intent == item_enums.Intent.KEEP
+
+
+def test_edit_grading_record_returns_303(
+    db_session: Session,
+    item_with_submissions_factory: Callable[..., models.Item],
+) -> None:
+    item = item_with_submissions_factory(
+        intent=item_enums.Intent.GRADE,
+        status=item_enums.Status.SUBMITTED,
+    )
+    record = item.submissions[0]
+
+    update = schemas.GradingRecordUpdate(grading_fee=1000, grade=9.0, cert=12345)
+    assert crud.edit_grading_record(db_session, record.id, update) == 303
+
+
+def test_edit_grading_record_adding_grade_changes_status_to_storage(
+    db_session: Session,
+    item_with_submissions_factory: Callable[..., models.Item],
+) -> None:
+    item = item_with_submissions_factory(
+        intent=item_enums.Intent.GRADE,
+        status=item_enums.Status.SUBMITTED,
+    )
+    record = item.submissions[0]
+
+    update = schemas.GradingRecordUpdate(grading_fee=1000, grade=9.0, cert=12345)
+    crud.edit_grading_record(db_session, record.id, update)
+
+    db_session.refresh(item)
+    assert item.status == item_enums.Status.STORAGE
+
+
+def test_edit_grading_record_adding_grade_changes_intent_to_keep(
+    db_session: Session,
+    item_with_submissions_factory: Callable[..., models.Item],
+) -> None:
+    item = item_with_submissions_factory(
+        intent=item_enums.Intent.GRADE,
+        status=item_enums.Status.SUBMITTED,
+    )
+    record = item.submissions[0]
+
+    update = schemas.GradingRecordUpdate(grading_fee=1000, grade=9.0, cert=12345)
+    crud.edit_grading_record(db_session, record.id, update)
+
+    db_session.refresh(item)
+    assert item.intent == item_enums.Intent.KEEP
+
+
+def test_edit_grading_record_removing_grade_changes_status_to_submitted(
+    db_session: Session,
+    item_with_submissions_factory: Callable[..., models.Item],
+) -> None:
+    item = item_with_submissions_factory(
+        grading_fees=[1000],
+        grades=[9.0],
+        certs=[12345],
+        intent=item_enums.Intent.KEEP,
+        status=item_enums.Status.STORAGE,
+    )
+    record = item.submissions[0]
+
+    update = schemas.GradingRecordUpdate(grading_fee=None, grade=None, cert=None)
+    crud.edit_grading_record(db_session, record.id, update)
+
+    db_session.refresh(item)
+    assert item.status == item_enums.Status.SUBMITTED
+
+
+def test_edit_grading_record_removing_grade_changes_intent_to_grade(
+    db_session: Session,
+    item_with_submissions_factory: Callable[..., models.Item],
+) -> None:
+    item = item_with_submissions_factory(
+        grading_fees=[1000],
+        grades=[9.0],
+        certs=[12345],
+        intent=item_enums.Intent.KEEP,
+        status=item_enums.Status.STORAGE,
+    )
+    record = item.submissions[0]
+
+    update = schemas.GradingRecordUpdate(grading_fee=None, grade=None, cert=None)
+    crud.edit_grading_record(db_session, record.id, update)
+
+    db_session.refresh(item)
+    assert item.intent == item_enums.Intent.GRADE
+
+
+def test_edit_grading_record_setting_is_cracked_to_false_updates_record(
+    db_session: Session,
+    item_with_submissions_factory: Callable[..., models.Item],
+) -> None:
+    item = item_with_submissions_factory(
+        grading_fees=[1000],
+        grades=[9.0],
+        certs=[12345],
+        is_cracked_flags=[True],
+        intent=item_enums.Intent.GRADE,
+    )
+    record = item.submissions[0]
+
+    update = schemas.GradingRecordUpdate(is_cracked=False)
+    crud.edit_grading_record(db_session, record.id, update)
+
+    db_session.refresh(record)
+    assert record.is_cracked is False
+
+
+def test_edit_grading_record_setting_is_cracked_to_false_leaves_status(
+    db_session: Session,
+    item_with_submissions_factory: Callable[..., models.Item],
+) -> None:
+    item = item_with_submissions_factory(
+        grading_fees=[1000],
+        grades=[9.0],
+        certs=[12345],
+        is_cracked_flags=[True],
+        intent=item_enums.Intent.GRADE,
+        status=item_enums.Status.VAULT,
+    )
+    record = item.submissions[0]
+
+    update = schemas.GradingRecordUpdate(is_cracked=False)
+    crud.edit_grading_record(db_session, record.id, update)
+
+    db_session.refresh(item)
+    assert item.status == item_enums.Status.VAULT
+
+
+def test_edit_grading_record_setting_is_cracked_to_false_changes_grade_intent_to_keep(
+    db_session: Session,
+    item_with_submissions_factory: Callable[..., models.Item],
+) -> None:
+    item = item_with_submissions_factory(
+        grading_fees=[1000],
+        grades=[9.0],
+        certs=[12345],
+        is_cracked_flags=[True],
+        intent=item_enums.Intent.GRADE,
+    )
+    record = item.submissions[0]
+
+    update = schemas.GradingRecordUpdate(is_cracked=False)
+    crud.edit_grading_record(db_session, record.id, update)
+
+    db_session.refresh(item)
+    assert item.intent == item_enums.Intent.KEEP
+
+
+def test_edit_grading_record_setting_is_cracked_to_false_leaves_non_grade_intent(
+    db_session: Session,
+    item_with_submissions_factory: Callable[..., models.Item],
+) -> None:
+    item = item_with_submissions_factory(
+        grading_fees=[1000],
+        grades=[9.0],
+        certs=[12345],
+        is_cracked_flags=[True],
+        intent=item_enums.Intent.SELL,
+    )
+    record = item.submissions[0]
+
+    update = schemas.GradingRecordUpdate(is_cracked=False)
+    crud.edit_grading_record(db_session, record.id, update)
+
+    db_session.refresh(item)
+    assert item.intent == item_enums.Intent.SELL
+
+
+def test_edit_grading_record_setting_is_cracked_to_false_on_older_record_rejected(
+    db_session: Session,
+    item_with_submissions_factory: Callable[..., models.Item],
+) -> None:
+    item = item_with_submissions_factory(
+        grading_record_ids=[1, 2],
+        submission_ids=[1, 2],
+        submission_numbers=[1, 2],
+        grading_fees=[1000, 1000],
+        grades=[8.0, 9.0],
+        certs=[111, 222],
+        is_cracked_flags=[True, True],
+        intent=item_enums.Intent.GRADE,
+    )
+    older_record = min(item.submissions, key=lambda s: s.submission_number)
+
+    update = schemas.GradingRecordUpdate(is_cracked=False)
+    with pytest.raises(ValueError, match='must stay marked as cracked'):
+        crud.edit_grading_record(db_session, older_record.id, update)
+
+
+def test_edit_grading_record_setting_is_cracked_to_false_on_older_record_leaves_record_cracked(
+    db_session: Session,
+    item_with_submissions_factory: Callable[..., models.Item],
+) -> None:
+    item = item_with_submissions_factory(
+        grading_record_ids=[1, 2],
+        submission_ids=[1, 2],
+        submission_numbers=[1, 2],
+        grading_fees=[1000, 1000],
+        grades=[8.0, 9.0],
+        certs=[111, 222],
+        is_cracked_flags=[True, True],
+        intent=item_enums.Intent.GRADE,
+    )
+    older_record = min(item.submissions, key=lambda s: s.submission_number)
+
+    update = schemas.GradingRecordUpdate(is_cracked=False)
+    with pytest.raises(ValueError, match='must stay marked as cracked'):
+        crud.edit_grading_record(db_session, older_record.id, update)
+
+    db_session.refresh(older_record)
+    assert older_record.is_cracked is True
+
+
+def test_edit_grading_record_setting_is_cracked_to_false_on_older_record_leaves_intent(
+    db_session: Session,
+    item_with_submissions_factory: Callable[..., models.Item],
+) -> None:
+    item = item_with_submissions_factory(
+        grading_record_ids=[1, 2],
+        submission_ids=[1, 2],
+        submission_numbers=[1, 2],
+        grading_fees=[1000, 1000],
+        grades=[8.0, 9.0],
+        certs=[111, 222],
+        is_cracked_flags=[True, True],
+        intent=item_enums.Intent.GRADE,
+    )
+    older_record = min(item.submissions, key=lambda s: s.submission_number)
+
+    update = schemas.GradingRecordUpdate(is_cracked=False)
+    with pytest.raises(ValueError, match='must stay marked as cracked'):
+        crud.edit_grading_record(db_session, older_record.id, update)
+
+    db_session.refresh(item)
+    assert item.intent == item_enums.Intent.GRADE
+
+
+def test_edit_grading_record_setting_is_cracked_to_false_on_latest_record_allowed(
+    db_session: Session,
+    item_with_submissions_factory: Callable[..., models.Item],
+) -> None:
+    item = item_with_submissions_factory(
+        grading_record_ids=[1, 2],
+        submission_ids=[1, 2],
+        submission_numbers=[1, 2],
+        grading_fees=[1000, 1000],
+        grades=[8.0, 9.0],
+        certs=[111, 222],
+        is_cracked_flags=[True, True],
+        intent=item_enums.Intent.GRADE,
+    )
+    latest_record = max(item.submissions, key=lambda s: s.submission_number)
+
+    update = schemas.GradingRecordUpdate(is_cracked=False)
+    crud.edit_grading_record(db_session, latest_record.id, update)
+
+    db_session.refresh(latest_record)
+    assert latest_record.is_cracked is False
+
+
+def test_edit_grading_record_setting_is_cracked_to_false_on_latest_record_changes_intent_to_keep(
+    db_session: Session,
+    item_with_submissions_factory: Callable[..., models.Item],
+) -> None:
+    item = item_with_submissions_factory(
+        grading_record_ids=[1, 2],
+        submission_ids=[1, 2],
+        submission_numbers=[1, 2],
+        grading_fees=[1000, 1000],
+        grades=[8.0, 9.0],
+        certs=[111, 222],
+        is_cracked_flags=[True, True],
+        intent=item_enums.Intent.GRADE,
+    )
+    latest_record = max(item.submissions, key=lambda s: s.submission_number)
+
+    update = schemas.GradingRecordUpdate(is_cracked=False)
+    crud.edit_grading_record(db_session, latest_record.id, update)
+
+    db_session.refresh(item)
+    assert item.intent == item_enums.Intent.KEEP
+
+
+def test_edit_grading_record_changing_grade_leaves_intent(
+    db_session: Session,
+    item_with_submissions_factory: Callable[..., models.Item],
+) -> None:
+    item = item_with_submissions_factory(
+        grading_fees=[1000],
+        grades=[9.0],
+        certs=[12345],
+        intent=item_enums.Intent.SELL,
+    )
+    record = item.submissions[0]
+
+    update = schemas.GradingRecordUpdate(grade=10.0)
+    crud.edit_grading_record(db_session, record.id, update)
+
+    db_session.refresh(item)
+    assert item.intent == item_enums.Intent.SELL
+
+
 def test_build_search_filters_no_special_case() -> None:
     params = {'name': 'Unown', 'set_name': 'Base Set'}
     filters, post_filters = crud.build_search_filters(params)
@@ -795,6 +1133,113 @@ def test_create_submission_duplicate_item_ids_rejected(
     assert crud.get_max_sub_number(db_session) == 0
     db_session.refresh(item)
     assert item.status == item_enums.Status.STORAGE
+
+
+def test_create_submission_item_with_non_cracked_record_rejected(
+    db_session: Session,
+    item_with_submissions_factory: Callable[..., models.Item],
+) -> None:
+    item = item_with_submissions_factory(
+        grading_fees=[1000],
+        grades=[9.0],
+        certs=[12345],
+        intent=item_enums.Intent.GRADE,
+    )
+
+    submission_summary = schemas.SubmissionCreate(
+        submission_number=2,
+        submission_company=item_enums.GradingCompany.PSA,
+    )
+    with pytest.raises(ValueError, match='has a grading record that is not marked as cracked'):
+        crud.create_submission(db_session, submission_summary, [item.id])
+
+
+def test_create_submission_item_with_non_cracked_record_leaves_status(
+    db_session: Session,
+    item_with_submissions_factory: Callable[..., models.Item],
+) -> None:
+    item = item_with_submissions_factory(
+        grading_fees=[1000],
+        grades=[9.0],
+        certs=[12345],
+        intent=item_enums.Intent.GRADE,
+    )
+
+    submission_summary = schemas.SubmissionCreate(
+        submission_number=2,
+        submission_company=item_enums.GradingCompany.PSA,
+    )
+    with pytest.raises(ValueError, match='has a grading record that is not marked as cracked'):
+        crud.create_submission(db_session, submission_summary, [item.id])
+
+    db_session.refresh(item)
+    assert item.status == item_enums.Status.STORAGE
+
+
+def test_create_submission_item_with_non_cracked_record_adds_no_grading_record(
+    db_session: Session,
+    item_with_submissions_factory: Callable[..., models.Item],
+) -> None:
+    item = item_with_submissions_factory(
+        grading_fees=[1000],
+        grades=[9.0],
+        certs=[12345],
+        intent=item_enums.Intent.GRADE,
+    )
+
+    submission_summary = schemas.SubmissionCreate(
+        submission_number=2,
+        submission_company=item_enums.GradingCompany.PSA,
+    )
+    with pytest.raises(ValueError, match='has a grading record that is not marked as cracked'):
+        crud.create_submission(db_session, submission_summary, [item.id])
+
+    db_session.refresh(item)
+    assert len(item.submissions) == 1
+
+
+def test_create_submission_item_with_cracked_record_changes_status_to_submitted(
+    db_session: Session,
+    item_with_submissions_factory: Callable[..., models.Item],
+) -> None:
+    item = item_with_submissions_factory(
+        grading_fees=[1000],
+        grades=[9.0],
+        certs=[12345],
+        is_cracked_flags=[True],
+        intent=item_enums.Intent.GRADE,
+    )
+
+    submission_summary = schemas.SubmissionCreate(
+        submission_number=2,
+        submission_company=item_enums.GradingCompany.PSA,
+    )
+    crud.create_submission(db_session, submission_summary, [item.id])
+
+    db_session.refresh(item)
+    assert item.status == item_enums.Status.SUBMITTED
+
+
+def test_create_submission_item_with_cracked_record_adds_grading_record(
+    db_session: Session,
+    item_with_submissions_factory: Callable[..., models.Item],
+) -> None:
+    item = item_with_submissions_factory(
+        grading_fees=[1000],
+        grades=[9.0],
+        certs=[12345],
+        is_cracked_flags=[True],
+        intent=item_enums.Intent.GRADE,
+    )
+
+    submission_summary = schemas.SubmissionCreate(
+        submission_number=2,
+        submission_company=item_enums.GradingCompany.PSA,
+    )
+    crud.create_submission(db_session, submission_summary, [item.id])
+
+    db_session.refresh(item)
+    assert len(item.submissions) == 2
 
 
 def test_create_submission_sets_item_to_submitted(

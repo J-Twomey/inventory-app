@@ -104,20 +104,146 @@ def test_check_valid_grading_record_update_partial_removal_ng(
 def test_check_item_can_return_to_submitted_ok(item_factory: ItemFactory) -> None:
     item = item_factory.get(
         status=item_enums.Status.STORAGE,
-        intent=item_enums.Intent.GRADE,
+        intent=item_enums.Intent.KEEP,
     )
     validators.check_item_can_return_to_submitted(item)
 
 
-def test_check_item_can_return_to_submitted_ng_bad_intent(item_factory: ItemFactory) -> None:
-    item = item_factory.get(
-        status=item_enums.Status.STORAGE,
-        intent=item_enums.Intent.SELL,
+@pytest.mark.parametrize(
+    ('intent', 'grades', 'is_cracked_flags'),
+    [
+        pytest.param(item_enums.Intent.GRADE, [None], [False], id='grade_awaiting_return'),
+        pytest.param(item_enums.Intent.GRADE, [9.0], [True], id='grade_latest_cracked'),
+        pytest.param(item_enums.Intent.KEEP, [9.0], [False], id='keep_graded'),
+        pytest.param(None, [9.0], [False], id='no_intent_update_graded'),
+    ],
+)
+def test_check_grade_intent_allowed_ok(
+    item_with_submissions_factory: Callable[..., Item],
+    intent: item_enums.Intent | None,
+    grades: list[float | None],
+    is_cracked_flags: list[bool],
+) -> None:
+    item = item_with_submissions_factory(
+        grading_fees=[1000] if grades[0] is not None else None,
+        grades=grades,
+        certs=[12345] if grades[0] is not None else None,
+        is_cracked_flags=is_cracked_flags,
     )
-    with pytest.raises(
-        ValueError, match='has an intent of SELL, which does not allow a status of SUBMITTED'
-    ):
-        validators.check_item_can_return_to_submitted(item)
+    validators.check_grade_intent_allowed(item, intent)
+
+
+@pytest.mark.parametrize(
+    ('record_idx', 'is_cracked'),
+    [
+        pytest.param(0, True, id='older_stays_cracked'),
+        pytest.param(1, False, id='latest_uncracked'),
+        pytest.param(1, True, id='latest_cracked'),
+    ],
+)
+def test_check_older_record_stays_cracked_ok(
+    item_with_submissions_factory: Callable[..., Item],
+    record_idx: int,
+    is_cracked: bool,
+) -> None:
+    item = item_with_submissions_factory(
+        grading_record_ids=[1, 2],
+        submission_ids=[1, 2],
+        submission_numbers=[1, 2],
+        is_cracked_flags=[True, False],
+    )
+    records = sorted(item.submissions, key=lambda s: s.submission_number)
+    update = GradingRecordUpdate(is_cracked=is_cracked)
+    validators.check_older_record_stays_cracked(records[record_idx], update, item)
+
+
+def test_check_older_record_stays_cracked_single_record_ok(
+    item_with_submissions_factory: Callable[..., Item],
+) -> None:
+    item = item_with_submissions_factory(is_cracked_flags=[True])
+    update = GradingRecordUpdate(is_cracked=False)
+    validators.check_older_record_stays_cracked(item.submissions[0], update, item)
+
+
+def test_check_older_record_stays_cracked_ng(
+    item_with_submissions_factory: Callable[..., Item],
+) -> None:
+    item = item_with_submissions_factory(
+        grading_record_ids=[1, 2],
+        submission_ids=[1, 2],
+        submission_numbers=[1, 2],
+        is_cracked_flags=[True, False],
+    )
+    older_record = min(item.submissions, key=lambda s: s.submission_number)
+    update = GradingRecordUpdate(is_cracked=False)
+    with pytest.raises(ValueError, match='must stay marked as cracked'):
+        validators.check_older_record_stays_cracked(older_record, update, item)
+
+
+@pytest.mark.parametrize(
+    'is_cracked_flags',
+    [
+        pytest.param([True], id='single_cracked'),
+        pytest.param([True, True], id='multiple_cracked'),
+    ],
+)
+def test_check_all_grading_records_are_cracked_ok(
+    item_with_submissions_factory: Callable[..., Item],
+    is_cracked_flags: list[bool],
+) -> None:
+    n = len(is_cracked_flags)
+    item = item_with_submissions_factory(
+        grading_record_ids=list(range(1, n + 1)),
+        submission_ids=list(range(1, n + 1)),
+        submission_numbers=list(range(1, n + 1)),
+        is_cracked_flags=is_cracked_flags,
+    )
+    validators.check_all_grading_records_are_cracked(item)
+
+
+def test_check_all_grading_records_are_cracked_no_records_ok(item_factory: ItemFactory) -> None:
+    validators.check_all_grading_records_are_cracked(item_factory.get())
+
+
+def test_check_all_grading_records_are_cracked_ng(
+    item_with_submissions_factory: Callable[..., Item],
+) -> None:
+    item = item_with_submissions_factory(
+        grading_record_ids=[1, 2],
+        submission_ids=[1, 2],
+        submission_numbers=[1, 2],
+        is_cracked_flags=[True, False],
+    )
+    with pytest.raises(ValueError, match='has a grading record that is not marked as cracked'):
+        validators.check_all_grading_records_are_cracked(item)
+
+
+def test_check_grade_intent_allowed_no_submissions(item_factory: ItemFactory) -> None:
+    validators.check_grade_intent_allowed(item_factory.get(), item_enums.Intent.GRADE)
+
+
+def test_check_grade_intent_allowed_graded_ng(
+    item_with_submissions_factory: Callable[..., Item],
+) -> None:
+    item = item_with_submissions_factory(grading_fees=[1000], grades=[9.0], certs=[12345])
+    with pytest.raises(ValueError, match='cannot have an intent of GRADE'):
+        validators.check_grade_intent_allowed(item, item_enums.Intent.GRADE)
+
+
+def test_check_grade_intent_allowed_uses_latest_record(
+    item_with_submissions_factory: Callable[..., Item],
+) -> None:
+    item = item_with_submissions_factory(
+        grading_record_ids=[1, 2],
+        submission_ids=[1, 2],
+        submission_numbers=[1, 2],
+        grading_fees=[1000, 1000],
+        grades=[9.0, 10.0],
+        certs=[111, 222],
+        is_cracked_flags=[True, False],
+    )
+    with pytest.raises(ValueError, match='cannot have an intent of GRADE'):
+        validators.check_grade_intent_allowed(item, item_enums.Intent.GRADE)
 
 
 def test_check_item_can_return_to_submitted_ng_populated_fields(
